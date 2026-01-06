@@ -1,0 +1,55 @@
+Subject: Partnership Opportunity - {{company}} 
+
+  
+
+Dear {{lead_name}}, 
+
+  
+
+I hope this email finds you well. We've identified {{company}} as a potential partner for our enterprise lead management solutions. 
+
+  
+
+Based on your company profile: 
+
+- Industry: {{industry}} 
+
+- Company Size: {{company_size}} 
+
+- Lead Score: {{score}}/100 
+
+  
+
+We believe there's a strong fit for collaboration. Our team would love to schedule a brief call to discuss how EasyFinder AI can help {{company}} achieve its sales goals. 
+
+  
+
+KEY BENEFITS: 
+
+• AI-powered lead scoring with explainable criteria 
+
+• Automated outreach campaigns 
+
+• Enterprise-grade security and compliance 
+
+• Detailed analytics and audit trails 
+
+  
+
+Would you be available for a 15-minute call this week? 
+
+  
+
+Best regards, 
+
+EasyFinder AI Team 
+
+demo@easyfinder.ai 
+
+  
+
+--- 
+
+This is an automated message from EasyFinder AI. 
+
+To unsubscribe, reply with \"UNSUBSCRIBE\". 
