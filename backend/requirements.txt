@@ -1,10 +1,20 @@
 fastapi==0.110.0
 uvicorn[standard]==0.27.1
+
+# MongoDB
 pymongo==4.6.1
+motor==3.3.2
+
+# Data handling
+pandas==2.2.0
+python-multipart==0.0.9
+
+# Env & config
 python-dotenv==1.0.1
-python-multipart
-pandas
-motor
-pydantic
-python-jose[cryptography]
-sqlalchemy
+
+# Validation
+pydantic==2.6.1
+
+# JWT (THIS MATCHES YOUR CODE)
+PyJWT==2.8.0
+cryptography==42.0.5
