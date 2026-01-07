@@ -14,7 +14,7 @@ app = FastAPI(
     )
 
 app.include_router(nda_router, prefix="/nda")
-app.include_router(inventory_router, prefix="/inventory")
+app.include_router(inventory_router, prefix="/inventory",tags=["Inventory"])
 app.include_router(demo_router, prefix="/demo")
 
 app.add_middleware(
