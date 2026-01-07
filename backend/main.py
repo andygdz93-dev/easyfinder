@@ -6,6 +6,7 @@ from routes.nda import router as nda_router
 from routes.demo import router as demo_router
 from routes.auth import router as auth_router
 import random
+from fastapi import FastAPI, APIRouter
 
 
 app = FastAPI(
@@ -14,11 +15,13 @@ app = FastAPI(
     version="1.0.0",
 )
 
+api_router = APIRouter(prefix="/api")
 
 app.include_router(nda_router, prefix="/nda")
 app.include_router(inventory_router, prefix="/inventory",tags=["Inventory"])
 app.include_router(demo_router, prefix="/demo")
 app.include_router(auth_router)
+app.include_router(api_router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -26,6 +29,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+print("All routes:")
+for route in app.routes:
+    print(route.path)
 
 # -------------------------
 # CONFIG
@@ -105,6 +112,11 @@ def get_scores():
         {"company": "IronWorks LLC", "score": 71, "tier": "Medium"},
         {"company": "Budget Rentals", "score": 45, "tier": "Low"},
     ]
+
+@api_router.get("/health")
+def health_check():
+    return {"status": "ok"}
+
 
 @app.post("/generate-outreach")
 def generate_outreach(req: OutreachRequest):
