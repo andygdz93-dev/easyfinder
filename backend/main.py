@@ -5,7 +5,11 @@ from datetime import datetime
 from backend.routes.inventory import router as inventory_router
 import random
 
-app = FastAPI(title="EasyFinder AI Backend")
+app = FastAPI(
+    title="EasyFinder AI",
+    description="Enterprise AI buyer identification & outreach platform",
+    version="1.0.0"
+    )
 
 app.include_router(inventory_router)
 
@@ -54,6 +58,13 @@ def score_lead(intent: str):
 # -------------------------
 # ENDPOINTS
 # -------------------------
+
+@app.get("/")
+def root():
+    return {
+        "status": 
+        "EasyFinder AI backend running"
+    }
 
 @app.post("/score-lead")
 def score_lead_endpoint(data: ScoreRequest):
