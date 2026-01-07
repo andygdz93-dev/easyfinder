@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from db import SessionLocal
-from auth.jwt import decode_token
+from auth.jwt import decode_token, get_current_user
 from auth.models import User
 
 def get_db():
