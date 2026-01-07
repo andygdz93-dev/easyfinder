@@ -1,18 +1,17 @@
 from fastapi import APIRouter, Depends
 from backend.deps import require_nda
 
-router = APIRouter(prefix="/inventory", tags=["Inventory"])
+router = APIRouter()
 
 INVENTORY = [
     {
-        "id": "CAT-950GC",
-        "type": "Wheel Loader",
-        "price": 145000,
-        "condition": "Used",
-        "location": "TX",
+        "id": "EX-2024-001",
+        "type": "Excavator",
+        "brand": "Caterpillar",
+        "price": 185000
     }
 ]
 
-@router.get("/", dependencies=[Depends(require_nda)])
-def get_inventory():
+@router.get("/inventory")
+def get_inventory(user=Depends(require_nda)):
     return INVENTORY
