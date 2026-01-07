@@ -1,11 +1,17 @@
-from fastapi import Depends, HTTPException, status
-from backend.auth.models import User
+from fastapi import Request, HTTPException, status
 
+def require_nda(request: Request):
+    """
+    Blocks access unless NDA is signed.
+    Later this will read from JWT / DB.
+    """
 
-def require_nda(user: User = Depends()):
-    if not user.nda_signed:
+    nda_signed = request.headers.get("X-NDA-SIGNED")
+
+    if nda_signed != "true":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="NDA required before accessing this resource"
         )
-    return user
+
+    return True
