@@ -1,8 +1,8 @@
 from fastapi import Depends, HTTPException, Header
 from sqlalchemy.orm import Session
-from db import SessionLocal
-from auth.jwt import decode_token
-from auth.models import User
+from .db import SessionLocal
+from .auth.jwt import decode_token
+from .auth.models import User
 
 def get_db():
     db = SessionLocal()

@@ -1,4 +1,4 @@
-from scoring import calculate_score
+from ..scoring import calculate_score
 
 
 def test_high_priority_high_urgency():
