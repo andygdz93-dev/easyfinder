@@ -1,38 +1,51 @@
 from fastapi import Depends, HTTPException, Header
-from sqlalchemy.orm import Session
-from db import SessionLocal
+from motor.motor_asyncio import AsyncIOMotorDatabase
+
 from auth.jwt import decode_token
-from auth.models import User
+from db.mongo import get_database
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
-def get_current_user(
+# -------------------------------------------------
+# AUTH DEPENDENCY
+# -------------------------------------------------
+
+async def get_current_user(
     authorization: str = Header(...),
-    db: Session = Depends(get_db)
+    db: AsyncIOMotorDatabase = Depends(get_database)
 ):
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Invalid auth header")
+    """
+    Extracts and validates JWT, then loads user.
+    """
 
-    token = authorization.split(" ")[1]
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid authorization header")
+
+    token = authorization.replace("Bearer ", "")
 
     try:
         payload = decode_token(token)
-        user_id = payload.get("user_id")
     except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
 
-    user = db.query(User).filter(User.id == user_id).first()
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid token payload")
+
+    user = await db.users.find_one({"id": user_id})
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
 
     return user
 
-def require_nda(user: User = Depends(get_current_user)):
-    if not user.nda_signed:
-        raise HTTPException(status_code=403, detail="NDA required")
+
+# -------------------------------------------------
+# NDA GUARD
+# -------------------------------------------------
+
+async def require_nda(user: dict = Depends(get_current_user)):
+    if not user.get("nda_signed", False):
+        raise HTTPException(
+            status_code=403,
+            detail="NDA must be signed before accessing this resource"
+        )
     return user
