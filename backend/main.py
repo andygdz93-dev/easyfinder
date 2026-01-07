@@ -5,6 +5,7 @@ from datetime import datetime
 from backend.routes.inventory import router as inventory_router
 from backend.routes.nda import router as nda_router
 from backend.routes.demo import router as demo_router
+from backend.routes.auth import router as auth_router
 import random
 
 app = FastAPI(
@@ -16,6 +17,7 @@ app = FastAPI(
 app.include_router(nda_router, prefix="/nda")
 app.include_router(inventory_router, prefix="/inventory",tags=["Inventory"])
 app.include_router(demo_router, prefix="/demo")
+app.include_router(auth_router)
 
 app.add_middleware(
     CORSMiddleware,
