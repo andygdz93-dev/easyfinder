@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* optional custom styles */
+/* Custom styles if needed */
 body {
-  font-family: 'Inter', sans-serif;
+  @apply bg-gray-100 font-sans;
 }
