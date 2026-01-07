@@ -1,17 +1,38 @@
-from fastapi import Request, HTTPException, status
+from fastapi import Depends, HTTPException, Header
+from sqlalchemy.orm import Session
+from backend.db import SessionLocal
+from backend.auth.jwt import decode_token
+from backend.auth.models import User
 
-def require_nda(request: Request):
-    """
-    Blocks access unless NDA is signed.
-    Later this will read from JWT / DB.
-    """
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-    nda_signed = request.headers.get("X-NDA-SIGNED")
+def get_current_user(
+    authorization: str = Header(...),
+    db: Session = Depends(get_db)
+):
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid auth header")
 
-    if nda_signed != "true":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="NDA required before accessing this resource"
-        )
+    token = authorization.split(" ")[1]
 
-    return True
+    try:
+        payload = decode_token(token)
+        user_id = payload.get("user_id")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    return user
+
+def require_nda(user: User = Depends(get_current_user)):
+    if not user.nda_signed:
+        raise HTTPException(status_code=403, detail="NDA required")
+    return user
