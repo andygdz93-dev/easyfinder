@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from .jwt import create_access_token
-from ..core.config import ACCESS_TOKEN_EXPIRE_MINUTES
+from auth.jwt import create_access_token
+from core.config import ACCESS_TOKEN_EXPIRE_MINUTES
 
 router = APIRouter(prefix="/auth")
 
