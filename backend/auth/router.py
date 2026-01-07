@@ -1,48 +1,36 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
+import uuid
 
-from auth.jwt import create_token
+from db import db
+from auth.jwt import create_access_token
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix="/auth", tags=["Auth"])
 
-
-# -------------------------------------------------
-# MODELS
-# -------------------------------------------------
 
 class LoginRequest(BaseModel):
     email: EmailStr
 
 
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+@router.post("/login")
+async def login(request: LoginRequest):
+    user = await db.users.find_one({"email": request.email})
 
+    if not user:
+        # Auto-create user (optional but recommended)
+        user = {
+            "id": str(uuid.uuid4()),
+            "email": request.email,
+            "tier": "demo",
+            "nda_signed": False,
+        }
+        await db.users.insert_one(user)
 
-# -------------------------------------------------
-# ROUTES
-# -------------------------------------------------
+    token = create_access_token({
+        "user_id": user["id"],
+        "email": user["email"],
+        "tier": user["tier"],
+        "nda_signed": user["nda_signed"]
+    })
 
-@router.post("/login", response_model=TokenResponse)
-def login(request: LoginRequest):
-    """
-    TEMP login endpoint.
-    Replace with real DB lookup later.
-    """
-
-    # 🔴 Replace this with DB lookup
-    if not request.email:
-        raise HTTPException(status_code=400, detail="Invalid email")
-
-    user_claims = {
-        "sub": "user_123",
-        "email": request.email,
-        "role": "user"
-    }
-
-    token = create_token(user_claims)
-
-    return {
-        "access_token": token,
-        "token_type": "bearer"
-    }
+    return {"access_token": token}

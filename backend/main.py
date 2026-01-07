@@ -1,17 +1,20 @@
 from fastapi import FastAPI, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
-from .routes.inventory import router as inventory_router
-from .routes.nda import router as nda_router
-from .routes.demo import router as demo_router
-from .routes.auth import router as auth_router
+from routes.inventory import router as inventory_router
+from routes.nda import router as nda_router
+from routes.demo import router as demo_router
+from routes.auth import router as auth_router
+from auth.router import router as auth_router
 import random
+
 
 app = FastAPI(
     title="EasyFinder AI",
     description="Enterprise AI buyer identification & outreach platform",
     version="1.0.0",
 )
+
 
 app.include_router(nda_router, prefix="/nda")
 app.include_router(inventory_router, prefix="/inventory",tags=["Inventory"])

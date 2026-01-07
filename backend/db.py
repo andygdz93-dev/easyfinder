@@ -1,12 +1,8 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+import os
+from motor.motor_asyncio import AsyncIOMotorClient
 
-DATABASE_URL = "sqlite:///./easyfinder.db"
+MONGO_URL = os.getenv("MONGO_URL")
+DB_NAME = os.getenv("DB_NAME", "easyfinder")
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False}
-)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+client = AsyncIOMotorClient(MONGO_URL)
+db = client[DB_NAME]

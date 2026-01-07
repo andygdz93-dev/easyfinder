@@ -1,26 +1,17 @@
 from fastapi import APIRouter, Depends
-
 from deps import get_current_user
 
 router = APIRouter(prefix="/inventory", tags=["Inventory"])
 
-
 INVENTORY = [
-    {"id": "EX-001", "type": "Excavator", "brand": "CAT", "price": 185000, "tier": "nda"},
-    {"id": "BD-002", "type": "Bulldozer", "brand": "Komatsu", "price": 220000, "tier": "paid"},
-    {"id": "SK-003", "type": "Skid Steer", "brand": "Bobcat", "price": 65000, "tier": "demo"},
+    {"id": "EX-001", "type": "Excavator", "tier": "nda"},
+    {"id": "BD-002", "type": "Bulldozer", "tier": "paid"},
+    {"id": "SK-003", "type": "Skid Steer", "tier": "demo"},
 ]
 
 
 @router.get("/")
 async def get_inventory(user: dict = Depends(get_current_user)):
-    """
-    Tier-based inventory access:
-    - demo → demo only
-    - nda → demo + nda
-    - paid → full access
-    """
-
     tier = user.get("tier", "demo")
 
     if tier == "demo":
