@@ -1,15 +1,37 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, func
+from pydantic import BaseModel, Field
+from typing import Optional
 from datetime import datetime
-from db import Base
+from bson import ObjectId
 
-class User(Base):
-    __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True, nullable=False)
-    company = Column(String, nullable=False)
+# Needed to serialize Mongo ObjectId
+class PyObjectId(ObjectId):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
 
-    nda_signed = Column(Boolean, default=False)
-    tier = Column(String, default="demo")  # demo | nda | paid
+    @classmethod
+    def validate(cls, v):
+        if not ObjectId.is_valid(v):
+            raise ValueError("Invalid ObjectId")
+        return ObjectId(v)
 
-    created_at = Column(DateTime, default=func.now())
+    @classmethod
+    def __modify_schema__(cls, field_schema):
+        field_schema.update(type="string")
+
+
+class User(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id")
+    email: str
+    company: Optional[str] = None
+
+    nda_signed: bool = False
+    tier: str = "demo"  # demo | nda | paid
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
