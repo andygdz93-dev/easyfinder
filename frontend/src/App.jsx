@@ -1,99 +1,44 @@
-import { useState } from "react";
-import Sidebar from "./components/Sidebar";
+import React, { useState } from "react";
 import Header from "./components/Header";
-import Scores from "./pages/Scores";
+import NDAModal from "./components/NDAModal";
+import Hero from "./components/Hero";
+import ScoreLead from "./pages/ScoreLead";
+import ScoresList from "./pages/ScoresList";
+import GeneratedOutreach from "./pages/GeneratedOutreach";
 
 export default function App() {
-  const [budget, setBudget] = useState("");
-  const [priority, setPriority] = useState("Low");
-  const [urgency, setUrgency] = useState("");
-  const [scoreResult, setScoreResult] = useState(null);
+  const [ndaAccepted, setNdaAccepted] = useState(false);
+  const [variant, setVariant] = useState("EasyFinder AI (Core)");
+  const [page, setPage] = useState("hero"); // hero | score | scores | outreach
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const payload = { budget: parseInt(budget), priority, urgency: parseInt(urgency) };
+  const renderPage = () => {
+    if (!ndaAccepted) return null;
 
-    try {
-      const res = await fetch("/api/score", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      setScoreResult(data.score);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to calculate score.");
+    switch (page) {
+      case "score":
+        return <ScoreLead variant={variant} />;
+      case "scores":
+        return <ScoresList />;
+      case "outreach":
+        return <GeneratedOutreach />;
+      default:
+        return <Hero variant={variant} />;
     }
   };
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="flex-1 flex flex-col bg-gray-100">
-        <Header />
-
-        <main className="p-6 flex flex-col gap-6">
-          {/* Score Form */}
-          <div className="bg-white shadow rounded-lg p-6 max-w-2xl">
-            <h1 className="text-2xl font-bold mb-4">Calculate a New Score</h1>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block font-medium mb-1">Budget</label>
-                <input
-                  type="number"
-                  value={budget}
-                  onChange={(e) => setBudget(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block font-medium mb-1">Priority</label>
-                <select
-                  value={priority}
-                  onChange={(e) => setPriority(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2"
-                >
-                  <option>Low</option>
-                  <option>Medium</option>
-                  <option>High</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-medium mb-1">Urgency</label>
-                <input
-                  type="number"
-                  value={urgency}
-                  onChange={(e) => setUrgency(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2"
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-blue-600 text-white rounded px-4 py-2 hover:bg-blue-700"
-              >
-                Calculate Score
-              </button>
-            </form>
-
-            {scoreResult !== null && (
-              <div className="mt-4 p-4 bg-green-100 border border-green-300 rounded">
-                <strong>Score:</strong> {scoreResult}
-              </div>
-            )}
-          </div>
-
-          {/* Scores List */}
-          <div id="scores">
-            <Scores />
-          </div>
-        </main>
-      </div>
+    <div className="min-h-screen">
+      <Header variant={variant} setVariant={setVariant} />
+      <NDAModal show={!ndaAccepted} onAccept={() => setNdaAccepted(true)} />
+      <div className="container mx-auto">{renderPage()}</div>
+      {ndaAccepted && (
+        <nav className="fixed bottom-0 left-0 w-full bg-gray-200 p-4 flex justify-center gap-4">
+          <button onClick={() => setPage("score")} className="px-3 py-1 rounded bg-blue-900 text-white hover:bg-blue-800">Score Lead</button>
+          <button onClick={() => setPage("scores")} className="px-3 py-1 rounded bg-blue-900 text-white hover:bg-blue-800">Past Scores</button>
+          <button onClick={() => setPage("outreach")} className="px-3 py-1 rounded bg-blue-900 text-white hover:bg-blue-800">Generated Outreach</button>
+          <button onClick={() => setPage("hero")} className="px-3 py-1 rounded bg-gray-400 text-white hover:bg-gray-500">Home</button>
+        </nav>
+      )}
     </div>
   );
 }
