@@ -1,29 +1,21 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-from db import SessionLocal
-from auth.models import User
-from auth.jwt import create_token
-from auth.dependancies import get_current_user
+from fastapi import APIRouter
+from pydantic import BaseModel
+from auth.jwt import create_access_token
+from core.config import ACCESS_TOKEN_EXPIRE_MINUTES
 
-router = APIRouter(prefix="/auth", tags=["Auth"])
+router = APIRouter(prefix="/auth")
+
+class LoginRequest(BaseModel):
+    email: str
 
 @router.post("/login")
-def login(email: str, company: str):
-    db = SessionLocal()
+def login(request: LoginRequest):
+    # TEMP: replace with MongoDB lookup
+    user = {
+        "sub": "user_123",
+        "email": request.email,
+        "tier": "demo"
+    }
 
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
-        user = User(email=email, company=company)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-
-    token = create_token({"user_id": user.id})
+    token = create_access_token(user, ACCESS_TOKEN_EXPIRE_MINUTES)
     return {"access_token": token}
-
-@router.post("/sign-nda")
-def sign_nda(user: User = Depends(get_current_user), db: Session = Depends(SessionLocal)):
-    user.nda_signed = True
-    user.tier = "nda"
-    db.commit()
-    return {"status": "NDA signed"}
