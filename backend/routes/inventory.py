@@ -13,5 +13,5 @@ INVENTORY = [
 ]
 
 @router.get("/")
-def get_inventory(user=Depends(require_nda)):
+def get_inventory(nda_ok=Depends(require_nda)):
     return INVENTORY
