@@ -1,22 +1,25 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from deps import require_nda
 
-router = APIRouter(prefix="/inventory", tags=["Inventory"])
+router = APIRouter()
 
 INVENTORY = [
     {
-        "id": "CAT-320",
-        "name": "CAT 320 Excavator",
-        "price": 95000,
-        "score": 92
+        "id": "excavator-001",
+        "type": "Excavator",
+        "brand": "CAT",
+        "hours": 3120,
+        "status": "Available"
     },
     {
-        "id": "JD-850K",
-        "name": "John Deere 850K Dozer",
-        "price": 120000,
-        "score": 88
+        "id": "loader-002",
+        "type": "Wheel Loader",
+        "brand": "Komatsu",
+        "hours": 4210,
+        "status": "Leased"
     }
 ]
 
 @router.get("/")
-def get_inventory():
+def get_inventory(_=Depends(require_nda)):
     return INVENTORY
