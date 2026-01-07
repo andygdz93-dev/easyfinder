@@ -10,7 +10,7 @@ INVENTORY = [
     {"id": "SK-003", "type": "Skid Steer", "brand": "Bobcat", "price": 65000, "tier": "demo"},
 ]
 
-@router.get("/")
+@router.get("/INVENTORY")
 def get_inventory(user: User = Depends(get_current_user)):
     if user.tier == "demo":
         return [i for i in INVENTORY if i["tier"] == "demo"]
