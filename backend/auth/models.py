@@ -1,6 +1,6 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, func
 from datetime import datetime
-from db import Base
+from ..db import Base
 
 class User(Base):
     __tablename__ = "users"
@@ -12,4 +12,4 @@ class User(Base):
     nda_signed = Column(Boolean, default=False)
     tier = Column(String, default="demo")  # demo | nda | paid
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=func.now())

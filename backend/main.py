@@ -1,7 +1,6 @@
 from fastapi import FastAPI, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
-from datetime import datetime
 from .routes.inventory import router as inventory_router
 from .routes.nda import router as nda_router
 from .routes.demo import router as demo_router
@@ -11,8 +10,8 @@ import random
 app = FastAPI(
     title="EasyFinder AI",
     description="Enterprise AI buyer identification & outreach platform",
-    version="1.0.0"
-    )
+    version="1.0.0",
+)
 
 app.include_router(nda_router, prefix="/nda")
 app.include_router(inventory_router, prefix="/inventory",tags=["Inventory"])
@@ -52,6 +51,7 @@ class OutreachRequest(BaseModel):
 def compute_lead_score(intent: str):
     base = {"Low": 40, "Medium": 65, "High": 85}.get(intent, 50)
     score = base + random.randint(0, 10)
+    score = max(0, min(100, score))  # clamp to [0,100]
 
     tier = "Low"
     if score >= 80:
@@ -61,6 +61,10 @@ def compute_lead_score(intent: str):
 
     return score, tier
 
+def _email_domain_allowed(email: str) -> bool:
+    domain = email.split("@")[-1].lower()
+    return any(domain == d or domain.endswith("." + d) for d in ALLOWED_DOMAINS)
+
 # -------------------------
 # ENDPOINTS
 # -------------------------
@@ -68,21 +72,25 @@ def compute_lead_score(intent: str):
 @app.get("/")
 def root():
     return {
-        "status": 
-        "EasyFinder AI backend running"
+        "status": "EasyFinder AI backend running"
     }
 
 @app.post("/score-lead")
 def score_lead_endpoint(data: ScoreRequest):
+    # enforce allowed domains unless demo mode is on
+    if not DEMO_MODE and not _email_domain_allowed(data.email):
+        raise HTTPException(status_code=403, detail="Email domain not allowed")
+
     score, tier = compute_lead_score(data.intent)
 
+    domain_note = "Commercial email domain detected" if _email_domain_allowed(data.email) else "Unrecognized email domain"
 
     return {
         "score": score,
         "tier": tier,
         "explanation": [
             "Equipment category matches active inventory",
-            "Commercial email domain detected",
+            domain_note,
             f"Declared intent level: {data.intent}",
         ],
     }

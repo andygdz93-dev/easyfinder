@@ -1,15 +1,19 @@
 from fastapi import APIRouter
-from auth.jwt import create_access_token
-from core.config import ACCESS_TOKEN_EXPIRE_MINUTES
+from pydantic import BaseModel
+from .jwt import create_access_token
+from ..core.config import ACCESS_TOKEN_EXPIRE_MINUTES
 
 router = APIRouter(prefix="/auth")
 
+class LoginRequest(BaseModel):
+    email: str
+
 @router.post("/login")
-def login(email: str):
+def login(request: LoginRequest):
     # TEMP: replace with DB lookup
     user = {
         "sub": "user_123",
-        "email": email,
+        "email": request.email,
         "role": "user"
     }
 
