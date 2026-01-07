@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
-from routes.inventory import router as inventory_router
+from backend.routes.inventory import router as inventory_router
 import random
 
 app = FastAPI(title="EasyFinder AI Backend")
