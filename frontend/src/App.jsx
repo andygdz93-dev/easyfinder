@@ -56,4 +56,51 @@ export default function App() {
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value)}
-              className="w-full border
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-1">
+              Urgency (1-10)
+            </label>
+            <input
+              type="number"
+              value={urgency}
+              onChange={(e) => setUrgency(e.target.value)}
+              min={1}
+              max={10}
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 transition-colors"
+          >
+            {loading ? "Calculating..." : "Get Score"}
+          </button>
+        </form>
+
+        {score !== null && (
+          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded flex items-center space-x-3">
+            <FaChartLine className="text-green-600 text-2xl" />
+            <span className="text-green-800 font-semibold text-lg">
+              Lead Score: {score}
+            </span>
+          </div>
+        )}
+      </main>
+
+      <footer className="mt-10 text-gray-500 text-sm">
+        © 2026 EasyFinder | Demo
+      </footer>
+    </div>
+  );
+}
