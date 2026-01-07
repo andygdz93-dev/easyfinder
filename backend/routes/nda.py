@@ -1,35 +1,24 @@
-from fastapi import APIRouter, UploadFile, HTTPException
-from datetime import datetime
-import os
+from fastapi import APIRouter, UploadFile, File, HTTPException
 import uuid
 
 router = APIRouter()
 
-NDA_DIR = "backend/storage/ndas"
-os.makedirs(NDA_DIR, exist_ok=True)
+SIGNED_NDAS = set()
 
-@router.post("/nda/upload")
-def upload_nda(file: UploadFile):
+@router.post("/upload")
+async def upload_nda(file: UploadFile = File(...)):
     if not file.filename.endswith(".pdf"):
-        raise HTTPException(400, "Only PDF NDAs allowed")
+        raise HTTPException(status_code=400, detail="PDF only")
 
     nda_id = str(uuid.uuid4())
-    path = f"{NDA_DIR}/{nda_id}.pdf"
-
-    with open(path, "wb") as f:
-        f.write(file.file.read())
+    SIGNED_NDAS.add(nda_id)
 
     return {
-        "nda_id": nda_id,
         "status": "uploaded",
-        "next": "signature_required"
+        "nda_id": nda_id,
+        "next": "DocuSign triggered"
     }
 
-@router.post("/nda/signed")
-def nda_signed(email: str):
-    # This is what DocuSign / HelloSign would call
-    return {
-        "email": email,
-        "signed": True,
-        "signed_at": datetime.utcnow()
-    }
+@router.get("/status/{nda_id}")
+def nda_status(nda_id: str):
+    return {"signed": nda_id in SIGNED_NDAS}
