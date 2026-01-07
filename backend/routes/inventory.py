@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from deps import get_current_user
+from auth.dependancies import get_current_user
 
 router = APIRouter(prefix="/inventory", tags=["Inventory"])
 

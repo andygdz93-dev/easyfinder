@@ -1,144 +1,175 @@
-""""Email Outreach Module for EasyFinder (Mock Mode)""" import logging from typing import Dict, Any, Optional from datetime import datetime, timezone from .config import MOCK_EMAIL_MODE, FROM_EMAIL, SENDGRID_API_KEY 
+"""
+Email Outreach Module for EasyFinder (Mock Mode)
+"""
 
-logger = logging.getLogger(name) 
+import logging
+from typing import Dict, Any, List
+from datetime import datetime, timezone
 
-def get_email_template(lead: Dict[str, Any]) -> Dict[str, str]: """Generate email content for a lead""" subject = f"Partnership Opportunity - {lead.get('company', 'Your Company')}" 
+from .config import MOCK_EMAIL_MODE, FROM_EMAIL, SENDGRID_API_KEY
 
-body = f""" 
- 
+logger = logging.getLogger(__name__)
 
-Dear {lead.get('name', 'Valued Partner')}, 
 
-I hope this email finds you well. We've identified {lead.get('company', 'your company')} as a potential partner for our enterprise solutions. 
+# -------------------------------------------------
+# EMAIL TEMPLATE
+# -------------------------------------------------
 
-Based on your company profile: 
+def get_email_template(lead: Dict[str, Any]) -> Dict[str, str]:
+    """Generate email content for a lead"""
 
-Industry: {lead.get('industry', 'N/A')} 
+    subject = f"Partnership Opportunity - {lead.get('company', 'Your Company')}"
 
-Company Size: {lead.get('company_size', 'N/A')} 
+    body = f"""
+Dear {lead.get('name', 'Valued Partner')},
 
-We believe there's a strong fit for collaboration. Our team would love to schedule a brief call to discuss how we can help {lead.get('company', 'your company')} achieve its goals. 
+I hope this email finds you well. We've identified {lead.get('company', 'your company')}
+as a potential partner for our enterprise solutions.
 
-Key benefits we offer: • Streamlined lead management and scoring • Automated outreach campaigns • Enterprise-grade security and compliance • Detailed analytics and reporting 
+Based on your company profile:
 
-Would you be available for a 15-minute call this week? 
+Industry: {lead.get('industry', 'N/A')}
+Company Size: {lead.get('company_size', 'N/A')}
 
-Best regards, EasyFinder AI Team demo@easyfinder.ai 
+We believe there's a strong fit for collaboration. Our team would love to schedule
+a brief call to discuss how we can help {lead.get('company', 'your company')} achieve its goals.
 
- 
+Key benefits we offer:
+• Streamlined lead management and scoring
+• Automated outreach campaigns
+• Enterprise-grade security and compliance
+• Detailed analytics and reporting
 
-This is an automated message from EasyFinder AI. If you wish to unsubscribe, please reply with "UNSUBSCRIBE". """ 
+Would you be available for a 15-minute call this week?
 
-html_body = f""" 
- 
+Best regards,
+EasyFinder AI Team
+demo@easyfinder.ai
 
-EasyFinder AI 
+This is an automated message from EasyFinder AI.
+If you wish to unsubscribe, please reply with "UNSUBSCRIBE".
+"""
 
-Dear {lead.get('name', 'Valued Partner')}, 
+    html_body = f"""
+<html>
+  <body>
+    <h2>EasyFinder AI</h2>
 
-I hope this email finds you well. We've identified {lead.get('company', 'your company')} as a potential partner for our enterprise solutions. 
+    <p>Dear {lead.get('name', 'Valued Partner')},</p>
 
-      <div class=\"highlight\"> 
-           <strong>Your Company Profile:</strong><br> 
-           Industry: {lead.get('industry', 'N/A')}<br> 
-           Company Size: {lead.get('company_size', 'N/A')} 
-       </div> 
-        
-       <p>We believe there's a strong fit for collaboration. Our team would love to schedule a brief call to discuss how we can help your company achieve its goals.</p> 
-        
-       <p><strong>Key benefits we offer:</strong></p> 
-       <ul> 
-           <li>Streamlined lead management and scoring</li> 
-           <li>Automated outreach campaigns</li> 
-           <li>Enterprise-grade security and compliance</li> 
-           <li>Detailed analytics and reporting</li> 
-       </ul> 
-        
-       <p>Would you be available for a 15-minute call this week?</p> 
-        
-       <p>Best regards,<br><strong>EasyFinder AI Team</strong></p> 
-   </div> 
-   <div class=\"footer\"> 
-       This is an automated message from EasyFinder AI.<br> 
-       If you wish to unsubscribe, please reply with \"UNSUBSCRIBE\". 
-   </div> 
-</div> 
-""" return { 
-   'subject': subject, 
-   'body': body, 
-   'html_body': html_body 
-} 
- 
+    <p>
+      We've identified <strong>{lead.get('company', 'your company')}</strong>
+      as a potential partner for our enterprise solutions.
+    </p>
 
-def send_email(to_email: str, lead: Dict[str, Any]) -> Dict[str, Any]: """ Send email to lead (MOCK MODE - no actual emails sent) 
+    <div style="padding:10px;border:1px solid #ddd;margin:15px 0;">
+      <strong>Your Company Profile</strong><br>
+      Industry: {lead.get('industry', 'N/A')}<br>
+      Company Size: {lead.get('company_size', 'N/A')}
+    </div>
 
-Args: 
-   to_email: Recipient email address 
-   lead: Lead data dictionary 
-    
-Returns: 
-   Result dictionary with status and details 
-""" 
-template = get_email_template(lead) 
- 
-# Always use mock mode for safety 
-if MOCK_EMAIL_MODE or SENDGRID_API_KEY == 'mock_key': 
-   logger.info(f\"[MOCK] Email would be sent to: {to_email}\") 
-   logger.info(f\"[MOCK] Subject: {template['subject']}\") 
-    
-   return { 
-       'success': True, 
-       'mode': 'mock', 
-       'to': to_email, 
-       'from': FROM_EMAIL, 
-       'subject': template['subject'], 
-       'timestamp': datetime.now(timezone.utc).isoformat(), 
-       'message': 'Email simulated (mock mode enabled)' 
-   } 
- 
-# Production mode with SendGrid (disabled for safety) 
-# This code path is intentionally not active 
-return { 
-   'success': False, 
-   'mode': 'production', 
-   'error': 'Production email sending is disabled. Enable by setting MOCK_EMAIL_MODE=False' 
-} 
- 
+    <p>Key benefits we offer:</p>
+    <ul>
+      <li>Streamlined lead management and scoring</li>
+      <li>Automated outreach campaigns</li>
+      <li>Enterprise-grade security and compliance</li>
+      <li>Detailed analytics and reporting</li>
+    </ul>
 
-def batch_send_emails(leads: list, score_threshold: int = 70) -> Dict[str, Any]: """ Send emails to qualified leads 
+    <p>Would you be available for a 15-minute call this week?</p>
 
-Args: 
-   leads: List of scored leads 
-   score_threshold: Minimum score for outreach 
-    
-Returns: 
-   Summary of email sending results 
-""" 
-results = { 
-   'total_leads': len(leads), 
-   'qualified': 0, 
-   'sent': 0, 
-   'failed': 0, 
-   'details': [] 
-} 
- 
-for lead in leads: 
-   score = lead.get('score', 0) 
-   if score >= score_threshold: 
-       results['qualified'] += 1 
-        
-       email_result = send_email(lead.get('email'), lead) 
-        
-       if email_result.get('success'): 
-           results['sent'] += 1 
-       else: 
-           results['failed'] += 1 
-        
-       results['details'].append({ 
-           'lead_name': lead.get('name'), 
-           'email': lead.get('email'), 
-           'score': score, 
-           'result': email_result 
-       }) 
- 
-return results 
+    <p>
+      Best regards,<br>
+      <strong>EasyFinder AI Team</strong>
+    </p>
+
+    <hr>
+    <small>
+      This is an automated message from EasyFinder AI.<br>
+      Reply with "UNSUBSCRIBE" to opt out.
+    </small>
+  </body>
+</html>
+"""
+
+    return {
+        "subject": subject,
+        "body": body,
+        "html_body": html_body,
+    }
+
+
+# -------------------------------------------------
+# SEND EMAIL (MOCK MODE)
+# -------------------------------------------------
+
+def send_email(to_email: str, lead: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Send email to lead (MOCK MODE ONLY)
+
+    Returns a simulated response.
+    """
+
+    template = get_email_template(lead)
+
+    # Always mock for safety
+    if MOCK_EMAIL_MODE or SENDGRID_API_KEY == "mock_key":
+        logger.info(f"[MOCK EMAIL] To: {to_email}")
+        logger.info(f"[MOCK EMAIL] Subject: {template['subject']}")
+
+        return {
+            "success": True,
+            "mode": "mock",
+            "to": to_email,
+            "from": FROM_EMAIL,
+            "subject": template["subject"],
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "message": "Email simulated (mock mode enabled)",
+        }
+
+    # Production disabled intentionally
+    return {
+        "success": False,
+        "mode": "production",
+        "error": "Production email sending is disabled",
+    }
+
+
+# -------------------------------------------------
+# BATCH SEND
+# -------------------------------------------------
+
+def batch_send_emails(leads: List[Dict[str, Any]], score_threshold: int = 70) -> Dict[str, Any]:
+    """Send emails to qualified leads"""
+
+    results = {
+        "total_leads": len(leads),
+        "qualified": 0,
+        "sent": 0,
+        "failed": 0,
+        "details": [],
+    }
+
+    for lead in leads:
+        score = lead.get("score", 0)
+
+        if score < score_threshold:
+            continue
+
+        results["qualified"] += 1
+
+        email_result = send_email(lead.get("email"), lead)
+
+        if email_result.get("success"):
+            results["sent"] += 1
+        else:
+            results["failed"] += 1
+
+        results["details"].append({
+            "lead_name": lead.get("name"),
+            "email": lead.get("email"),
+            "score": score,
+            "result": email_result,
+        })
+
+    return results
