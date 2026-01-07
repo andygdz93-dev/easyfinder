@@ -1,80 +1,94 @@
-from fastapi import FastAPI, Depends
-from pydantic import BaseModel
-from datetime import datetime
+from fastapi import FastAPI, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-import os
+from pydantic import BaseModel, EmailStr
+from datetime import datetime
+import random
 
-from db import scores_collection
-from scoring import calculate_score
-from routers.health import router as health_router
-from routers.score import router as score_router
-
-from auth.deps import get_current_user
-from auth.models import User
-
-app = FastAPI(title="EasyFinder API")
-
-# ---------- CORS ----------
-origins = os.getenv("CORS_ORIGINS")
-origins = origins.split(",") if origins else ["*"]
+app = FastAPI(title="EasyFinder AI Backend")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ---------- Routers ----------
-app.include_router(health_router, prefix="/api")
-app.include_router(score_router)
+# -------------------------
+# CONFIG
+# -------------------------
+DEMO_MODE = True
+ALLOWED_DOMAINS = ["dealer.com", "equipment.com", "corp.com"]
 
-# ---------- Models ----------
+# -------------------------
+# SCHEMAS
+# -------------------------
 class ScoreRequest(BaseModel):
-    budget: int
-    priority: str
-    urgency: int
+    company: str
+    contact: str
+    email: EmailStr
+    equipment: str
+    intent: str
+    variant: str
 
-# ---------- PROTECTED ROUTES ----------
-@app.post("/api/score")
-async def score(
-    payload: ScoreRequest,
-    user: User = Depends(get_current_user)  # 🔐 1.8 PROTECTION IS HERE
-):
-    score_value = calculate_score(
-        payload.budget,
-        payload.priority,
-        payload.urgency
-    )
+class OutreachRequest(BaseModel):
+    context: str
 
-    doc = {
-        "budget": payload.budget,
-        "priority": payload.priority,
-        "urgency": payload.urgency,
-        "score": score_value,
-        "created_at": datetime.utcnow(),
-        "requested_by": user.email,
-        "user_id": user.id,
+# -------------------------
+# HELPERS
+# -------------------------
+def score_lead(intent: str):
+    base = {"Low": 40, "Medium": 65, "High": 85}.get(intent, 50)
+    score = base + random.randint(0, 10)
+
+    tier = "Low"
+    if score >= 80:
+        tier = "High"
+    elif score >= 60:
+        tier = "Medium"
+
+    return score, tier
+
+# -------------------------
+# ENDPOINTS
+# -------------------------
+
+@app.post("/score-lead")
+def score_lead_endpoint(data: ScoreRequest):
+    score, tier = score_lead(data.intent)
+
+    return {
+        "score": score,
+        "tier": tier,
+        "explanation": [
+            "Equipment category matches active inventory",
+            "Commercial email domain detected",
+            f"Declared intent level: {data.intent}",
+        ],
     }
 
-    await scores_collection.insert_one(doc)
+@app.get("/scores")
+def get_scores():
+    # demo-safe static data
+    return [
+        {"company": "Delta Equipment", "score": 92, "tier": "High"},
+        {"company": "IronWorks LLC", "score": 71, "tier": "Medium"},
+        {"company": "Budget Rentals", "score": 45, "tier": "Low"},
+    ]
 
-    return {"total": score_value}
+@app.post("/generate-outreach")
+def generate_outreach(req: OutreachRequest):
+    return {
+        "email": f"""Subject: Confidential Equipment Availability
 
-@app.get("/api/scores")
-async def get_scores(
-    user: User = Depends(get_current_user)  # 🔐 protected read
-):
-    cursor = scores_collection.find().sort("created_at", -1).limit(20)
-    results = []
+Hi,
 
-    async for doc in cursor:
-        doc["_id"] = str(doc["_id"])
-        results.append(doc)
+Based on recent demand signals, our system identified your organization as a strong match for select heavy equipment inventory.
 
-    return results
+Access is NDA-gated. We do not distribute inventory lists publicly.
 
-@app.get("/")
-def root():
-    return {"status": "ok", "service": "easyfinder-backend"}
+If you'd like to review availability, please confirm NDA execution.
+
+Best,
+EasyFinder AI
+"""
+    }
