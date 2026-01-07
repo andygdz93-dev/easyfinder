@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from backend.routes.inventory import router as inventory_router
+from routes.nda import router as nda_router
+from routes.demo import router as demo_router
 import random
 
 app = FastAPI(
@@ -11,7 +13,9 @@ app = FastAPI(
     version="1.0.0"
     )
 
-app.include_router(inventory_router)
+app.include_router(nda_router, prefix="/nda")
+app.include_router(inventory_router, prefix="/inventory")
+app.include_router(demo_router, prefix="/demo")
 
 app.add_middleware(
     CORSMiddleware,
