@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from backend.db import SessionLocal
-from backend.auth.models import User
-from backend.auth.jwt import create_token
-from backend.auth.jwt import get_current_user
+from db import SessionLocal
+from auth.models import User
+from auth.jwt import create_token
+from auth.jwt import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 

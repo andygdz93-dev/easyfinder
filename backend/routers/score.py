@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from backend.scoring import calculate_score
+from scoring import calculate_score
 
 router = APIRouter(prefix="/api", tags=["Score"])
 

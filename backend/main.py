@@ -2,10 +2,10 @@ from fastapi import FastAPI, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
-from backend.routes.inventory import router as inventory_router
-from backend.routes.nda import router as nda_router
-from backend.routes.demo import router as demo_router
-from backend.routes.auth import router as auth_router
+from routes.inventory import router as inventory_router
+from routes.nda import router as nda_router
+from routes.demo import router as demo_router
+from routes.auth import router as auth_router
 import random
 
 app = FastAPI(
