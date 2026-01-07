@@ -1,7 +1,3 @@
-from motor.motor_asyncio import AsyncIOMotorClient
-from backend.config import MONGO_URL, DB_NAME
+from sqlalchemy.orm import declarative_base
 
-client = AsyncIOMotorClient(MONGO_URL)
-db = client[DB_NAME]
-
-scores_collection = db.scores
+Base = declarative_base()
