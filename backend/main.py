@@ -47,7 +47,7 @@ class OutreachRequest(BaseModel):
 # -------------------------
 # HELPERS
 # -------------------------
-def score_lead(intent: str):
+def compute_lead_score(intent: str):
     base = {"Low": 40, "Medium": 65, "High": 85}.get(intent, 50)
     score = base + random.randint(0, 10)
 
@@ -72,7 +72,8 @@ def root():
 
 @app.post("/score-lead")
 def score_lead_endpoint(data: ScoreRequest):
-    score, tier = score_lead(data.intent)
+    score, tier = compute_lead_score(data.intent)
+
 
     return {
         "score": score,
