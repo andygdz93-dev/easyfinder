@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends
-from deps import get_current_user
-from models import User
 
-router = APIRouter()
+from deps import get_current_user
+
+router = APIRouter(prefix="/inventory", tags=["Inventory"])
+
 
 INVENTORY = [
     {"id": "EX-001", "type": "Excavator", "brand": "CAT", "price": 185000, "tier": "nda"},
@@ -10,12 +11,22 @@ INVENTORY = [
     {"id": "SK-003", "type": "Skid Steer", "brand": "Bobcat", "price": 65000, "tier": "demo"},
 ]
 
-@router.get("/INVENTORY")
-def get_inventory(user: User = Depends(get_current_user)):
-    if user.tier == "demo":
+
+@router.get("/")
+async def get_inventory(user: dict = Depends(get_current_user)):
+    """
+    Tier-based inventory access:
+    - demo → demo only
+    - nda → demo + nda
+    - paid → full access
+    """
+
+    tier = user.get("tier", "demo")
+
+    if tier == "demo":
         return [i for i in INVENTORY if i["tier"] == "demo"]
 
-    if user.tier == "nda":
-        return [i for i in INVENTORY if i["tier"] in ["demo", "nda"]]
+    if tier == "nda":
+        return [i for i in INVENTORY if i["tier"] in ("demo", "nda")]
 
     return INVENTORY
