@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from jose import jwt, JWTError
+from jose import jwt
 
 SECRET_KEY = "CHANGE_THIS_IN_PROD"
 ALGORITHM = "HS256"
