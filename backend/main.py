@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 from routes.inventory import router as inventory_router
@@ -6,8 +6,7 @@ from routes.nda import router as nda_router
 from routes.demo import router as demo_router
 from routes.auth import router as auth_router
 import random
-from fastapi import FastAPI, APIRouter
-
+from fastapi import APIRouter
 
 app = FastAPI(
     title="EasyFinder AI",
@@ -23,16 +22,14 @@ app.include_router(demo_router, prefix="/demo")
 app.include_router(auth_router)
 app.include_router(api_router)
 
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-print("All routes:")
-for route in app.routes:
-    print(route.path)
 
 # -------------------------
 # CONFIG
@@ -50,6 +47,8 @@ class ScoreRequest(BaseModel):
     equipment: str
     intent: str
     variant: str
+    name: str
+    score: int
 
 class OutreachRequest(BaseModel):
     context: str
@@ -77,9 +76,11 @@ def _email_domain_allowed(email: str) -> bool:
 # -------------------------
 # ENDPOINTS
 # -------------------------
-
+   
+# Root endpoint
+# ---------------------------
 @app.get("/")
-def root():
+def read_root():
     return {
         "status": "EasyFinder AI backend running"
     }
@@ -117,6 +118,9 @@ def get_scores():
 def health_check():
     return {"status": "ok"}
 
+@api_router.post("/score")
+def submit_score(request: ScoreRequest):
+    return {"message": f"Score received for {request.name}", "score": request.score}
 
 @app.post("/generate-outreach")
 def generate_outreach(req: OutreachRequest):
@@ -135,3 +139,8 @@ Best,
 EasyFinder AI
 """
     }
+
+if __name__ == "__main__":
+    print("Registered routes:")
+    for route in app.routes:
+        print(route.path)
