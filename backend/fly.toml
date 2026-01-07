@@ -2,7 +2,7 @@ app = "easyfinder-backend"
 
 [build]
   # Let Fly.io use the Dockerfile
-  image = "Dockerfile"
+  dockerfile = "Dockerfile"
 
 [env]
   PORT = "8080"
@@ -14,7 +14,3 @@ app = "easyfinder-backend"
   [[services.ports]]
     port = 80
     handlers = ["http"]
-
-  [[services.ports]]
-    port = 443
-    handlers = ["tls", "http"]
