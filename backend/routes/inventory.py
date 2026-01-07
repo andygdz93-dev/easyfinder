@@ -1,26 +1,22 @@
 from fastapi import APIRouter
 
-router = APIRouter()
+router = APIRouter(prefix="/inventory", tags=["Inventory"])
 
 INVENTORY = [
     {
         "id": "CAT-320",
-        "type": "Excavator",
-        "year": 2021,
-        "hours": 3100,
-        "price": 185000,
-        "location": "Texas"
+        "name": "CAT 320 Excavator",
+        "price": 95000,
+        "score": 92
     },
     {
-        "id": "JD-650K",
-        "type": "Dozer",
-        "year": 2020,
-        "hours": 2800,
-        "price": 210000,
-        "location": "Arizona"
+        "id": "JD-850K",
+        "name": "John Deere 850K Dozer",
+        "price": 120000,
+        "score": 88
     }
 ]
 
-@router.get("/inventory")
-def inventory():
+@router.get("/")
+def get_inventory():
     return INVENTORY
