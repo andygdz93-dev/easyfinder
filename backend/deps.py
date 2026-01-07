@@ -1,10 +1,12 @@
 from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import HTTPBearer
 from jose import JWTError
-from auth.jwt import decode_token
-from auth.models import User
+from backend.auth.jwt import decode_token
+from backend.auth.models import User
 
 security = HTTPBearer()
+
+
 
 def get_current_user(credentials=Depends(security)) -> User:
     try:
