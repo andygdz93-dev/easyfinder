@@ -5,7 +5,6 @@ from routes.inventory import router as inventory_router
 from routes.nda import router as nda_router
 from routes.demo import router as demo_router
 from routes.auth import router as auth_router
-from auth.router import router as auth_router
 import random
 
 
