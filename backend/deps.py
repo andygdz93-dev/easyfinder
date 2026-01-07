@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import HTTPBearer
 from jose import JWTError
 from auth.jwt import decode_token
@@ -27,3 +27,9 @@ def require_role(role: str):
         return user
     return checker
 
+def require_nda(x_nda_signed: str | None = Header(default=None)):
+    if x_nda_signed != "true":
+        raise HTTPException(
+            status_code=403,
+            detail="NDA required before accessing this resource"
+        )
