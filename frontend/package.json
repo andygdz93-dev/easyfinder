@@ -1,6 +1,9 @@
 {
   "name": "easyfinder-frontend",
   "private": true,
+"engines": {
+    "node": ">=20.19"
+  },
   "version": "1.0.0",
   "type": "module",
   "scripts": {
