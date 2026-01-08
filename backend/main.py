@@ -1,13 +1,17 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
+import random
+
+# Import your routers
 from routes.inventory import router as inventory_router
 from routes.nda import router as nda_router
 from routes.demo import router as demo_router
 from routes.auth import router as auth_router
-import random
-from fastapi import APIRouter
 
+# -------------------------
+# APP INIT
+# -------------------------
 app = FastAPI(
     title="EasyFinder AI",
     description="Enterprise AI buyer identification & outreach platform",
@@ -16,14 +20,9 @@ app = FastAPI(
 
 api_router = APIRouter(prefix="/api")
 
-app.include_router(nda_router, prefix="/nda")
-app.include_router(inventory_router, prefix="/inventory",tags=["Inventory"])
-app.include_router(demo_router, prefix="/demo")
-app.include_router(auth_router)
-app.include_router(api_router)
-
-
-
+# -------------------------
+# MIDDLEWARE
+# -------------------------
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -59,14 +58,12 @@ class OutreachRequest(BaseModel):
 def compute_lead_score(intent: str):
     base = {"Low": 40, "Medium": 65, "High": 85}.get(intent, 50)
     score = base + random.randint(0, 10)
-    score = max(0, min(100, score))  # clamp to [0,100]
-
+    score = max(0, min(100, score))
     tier = "Low"
     if score >= 80:
         tier = "High"
     elif score >= 60:
         tier = "Medium"
-
     return score, tier
 
 def _email_domain_allowed(email: str) -> bool:
@@ -74,27 +71,27 @@ def _email_domain_allowed(email: str) -> bool:
     return any(domain == d or domain.endswith("." + d) for d in ALLOWED_DOMAINS)
 
 # -------------------------
+# ROUTERS
+# -------------------------
+app.include_router(nda_router, prefix="/nda")
+app.include_router(inventory_router, prefix="/inventory", tags=["Inventory"])
+app.include_router(demo_router, prefix="/demo")
+app.include_router(auth_router)
+app.include_router(api_router)
+
+# -------------------------
 # ENDPOINTS
 # -------------------------
-   
-# Root endpoint
-# ---------------------------
 @app.get("/")
 def read_root():
-    return {
-        "status": "EasyFinder AI backend running"
-    }
+    return {"status": "EasyFinder AI backend running"}
 
 @app.post("/score-lead")
 def score_lead_endpoint(data: ScoreRequest):
-    # enforce allowed domains unless demo mode is on
     if not DEMO_MODE and not _email_domain_allowed(data.email):
         raise HTTPException(status_code=403, detail="Email domain not allowed")
-
     score, tier = compute_lead_score(data.intent)
-
     domain_note = "Commercial email domain detected" if _email_domain_allowed(data.email) else "Unrecognized email domain"
-
     return {
         "score": score,
         "tier": tier,
@@ -107,7 +104,6 @@ def score_lead_endpoint(data: ScoreRequest):
 
 @app.get("/scores")
 def get_scores():
-    # demo-safe static data
     return [
         {"company": "Delta Equipment", "score": 92, "tier": "High"},
         {"company": "IronWorks LLC", "score": 71, "tier": "Medium"},
@@ -139,8 +135,3 @@ Best,
 EasyFinder AI
 """
     }
-
-if __name__ == "__main__":
-    print("Registered routes:")
-    for route in app.routes:
-        print(route.path)

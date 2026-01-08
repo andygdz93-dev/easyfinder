@@ -1,22 +1,33 @@
-fastapi==0.110.0
-uvicorn[standard]==0.27.1
-
 # MongoDB
 pymongo==4.6.1
 motor==3.3.2
+
+# Pydantic for schemas & data validation (matches FastAPI)
+pydantic==2.16.2
+pydantic-core==2.16.2
 
 # Data handling
 pandas==2.2.0
 python-multipart==0.0.9
 
-# Env & config
-python-dotenv==1.0.1
-
-# Validation
-pydantic==2.6.1
+# Optional: dotenv support if you use environment variables locally
+python-dotenv==1.0.0
 
 # JWT (THIS MATCHES YOUR CODE)
 PyJWT==2.8.0
 cryptography==42.0.5
 
-email-validator
+# FastAPI framework
+fastapi==0.111.1
+
+# ASGI server
+uvicorn[standard]==0.23.2
+
+# CORS middleware (already included in FastAPI, but explicit)
+starlette==0.28.1
+
+# Email validation for EmailStr
+email-validator==2.1.1
+
+# Random utils / HTTP requests if needed
+requests==2.32.0
