@@ -1,11 +1,5 @@
-app = "easyfinder-backend"
-
-[build]
-  builder = "paketobuildpacks/builder:base"
-
-[env]
-  PORT = "8080"
+app = "easyfinder-frontend"
 
 [http_service]
-  internal_port = 8080
+  internal_port = 80
   force_https = true
