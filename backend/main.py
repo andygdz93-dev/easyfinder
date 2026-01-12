@@ -110,9 +110,10 @@ def get_scores():
         {"company": "Budget Rentals", "score": 45, "tier": "Low"},
     ]
 
-@api_router.get("/health")
-def health_check():
+@app.get("/health")
+async def fly_health():
     return {"status": "ok"}
+
 
 @api_router.post("/score")
 def submit_score(request: ScoreRequest):
