@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-import jwt
+from jose import jwt
 import os
 
 SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_THIS_IN_PROD")
