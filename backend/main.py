@@ -18,7 +18,7 @@ app = FastAPI(
     version="1.0.0",
 )
 
-api_router = APIRouter(prefix="/api")
+api_router = APIRouter(prefix="/api/auth")
 
 # -------------------------
 # MIDDLEWARE
@@ -48,6 +48,9 @@ class ScoreRequest(BaseModel):
     variant: str
     name: str
     score: int
+    budget: int
+    priority: str
+    urgency: int
 
 class OutreachRequest(BaseModel):
     context: str
@@ -73,18 +76,18 @@ def _email_domain_allowed(email: str) -> bool:
 # -------------------------
 # API Routers
 # -------------------------
+app.include_router(auth_router, prefix="/api/auth")
+app.include_router(inventory_router, prefix="/api/inventory")
+app.include_router(nda_router, prefix="/api/nda")
+app.include_router(demo_router, prefix="/api/demo")
 
-app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
-app.include_router(nda_router, prefix="/api/nda", tags=["NDA"])
-app.include_router(inventory_router, prefix="/api/inventory", tags=["Inventory"])
-app.include_router(demo_router, prefix="/api/demo", tags=["Demo"])
 
 # -------------------------
 # ENDPOINTS
 # -------------------------
 @app.get("/")
-def read_root():
-    return {"status": "EasyFinder AI backend running"}
+def root():
+    return {"status": "EasyFinder API running"}
 
 @app.post("/score-lead")
 def score_lead_endpoint(data: ScoreRequest):
@@ -111,7 +114,7 @@ def get_scores():
     ]
 
 @app.get("/health")
-async def fly_health():
+def health_check():
     return {"status": "ok"}
 
 
