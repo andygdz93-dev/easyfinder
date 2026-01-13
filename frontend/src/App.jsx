@@ -1,11 +1,11 @@
 import Header from "./components/Header";
-import Landing from "./pages/Landing";
+import Dashboard from "./pages/Dashboard";
 
 export default function App() {
   return (
     <div className="min-h-screen bg-brand-blue text-white">
       <Header />
-      <Landing />
+      <Dashboard />
     </div>
   );
 }
