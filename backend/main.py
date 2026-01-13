@@ -6,10 +6,16 @@ from routes.nda import router as nda_router
 from routes.inventory import router as inventory_router
 from routes.demo import router as demo_router
 
+import os
+
+APP_ENV = os.getenv("APP_ENV", "dev")
+
 app = FastAPI(
     title="EasyFinder AI",
-    version="1.0.0",
+    docs_url="/docs" if APP_ENV != "prod" else None,
+    redoc_url=None,
 )
+
 
 app.add_middleware(
     CORSMiddleware,
