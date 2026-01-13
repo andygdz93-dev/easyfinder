@@ -4,6 +4,8 @@ app = "easyfinder-backend"
   internal_port = 8080
   force_https = true
 
-[env]
-  PORT = "8080"
-
+[[http_service.checks]]
+  interval = "15s"
+  timeout = "2s"
+  method = "GET"
+  path = "/healthz"
