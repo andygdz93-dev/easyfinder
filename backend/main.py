@@ -71,13 +71,13 @@ def _email_domain_allowed(email: str) -> bool:
     return any(domain == d or domain.endswith("." + d) for d in ALLOWED_DOMAINS)
 
 # -------------------------
-# ROUTERS
+# API Routers
 # -------------------------
-app.include_router(nda_router, prefix="/nda")
-app.include_router(inventory_router, prefix="/inventory", tags=["Inventory"])
-app.include_router(demo_router, prefix="/demo")
-app.include_router(auth_router)
-app.include_router(api_router)
+
+app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
+app.include_router(nda_router, prefix="/api/nda", tags=["NDA"])
+app.include_router(inventory_router, prefix="/api/inventory", tags=["Inventory"])
+app.include_router(demo_router, prefix="/api/demo", tags=["Demo"])
 
 # -------------------------
 # ENDPOINTS
