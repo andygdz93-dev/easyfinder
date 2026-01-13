@@ -18,7 +18,6 @@ app = FastAPI(
     version="1.0.0",
 )
 
-api_router = APIRouter(prefix="/api/auth")
 
 # -------------------------
 # MIDDLEWARE
