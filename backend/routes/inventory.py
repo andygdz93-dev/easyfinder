@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Depends
-from core.deps import require_nda
+from fastapi import APIRouter, Depends, HTTPException
+from core.security import get_current_user
 
-router = APIRouter(tags=["Inventory"])
+router = APIRouter()
 
+@router.get("")
+def get_inventory(user=Depends(get_current_user)):
+    if not user.get("nda"):
+        raise HTTPException(status_code=403, detail="NDA required")
 
-@router.get("/")
-def get_inventory(user=Depends(require_nda)):
     return [
-        {"id": 1, "name": "Excavator X1", "status": "Available"},
-        {"id": 2, "name": "Bulldozer B2", "status": "Limited"},
+        {"item": "Excavator", "price": "$120,000"},
+        {"item": "Bulldozer", "price": "$95,000"},
     ]
