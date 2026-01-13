@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from auth.dependencies import get_current_user
 
-router = APIRouter(prefix="/inventory", tags=["Inventory"])
+router = APIRouter(tags=["Inventory"])
 
 INVENTORY = [
     {"id": "EX-001", "type": "Excavator", "tier": "nda"},

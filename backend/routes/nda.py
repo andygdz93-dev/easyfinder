@@ -1,7 +1,8 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 import uuid
 
-router = APIRouter()
+router = APIRouter(tags=["NDA"]
+                   )
 
 SIGNED_NDAS = set()
 

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Header
 
-router = APIRouter()
+router = APIRouter(tags=["Demo"])
 
 @router.get("/mode")
 def demo_mode(x_demo_mode: str = Header(default="enterprise")):
