@@ -1,29 +1,17 @@
-from fastapi import HTTPException, status
-import os
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
-from fastapi.security import OAuth2PasswordBearer
 
-JWT_SECRET = os.getenv("JWT_SECRET", "dev-secret")
+JWT_SECRET = "CHANGE_ME_IN_ENV"
 ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/api/auth/login"  # MUST MATCH LOGIN ROUTE
-)
 
-def create_access_token(data: dict, expires_minutes: int = 60):
+def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=expires_minutes)
+
+    expire = datetime.utcnow() + (
+        expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
     to_encode.update({"exp": expire})
+
     return jwt.encode(to_encode, JWT_SECRET, algorithm=ALGORITHM)
-
-def decode_token(token: str):
-    try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
-        return payload
-    except JWTError:
-        return None
-
-
-        
-

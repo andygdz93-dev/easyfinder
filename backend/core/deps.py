@@ -1,6 +1,8 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from core.security import jwt, JWTError, JWT_SECRET, ALGORITHM
+from jose import JWTError, jwt
+
+from core.security import JWT_SECRET, ALGORITHM
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
@@ -17,8 +19,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         )
 
 
-
-def require_nda(user=Depends(get_current_user)):
+def require_nda(user: dict = Depends(get_current_user)):
     if not user.get("nda"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
