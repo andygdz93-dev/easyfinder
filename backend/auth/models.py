@@ -1,8 +1,9 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import Optional
 from datetime import datetime
 from bson import ObjectId
 
+email: EmailStr
 
 # Needed to serialize Mongo ObjectId
 class PyObjectId(ObjectId):
