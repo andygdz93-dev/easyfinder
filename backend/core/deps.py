@@ -1,13 +1,15 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
+from jose import jwt, JWTError
 
 from core.security import JWT_SECRET, ALGORITHM
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="/api/auth/login"
+)
 
 
-def get_current_user(token: str = Depends(oauth2_scheme)):
+def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
         return payload
@@ -19,10 +21,10 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         )
 
 
-def require_nda(user: dict = Depends(get_current_user)):
+def require_nda(user: dict = Depends(get_current_user)) -> dict:
     if not user.get("nda"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="NDA required",
+            detail="NDA required"
         )
     return user
