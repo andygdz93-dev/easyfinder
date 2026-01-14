@@ -13,7 +13,7 @@ oauth2_scheme = OAuth2PasswordBearer(
 
 def create_access_token(data: dict, expires_minutes: int = 60):
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=expires_minutes)
+    expire = datetime.now() + timedelta(minutes=expires_minutes)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, JWT_SECRET, algorithm=ALGORITHM)
 
@@ -29,3 +29,4 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         )
 
         
+
