@@ -1,11 +1,9 @@
 from pydantic import BaseModel, Field, EmailStr
-from typing import Optional
+from typing import Optional, Literal
 from datetime import datetime
 from bson import ObjectId
 
-email: EmailStr
 
-# Needed to serialize Mongo ObjectId
 class PyObjectId(ObjectId):
     @classmethod
     def __get_validators__(cls):
@@ -24,11 +22,11 @@ class PyObjectId(ObjectId):
 
 class User(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id")
-    email: str
+    email: EmailStr
     company: Optional[str] = None
 
     nda_signed: bool = False
-    tier: str = "demo"  # demo | nda | paid
+    tier: Literal["demo", "nda", "paid"] = "demo"
 
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
