@@ -10,7 +10,7 @@ router = APIRouter(prefix="/api/billing", tags=["billing"])
 
 
 @router.post("/checkout")
-def create_checkout(user: dict = Depends(get_current_user)):
+def create_checkout(user=Depends(get_current_user)):
     email = user.get("sub")
     if not email:
         raise HTTPException(status_code=400, detail="Invalid user token")

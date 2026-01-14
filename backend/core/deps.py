@@ -1,15 +1,15 @@
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
+from jose import jwt, JWTError
 from core.security import JWT_SECRET, ALGORITHM
 
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/api/auth/login"
-)
+security = HTTPBearer()
 
-
-def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+):
+    token = credentials.credentials
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
         return payload
@@ -17,14 +17,13 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
         )
 
 
-def require_nda(user: dict = Depends(get_current_user)) -> dict:
+def require_nda(user=Depends(get_current_user)):
     if not user.get("nda"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="NDA required"
+            detail="NDA required",
         )
     return user
