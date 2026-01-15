@@ -1,5 +1,8 @@
+from typing import Union
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
 
 from routes.auth import router as auth_router
 from routes.nda import router as nda_router
