@@ -5,12 +5,12 @@ from routes.auth import router as auth_router
 from routes.nda import router as nda_router
 from routes.inventory import router as inventory_router
 from routes.demo import router as demo_router
-
-app = FastAPI()
-
+from dotenv import load_dotenv
 import os
 
 APP_ENV = os.getenv("APP_ENV", "dev")
+
+load_dotenv()
 
 app = FastAPI(
     title="EasyFinder AI",
@@ -18,7 +18,7 @@ app = FastAPI(
     redoc_url=None,
 )
 
-
+# CORS MIDDLEWARE
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
