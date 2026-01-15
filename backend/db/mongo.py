@@ -2,29 +2,22 @@ from typing import Optional
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 
-_client: AsyncIOMotorClient | None = None
+_client: Optional[AsyncIOMotorClient] = None
 
 
 def get_client() -> AsyncIOMotorClient:
     global _client
 
-    MONGO_URL = os.getenv("MONGO_URL")
-    if not MONGO_URL:
+    mongo_url = os.getenv("MONGO_URL")
+    if not mongo_url:
         raise RuntimeError("MONGO_URL environment variable is not set")
 
     if _client is None:
-        _client = AsyncIOMotorClient(MONGO_URL)
+        _client = AsyncIOMotorClient(mongo_url)
 
     return _client
 
 
 def get_database():
-    return get_client().get_default_database()
-
-
-
-
-DB_NAME = os.getenv("DB_NAME", "easyfinder")
-
-client = AsyncIOMotorClient(MONGO_URL)
-db = client[DB_NAME]
+    db_name = os.getenv("DB_NAME", "easyfinder")
+    return get_client()[db_name]
