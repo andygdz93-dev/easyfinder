@@ -1,21 +1,13 @@
-from fastapi import APIRouter
-from pydantic import BaseModel, EmailStr
-from core.jwt import create_access_token
+from fastapi import APIRouter, Depends
+from core.deps import get_current_user
 
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
 
-
-class LoginRequest(BaseModel):
-    email: EmailStr
-
-
-@router.post("/login")
-async def login(request: LoginRequest):
-    token = create_access_token(
-        {
-            "sub": request.email,
-            "role": "demo",
-            "nda": True,
-        }
-    )
-    return {"access_token": token, "token_type": "bearer"}
+@router.get("/me")
+def me(user=Depends(get_current_user)):
+    return {
+        "email": user.get("sub"),
+        "tier": user.get("tier"),
+        "nda": user.get("nda"),
+        "scopes": user.get("scopes"),
+    }
