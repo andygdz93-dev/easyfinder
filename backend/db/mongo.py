@@ -1,6 +1,6 @@
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
-from fastapi import HTTPException
+from typing import Optional
 
 MONGO_URL = os.getenv("MONGO_URL")
 DB_NAME = os.getenv("DB_NAME", "easyfinder")
@@ -8,7 +8,7 @@ DB_NAME = os.getenv("DB_NAME", "easyfinder")
 if not MONGO_URL:
     raise RuntimeError("MONGO_URL environment variable is not set")
 
-_client: AsyncIOMotorClient | None = None
+_client: Optional[AsyncIOMotorClient] = None
 
 
 def get_client() -> AsyncIOMotorClient:
@@ -19,4 +19,5 @@ def get_client() -> AsyncIOMotorClient:
 
 
 def get_database():
-    return get_client()[DB_NAME]
+    client = get_client()
+    return client[DB_NAME]
