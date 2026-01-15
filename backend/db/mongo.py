@@ -1,6 +1,6 @@
 import os
-from motor.motor_asyncio import AsyncIOMotorClient
 from typing import Optional
+from motor.motor_asyncio import AsyncIOMotorClient
 
 MONGO_URL = os.getenv("MONGO_URL")
 DB_NAME = os.getenv("DB_NAME", "easyfinder")
