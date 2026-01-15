@@ -1,12 +1,8 @@
 from fastapi import APIRouter, Depends
 from core.deps import get_current_user
 
-router = APIRouter(
-    prefix="/api/nda",
-    tags=["NDA"]
+router = APIRouter(tags=["NDA"]
 )
-
-
 @router.post("/upload")
 def upload_nda(user: dict = Depends(get_current_user)):
     """

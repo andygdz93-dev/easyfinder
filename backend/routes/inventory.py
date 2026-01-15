@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from core.deps import require_paid
 
-router = APIRouter(prefix="/api/inventory", tags=["Inventory"])
+router = APIRouter(tags=["Inventory"])
 
 
 @router.get("")

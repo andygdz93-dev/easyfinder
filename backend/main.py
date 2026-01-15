@@ -8,9 +8,9 @@ from routes.demo import router as demo_router
 from dotenv import load_dotenv
 import os
 
-APP_ENV = os.getenv("APP_ENV", "dev")
-
 load_dotenv()
+
+APP_ENV = os.getenv("APP_ENV", "dev")
 
 app = FastAPI(
     title="EasyFinder AI",

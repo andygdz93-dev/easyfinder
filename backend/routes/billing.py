@@ -4,7 +4,7 @@ from core.jwt import create_access_token
 
 stripe.api_key = "STRIPE_SECRET_KEY"
 
-router = APIRouter(prefix="/api/billing", tags=["Billing"])
+router = APIRouter(tags=["Billing"])
 
 
 @router.post("/webhook")
