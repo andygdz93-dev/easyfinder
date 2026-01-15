@@ -20,3 +20,11 @@ def get_client() -> AsyncIOMotorClient:
 
 def get_database():
     return get_client().get_default_database()
+
+
+
+
+DB_NAME = os.getenv("DB_NAME", "easyfinder")
+
+client = AsyncIOMotorClient(MONGO_URL)
+db = client[DB_NAME]
