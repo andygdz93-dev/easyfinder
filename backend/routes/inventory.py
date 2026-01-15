@@ -1,14 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from core.deps import get_current_user
 
-router = APIRouter()
+router = APIRouter(prefix="/inventory", tags=["Inventory"])
 
-@router.get("")
-def get_inventory(user=Depends(get_current_user)):
-    if not user.get("nda"):
-        raise HTTPException(status_code=403, detail="NDA required")
-
-    return [
-        {"item": "Excavator", "price": "$120,000"},
-        {"item": "Bulldozer", "price": "$95,000"},
-    ]
+@router.get("/")
+def list_inventory(user=Depends(get_current_user)):
+    return {
+        "status": "paid access",
+        "user": user,
+        "items": ["item1", "item2"]
+    }

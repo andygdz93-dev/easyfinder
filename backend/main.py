@@ -6,6 +6,8 @@ from routes.nda import router as nda_router
 from routes.inventory import router as inventory_router
 from routes.demo import router as demo_router
 
+app = FastAPI()
+
 import os
 
 APP_ENV = os.getenv("APP_ENV", "dev")
@@ -29,6 +31,7 @@ app.include_router(auth_router, prefix="/api/auth")
 app.include_router(nda_router, prefix="/api/nda")
 app.include_router(inventory_router, prefix="/api/inventory")
 app.include_router(demo_router, prefix="/api/demo")
+
 
 
 @app.get("/")
