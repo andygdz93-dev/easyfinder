@@ -8,19 +8,23 @@ router = APIRouter(prefix="/api/auth", tags=["Auth"])
 
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    # DEMO login — no password validation yet
     token = create_access_token({
         "sub": form_data.username,
         "tier": "demo",
-        "nda": False,
-        "scopes": ["demo"]
+        "scopes": ["demo"],
     })
 
     return {
         "access_token": token,
-        "token_type": "bearer"
+        "token_type": "bearer",
     }
 
-@router.get("/me")
-def me(user=Depends(get_current_user)):
-    return user
+@router.post("/refresh")
+def refresh(user=Depends(get_current_user)):
+    new_token = create_access_token({
+        "sub": user["sub"],
+        "tier": user.get("tier"),
+        "scopes": user.get("scopes", []),
+    })
+
+    return {"access_token": new_token}

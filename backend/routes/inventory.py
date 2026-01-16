@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends
-from core.deps import require_paid
+from fastapi import APIRouter, Security
+from core.deps import get_current_user
 
 router = APIRouter(tags=["Inventory"])
 
-@router.get("")
-def get_inventory(user=Depends(require_paid)):
-    return [...]  # Return inventory items for the paid user
 
+@router.get("/")
+def list_inventory(
+    user=Security(get_current_user, scopes=["paid", "inventory"])
+):
+    return {"items": ["enterprise_lead_1", "enterprise_lead_2"]}

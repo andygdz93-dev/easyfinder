@@ -31,3 +31,7 @@ def decode_token(token: str):
         get_jwt_secret(),
         algorithms=[ALGORITHM],
     )
+
+def create_refresh_token(data: dict):
+    return create_access_token(data, expires_minutes=60 * 24 * 7)
+
