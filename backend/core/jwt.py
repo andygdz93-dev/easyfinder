@@ -6,9 +6,8 @@ JWT_SECRET = os.getenv("JWT_SECRET")
 JWT_REFRESH_SECRET = os.getenv("JWT_REFRESH_SECRET")
 
 ALGORITHM = "HS256"
-ACCESS_EXPIRE_MIN = 15
+ACCESS_TOKEN_EXPIRE_MINUTES = 15
 REFRESH_EXPIRE_DAYS = 7
-
 
 def create_access_token(
         *, 
@@ -16,7 +15,7 @@ def create_access_token(
         email: str, 
         tier: str, 
         scopes: list[str], 
-        expires_minutes: int = ACCESS_EXPIRE_MIN,):    
+        expires_minutes: int = ACCESS_TOKEN_EXPIRE_MINUTES,):    
     payload = {
         "sub": sub,
         "email": email,
@@ -34,14 +33,12 @@ def create_refresh_token(data: dict):
     return jwt.encode(payload, JWT_REFRESH_SECRET, algorithm=ALGORITHM)
 
 
-def decode_access_token(token: str):
+def decode_token(token: str) -> dict:
     payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
-    if payload.get("type") != "access":
-        raise JWTError("Invalid token type")
     return payload
 
 
-def decode_refresh_token(token: str):
+def decode_refresh_token(token: str) -> dict:
     payload = jwt.decode(token, JWT_REFRESH_SECRET, algorithms=[ALGORITHM])
     if payload.get("type") != "refresh":
         raise JWTError("Invalid token type")
