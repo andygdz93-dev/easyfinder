@@ -10,10 +10,20 @@ ACCESS_EXPIRE_MIN = 15
 REFRESH_EXPIRE_DAYS = 7
 
 
-def create_access_token(data: dict):
-    payload = data.copy()
-    payload["exp"] = datetime.utcnow() + timedelta(minutes=ACCESS_EXPIRE_MIN)
-    payload["type"] = "access"
+def create_access_token(
+        *, 
+        sub: str, 
+        email: str, 
+        tier: str, 
+        scopes: list[str], 
+        expires_minutes: int = ACCESS_EXPIRE_MIN,):    
+    payload = {
+        "sub": sub,
+        "email": email,
+        "tier": tier,
+        "scopes": scopes,
+        "exp": datetime.utcnow() + timedelta(minutes=expires_minutes),
+        }
     return jwt.encode(payload, JWT_SECRET, algorithm=ALGORITHM)
 
 

@@ -1,38 +1,29 @@
-from pydantic import BaseModel, Field, EmailStr
-from typing import Optional, Literal
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from typing import Optional, Literal, List
 from datetime import datetime
-from bson import ObjectId
-
-
-class PyObjectId(ObjectId):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        if not ObjectId.is_valid(v):
-            raise ValueError("Invalid ObjectId")
-        return ObjectId(v)
-
-    @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update(type="string")
 
 
 class User(BaseModel):
-    id: Optional[PyObjectId] = Field(alias="_id")
+    id: Optional[str] = Field(default=None, alias="_id")
     email: EmailStr
     company: Optional[str] = None
 
     nda_signed: bool = False
     tier: Literal["demo", "nda", "paid"] = "demo"
+    scopes: List[str] = []
 
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    class Config:
-        allow_population_by_field_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
+    model_config = ConfigDict(
+        populate_by_name=True,
+        json_schema_extra={
+        "example": {
+                 "sub": "user_id",
+                 "email": "user@email.com",
+                 "tier": "paid",
+                 "scopes": ["inventory", "paid"],
+                 "exp": ...
+                 }
 
-        
+        },
+    )
