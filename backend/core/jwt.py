@@ -1,9 +1,14 @@
-import os
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
+import os
 
 JWT_SECRET = os.getenv("JWT_SECRET")
+if not JWT_SECRET:
+    raise RuntimeError("JWT_SECRET not set")
+
 JWT_REFRESH_SECRET = os.getenv("JWT_REFRESH_SECRET")
+if not JWT_REFRESH_SECRET:
+    raise RuntimeError("JWT_REFRESH_SECRET not set")
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 15
