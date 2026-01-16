@@ -2,36 +2,37 @@ import os
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
 
-def get_jwt_secret():
-    secret = os.getenv("JWT_SECRET")
-    if not secret:
-        raise RuntimeError("JWT_SECRET not set")
-    return secret
-
+JWT_SECRET = os.getenv("JWT_SECRET")
+JWT_REFRESH_SECRET = os.getenv("JWT_REFRESH_SECRET")
 
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+ACCESS_EXPIRE_MIN = 15
+REFRESH_EXPIRE_DAYS = 7
 
 
-def create_access_token(data: dict, expires_minutes: int = ACCESS_TOKEN_EXPIRE_MINUTES):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=expires_minutes)
-    to_encode.update({"exp": expire})
+def create_access_token(data: dict):
+    payload = data.copy()
+    payload["exp"] = datetime.utcnow() + timedelta(minutes=ACCESS_EXPIRE_MIN)
+    payload["type"] = "access"
+    return jwt.encode(payload, JWT_SECRET, algorithm=ALGORITHM)
 
-    return jwt.encode(
-        to_encode,
-        get_jwt_secret(),
-        algorithm=ALGORITHM,
-    )
-
-
-def decode_token(token: str):
-    return jwt.decode(
-        token,
-        get_jwt_secret(),
-        algorithms=[ALGORITHM],
-    )
 
 def create_refresh_token(data: dict):
-    return create_access_token(data, expires_minutes=60 * 24 * 7)
+    payload = data.copy()
+    payload["exp"] = datetime.utcnow() + timedelta(days=REFRESH_EXPIRE_DAYS)
+    payload["type"] = "refresh"
+    return jwt.encode(payload, JWT_REFRESH_SECRET, algorithm=ALGORITHM)
 
+
+def decode_access_token(token: str):
+    payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
+    if payload.get("type") != "access":
+        raise JWTError("Invalid token type")
+    return payload
+
+
+def decode_refresh_token(token: str):
+    payload = jwt.decode(token, JWT_REFRESH_SECRET, algorithms=[ALGORITHM])
+    if payload.get("type") != "refresh":
+        raise JWTError("Invalid token type")
+    return payload
