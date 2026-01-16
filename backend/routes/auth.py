@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Depends, Response, Cookie, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from auth.repository import get_user_by_email
+from core.deps import get_current_user
 from core.jwt import (
     create_access_token,
     create_refresh_token,
     decode_refresh_token,
 )
 
-router = APIRouter(prefix="/api/auth", tags=["Auth"])
-
+router = APIRouter(tags=["Auth"])
 
 @router.post("/login")
 async def login(
@@ -54,11 +54,15 @@ async def login(
 
 
 @router.post("/refresh")
-def refresh(refresh_token: str | None = Cookie(None)):
-    if not refresh_token:
-        raise HTTPException(status_code=401, detail="Missing refresh token")
+def refresh(user=Depends(get_current_user)):
+    tier = user["tier"]
+    scopes = ["inventory", "paid"] if tier == "paid" else ["demo"]
 
-    user = decode_refresh_token(refresh_token)
-    new_access = create_access_token(user)
+    token = create_access_token({
+        "sub": user["sub"],
+        "email": user["email"],
+        "tier": tier,
+        "scopes": scopes,
+    })
 
-    return {"access_token": new_access}
+    return {"access_token": token, "token_type": "bearer"}

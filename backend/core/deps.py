@@ -4,8 +4,7 @@ from core.jwt import decode_token
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
-
-def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
+def get_current_user(token: str = Depends(oauth2_scheme)):
     try:
         return decode_token(token)
     except Exception:
@@ -15,12 +14,11 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
         )
 
 def require_scope(scope: str):
-    def checker(user: dict = Depends(get_current_user)):
+    def checker(user=Depends(get_current_user)):
         if scope not in user.get("scopes", []):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Scope '{scope}' required",
+                detail=f"Missing scope: {scope}",
             )
         return user
-
     return checker

@@ -1,42 +1,26 @@
 from fastapi import APIRouter, Request, HTTPException
-from core.jwt import create_access_token
-from auth.repository import upsert_user
+from backend.db.mongo import get_database
 import stripe
 import os
 
-router = APIRouter(prefix="/api/stripe", tags=["Stripe"])
+router = APIRouter(tags=["Stripe"])
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
-@router.post("/webhook")
-async def stripe_webhook(request: Request):
-    payload = await request.body()
-    sig = request.headers.get("stripe-signature")
+@router.post("/stripe/webhook")
+async def stripe_webhook(payload: dict):
+    email = payload["data"]["object"]["customer_email"]
+    tier = "paid"
 
-    try:
-        event = stripe.Webhook.construct_event(
-            payload,
-            sig,
-            os.getenv("STRIPE_WEBHOOK_SECRET"),
-        )
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid webhook")
+    db = get_database()
 
-    if event["type"] == "checkout.session.completed":
-        session = event["data"]["object"]
-        email = session["customer_email"]
-    await upsert_user(email, tier="paid")
+    await db.users.update_one(
+        {"email": email},
+        {"$set": {"tier": tier}},
+        upsert=True
+    )
 
-        # issue upgraded token
-    upgraded_token = create_access_token({
-            "sub": email,
-            "tier": "paid",
-            "scopes": ["paid", "inventory"],
-        })
+    return {"ok": True}
 
-        # TODO: save token / user in DB later
-    print("UPGRADED TOKEN:", upgraded_token)
-    
-    return {"status": "ok"}
 
 
    
