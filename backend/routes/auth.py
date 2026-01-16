@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, Response, Cookie, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
-from auth.repository import get_user_by_email
 from core.deps import get_current_user
 from core.jwt import (
     create_access_token,
