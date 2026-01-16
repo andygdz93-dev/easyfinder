@@ -1,12 +1,11 @@
 from fastapi import APIRouter, Request, HTTPException
 from core.jwt import create_access_token
+from auth.repository import upsert_user
 import stripe
 import os
 
 router = APIRouter(prefix="/api/stripe", tags=["Stripe"])
-
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
-
 
 @router.post("/webhook")
 async def stripe_webhook(request: Request):
@@ -24,17 +23,20 @@ async def stripe_webhook(request: Request):
 
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
-
         email = session["customer_email"]
+    await upsert_user(email, tier="paid")
 
         # issue upgraded token
-        upgraded_token = create_access_token({
+    upgraded_token = create_access_token({
             "sub": email,
             "tier": "paid",
             "scopes": ["paid", "inventory"],
         })
 
         # TODO: save token / user in DB later
-        print("UPGRADED TOKEN:", upgraded_token)
-
+    print("UPGRADED TOKEN:", upgraded_token)
+    
     return {"status": "ok"}
+
+
+   
