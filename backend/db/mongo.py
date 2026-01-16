@@ -10,7 +10,7 @@ def get_client() -> AsyncIOMotorClient:
 
     mongo_url = os.getenv("MONGO_URL")
     if not mongo_url:
-        raise RuntimeError("MONGO_URL environment variable is not set")
+        raise RuntimeError("MONGO_URL not set")
 
     if _client is None:
         _client = AsyncIOMotorClient(mongo_url)
@@ -19,5 +19,4 @@ def get_client() -> AsyncIOMotorClient:
 
 
 def get_database():
-    db_name = os.getenv("DB_NAME", "easyfinder")
-    return get_client()[db_name]
+    return get_client().get_default_database()

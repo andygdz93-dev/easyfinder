@@ -9,11 +9,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     try:
         return decode_token(token)
     except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 
 def require_paid(user=Depends(get_current_user)):
@@ -23,3 +19,5 @@ def require_paid(user=Depends(get_current_user)):
             detail="Paid plan required",
         )
     return user
+
+

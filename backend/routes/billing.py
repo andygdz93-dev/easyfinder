@@ -23,7 +23,8 @@ async def stripe_webhook(request: Request):
         token = create_access_token({
             "sub": email,
             "tier": "paid",
-            "scopes": ["inventory:read", "billing:write"]
+            "nda": True,
+            "scopes": ["paid", "inventory"]
         })
 
         # In real life → email or frontend refresh
