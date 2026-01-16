@@ -1,10 +1,13 @@
-from fastapi import APIRouter, Security
-from core.deps import get_current_user
-from db.audit import log_access
+from fastapi import APIRouter, Depends
+from core.deps import require_scope
 
-router = APIRouter(tags=["Inventory"])
+router = APIRouter(
+    tags=["Inventory"]
+)
 
-@router.get("/")
-async def inventory(user=Security(get_current_user, scopes=["paid"])):
-    await log_access(user["sub"], "inventory_access")
-    return {"data": "enterprise inventory"}
+@router.get("/", summary="Paid inventory access")
+def get_inventory(user: dict = Depends(require_scope("inventory"))):
+    return [
+        {"item": "Excavator", "price": "$120,000"},
+        {"item": "Bulldozer", "price": "$95,000"},
+    ]
