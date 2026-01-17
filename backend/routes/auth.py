@@ -24,26 +24,25 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         scopes=scopes,
     )
 
-    refresh_token = create_refresh_token(
-        {"sub": email}
-    )
+    
+
 
     return {
         "access_token": access_token,
-        "refresh_token": refresh_token,
         "token_type": "bearer",
     }
 
 @router.post("/refresh")
-def refresh(user=Depends(get_current_user)):
-    tier = user["tier"]
-    scopes = ["inventory", "paid"] if tier == "paid" else ["demo"]
-
-    token = create_access_token({
-        "sub": user["sub"],
-        "email": user["email"],
-        "tier": tier,
-        "scopes": scopes,
-    })
-
-    return {"access_token": token, "token_type": "bearer"}
+def refresh(user = Depends(get_current_user)):
+          tier = user["tier"]
+scopes = ["inventory", "paid"] if tier == "paid" else ["demo"]
+refresh_token = create_refresh_token(
+                 {"sub": email}({
+                    "sub": user["sub"],
+                     "email": user["email"],
+                      "tier": tier,
+                      "scopes": scopes,
+                       })   
+    
+         return {"access_token": token, "token_type": "bearer"}
+ )
