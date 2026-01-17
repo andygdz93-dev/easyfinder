@@ -1,5 +1,5 @@
 import axios from "../api/axios"
-import { useUser } from "./components/auth/useUser"
+import { useUser } from "../components/auth/useUser"
 import { useEffect, useState } from "react"
 
 export default function Inventory() {

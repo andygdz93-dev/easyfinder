@@ -1,42 +1,23 @@
-"use client";
-
-import { useEffect } from "react";
 import "./globals.css";
-
-import Sidebar from "@/app/components/layout/Sidebar";
-import Topbar from "@/app/components/layout/Topbar";
-import { loadMe } from "@/lib/auth";
+import Sidebar from "@/components/layout/Sidebar";
+import Topbar from "@/components/layout/Topbar";
+import AuthProvider from "@/components/auth/AuthProvider";
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  useEffect(() => {
-    loadMe();
-  }, []);
-
   return (
     <html lang="en">
-      <body className="h-screen overflow-hidden bg-slate-50">
-        <div className="grid grid-cols-[240px_1fr] grid-rows-[64px_1fr] h-full">
-          
-          {/* Sidebar */}
-          <aside className="row-span-2 border-r bg-white">
-            <Sidebar />
-          </aside>
-
-          {/* Topbar */}
-          <header className="border-b bg-white">
+      <body className="flex h-screen bg-slate-50">
+        <AuthProvider>
+          <Sidebar />
+          <div className="flex flex-col flex-1">
             <Topbar />
-          </header>
-
-          {/* Main Content */}
-          <main className="overflow-auto p-6">
-            {children}
-          </main>
-
-        </div>
+            <main className="p-6">{children}</main>
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );
