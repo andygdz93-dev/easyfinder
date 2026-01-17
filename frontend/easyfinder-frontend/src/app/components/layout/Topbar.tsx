@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/store/useAuth";
+import useAuth  from "@/store/useAuth";
 
 export default function Topbar() {
   const { user, setUser } = useAuth();

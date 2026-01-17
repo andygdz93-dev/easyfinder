@@ -1,5 +1,5 @@
 import { apiFetch } from "./api";
-import { useAuth } from "@/store/useAuth";
+import useAuth from "@/store/useAuth";
 
 export async function loadMe() {
   try {

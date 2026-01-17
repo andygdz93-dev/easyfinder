@@ -3,8 +3,8 @@
 import { useEffect } from "react";
 import "./globals.css";
 
-import Sidebar from "@/components/layout/Sidebar";
-import Topbar from "@/components/layout/Topbar";
+import Sidebar from "@/app/components/layout/Sidebar";
+import Topbar from "@/app/components/layout/Topbar";
 import { loadMe } from "@/lib/auth";
 
 export default function RootLayout({

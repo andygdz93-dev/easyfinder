@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import useAuth from "@/store/useAuth";
+import useAuth from "store/useAuth";
 
 export default function Sidebar() {
   const { user } = useAuth();
