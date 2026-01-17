@@ -5,6 +5,20 @@ import useAuth from "@/store/useAuth";
 export default function UpgradePage() {
   const { user } = useAuth();
 
+  async function upgrade() {
+    const res = await fetch("/api/billing/checkout", {
+      method: "POST",
+    });
+
+    if (!res.ok) {
+      alert("Failed to start checkout");
+      return;
+    }
+
+    const { url } = await res.json();
+    window.location.href = url;
+  }
+
   return (
     <div className="max-w-2xl">
       <h1 className="text-2xl font-semibold mb-4">Upgrade your plan</h1>
@@ -19,7 +33,10 @@ export default function UpgradePage() {
           Full inventory access, exports, and priority data.
         </p>
 
-        <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        <button
+          onClick={upgrade}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
           Upgrade (Stripe)
         </button>
       </div>

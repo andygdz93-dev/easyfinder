@@ -1,4 +1,4 @@
-import axios from "../api/axios"
+import axios from "../app/api/axios"
 import { useUser } from "../components/auth/useUser"
 import { useEffect, useState } from "react"
 
