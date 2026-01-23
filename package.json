@@ -2,7 +2,7 @@
   "name": "easyfinder",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@9.6.0",
+  "packageManager": "pnpm@10.28.1",
   "workspaces": [
     "apps/*",
     "packages/*"
