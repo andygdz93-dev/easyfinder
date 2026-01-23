@@ -37,4 +37,4 @@ COPY --from=build /repo/packages/shared/dist ./node_modules/@easyfinderai/shared
 COPY --from=build /repo/packages/shared/package.json ./node_modules/@easyfinderai/shared/package.json
 
 EXPOSE 8080
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/src/index.js"]

@@ -4,6 +4,9 @@ primary_region = "lax"
 [build]
   dockerfile = "Dockerfile"
 
+[processes]
+  app = "node dist/src/index.js"
+
 [http_service]
   internal_port = 8080
   force_https = true
