@@ -30,13 +30,11 @@ ENV NODE_ENV=production
 COPY --from=build /repo/apps/api/dist ./dist
 COPY --from=build /repo/apps/api/package.json ./package.json
 
-# If your API imports runtime JS from shared/dist, copy it too
-COPY --from=build /repo/packages/shared/dist ./packages/shared/dist
-COPY --from=build /repo/packages/shared/package.json ./packages/shared/package.json
-
-# Install production deps for API only
-RUN corepack enable \
-  && pnpm install --prod --frozen-lockfile
+# Copy node_modules required at runtime.
+# (This is simplest & reliable. Can optimize later with pnpm deploy/prune.)
+COPY --from=build /repo/node_modules ./node_modules
+COPY --from=build /repo/packages/shared/dist ./node_modules/@easyfinderai/shared/dist
+COPY --from=build /repo/packages/shared/package.json ./node_modules/@easyfinderai/shared/package.json
 
 EXPOSE 8080
 CMD ["node", "dist/server.js"]
