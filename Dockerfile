@@ -13,8 +13,6 @@ COPY packages/shared/package.json packages/shared/package.json
 # 2) Install all workspace deps (this is the missing step on Fly)
 RUN pnpm install --frozen-lockfile
 
-RUN test -d node_modules/zod && echo "zod present" || (echo "zod missing" && ls -la node_modules && exit 1)
-
 
 # 3) Copy the rest of the repo
 COPY . .
