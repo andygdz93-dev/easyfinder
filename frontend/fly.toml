@@ -1,5 +1,0 @@
-app = "easyfinder-frontend"
-
-[http_service]
-  internal_port = 80
-  force_https = true
