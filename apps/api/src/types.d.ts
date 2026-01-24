@@ -1,6 +1,6 @@
 import "fastify";
 import "@fastify/jwt";
-import { FastifyReply, FastifyRequest } from "fastify";
+import type { FastifyReply } from "fastify";
 
 declare module "fastify" {
   interface FastifyRequest {
