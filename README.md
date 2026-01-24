@@ -1,9 +1,9 @@
-🚜 EasyFinder
-Intelligent Equipment Discovery & Scoring Platform
+**🚜EasyFinder**
+**Intelligent Equipment Discovery & Scoring Platform**
 
-Find the best heavy equipment — faster, smarter, and without middlemen.
+_Find the best heavy equipment — faster, smarter, and without middlemen._
 
-🌍 What Is EasyFinder?
+**🌍** **What Is EasyFinder?**
 
 EasyFinder is a full-stack platform designed to help buyers and sellers of heavy-duty equipment (construction, industrial, agricultural) connect efficiently.
 
@@ -17,8 +17,9 @@ The platform intelligently scores and ranks listings
 
 Every recommendation is explainable, transparent, and data-driven
 
-🎯 Core Value Proposition
-For Buyers
+**🎯 Core Value Proposition**
+
+**For Buyers**
 
 One place to search across inventory
 
@@ -28,7 +29,7 @@ Price vs condition vs usage scored automatically
 
 No dealer pressure or auction friction
 
-For Sellers
+**For Sellers**
 
 Faster exposure to qualified buyers
 
@@ -36,7 +37,7 @@ Intelligent positioning of listings
 
 Reduced time-to-sale
 
-For the Platform
+**For the Platform**
 
 Commission-based transaction model
 
@@ -44,7 +45,7 @@ High-value equipment → meaningful margins
 
 Scalable intelligence layer
 
-🧠 What Makes EasyFinder Different?
+**🧠 What Makes EasyFinder Different?**
 
 ✔ Scoring, not sorting
 ✔ Explainable rankings
@@ -53,44 +54,76 @@ Scalable intelligence layer
 
 EasyFinder doesn’t just list equipment — it tells you what’s worth buying and why.
 
-🏗️ System Architecture (High Level)
-User Browser
-     │
-     ▼
-Frontend (Vercel / Vite + React)
-     │
-     ▼
-Backend API (Fly.io / Fastify)
-     │
-     ▼
-Scoring Engine + Database (MongoDB)
 
-📁 Repository Structure
-easyfinder/
-├── apps/
-│   ├── api/                # Backend API (Fastify + TypeScript)
-│   │   ├── src/
-│   │   │   ├── routes/     # API endpoints
-│   │   │   ├── scoring/    # Scoring engine
-│   │   │   ├── services/  # Business logic
-│   │   │   ├── plugins/   # Fastify plugins (JWT, auth)
-│   │   │   └── index.ts   # API entry point
-│   │   └── tests/
-│   │
-│   └── web/                # Frontend (Vite + React)
-│       ├── src/
-│       └── dist/
-│
-├── packages/
-│   └── shared/             # Shared types & utilities
-│
-├── .github/workflows/      # CI pipelines
-├── Dockerfile              # API container
-├── fly.toml                # Fly.io config
-├── pnpm-workspace.yaml
-└── README.md
+**🏗️ System Architecture (High Level**)
 
-⚙️ Tech Stack
+**User Browser**
+
+     │
+     ▼
+**Frontend (Vercel / Vite + React)**
+
+     │
+     ▼
+**Backend API (Fly.io / Fastify)**
+
+     │
+     ▼
+**Scoring Engine + Database (MongoDB)**
+
+
+
+**📁 Repository Structure**
+
+**easyfinder/**
+
+**├── apps/**
+
+**│   ├── api/                # Backend API (Fastify + TypeScript)**
+
+**│   │   ├── src/**
+
+**│   │   │   ├── routes/     # API endpoints**
+
+**│   │   │   ├── scoring/    # Scoring engine**
+
+**│   │   │   ├── services/  # Business logic**
+
+**│   │   │   ├── plugins/   # Fastify plugins (JWT, auth)**
+
+**│   │   │   └── index.ts   # API entry point**
+
+**│   │   └── tests/**
+
+**│   │**
+
+**│   └── web/                # Frontend (Vite + React)**
+
+**│       ├── src/**
+
+**│       └── dist/**
+
+**│**
+
+**├── packages/**
+
+**│   └── shared/             # Shared types & utilities**
+
+**│**
+
+**├── .github/workflows/      # CI pipelines**
+
+**├── Dockerfile              # API container**
+
+**├── fly.toml                # Fly.io config**
+
+**├── pnpm-workspace.yaml**
+
+**└── README.md**
+
+
+**⚙️ Tech Stack**
+
 Backend
 
 Node.js
@@ -127,14 +160,18 @@ TypeScript strict mode
 
 GitHub Actions (CI)
 
-🔌 Live Endpoints (Current)
-Health
-GET /api/health
 
 
-✔ API up
-✔ Database connected
-
+**🔌 Live Endpoints (Current)**
++
++
+**Health**
+**GET** /api/health
+**✔ API up**
+**✔ Database connected**
++
++
++
 Listings (Core Feature)
 GET /api/listings
 
