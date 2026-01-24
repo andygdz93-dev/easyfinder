@@ -331,3 +331,40 @@ Non-operable example:
   ]
 }
 
+
+
+Appendix B — Config knobs (v1)
+
+These settings should be adjustable in /api/scoring-configs:
+
+weights:
+
+price, hours, location, risk
+
+preferredStates (mild boost list)
+
+maxPrice / category caps (fallback)
+
+maxHours / category caps (fallback)
+
+operabilityPenalty (default -60)
+
+confidence penalties
+
+stale listing threshold (e.g., lastSeen > N days)
+
+
+
+Appendix C — Listings acquisition note (inventory moat)
+
+Scoring is powerful only with inventory. EasyFinder should build inventory via:
+
+Seller submission (owned supply)
+
+Dealer CSV/Sheet imports (fast, cheap)
+
+Partner feeds and APIs (scalable, reliable)
+
+Long-term: DMS integrations + market benchmarks + outcome learning
+
+The moat is not just listings—it's intelligence + trust + outcomes.
