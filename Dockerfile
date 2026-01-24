@@ -16,11 +16,17 @@ RUN pnpm --filter @easyfinderai/api build
 # after your build + deploy step:
 RUN pnpm --filter @easyfinderai/api deploy --prod /out
 
+# ---- runtime ----
 FROM node:20-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 
-COPY --from=build /out ./
+# prod deps from pnpm deploy output
+COPY --from=build /out/package.json ./package.json
+COPY --from=build /out/node_modules ./node_modules
+
+# ✅ compiled app from the real build output
+COPY --from=build /repo/apps/api/dist ./dist
 
 EXPOSE 8080
 CMD ["node", "dist/src/index.js"]
