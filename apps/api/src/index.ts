@@ -1,8 +1,8 @@
-import { buildServer } from "./server";
+import { buildServer } from "./server.js";
 
 const app = buildServer();
 
-const port = Number(process.env.PORT ?? 3001);
+const port = Number(process.env.PORT ?? 8080);
 
 app.listen({ port, host: "0.0.0.0" }).catch((error) => {
   app.log.error(error);

@@ -1,8 +1,8 @@
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { nanoid } from "nanoid";
-import { getScoringConfig, setScoringConfig } from "../store";
-import { ok, fail } from "../response";
+import { getScoringConfig, setScoringConfig } from "../store.js";
+import { ok, fail } from "../response.js";
 
 const scoringConfigInput = z.object({
   name: z.string(),

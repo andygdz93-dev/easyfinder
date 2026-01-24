@@ -1,9 +1,9 @@
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { parse } from "csv-parse/sync";
-import { listings, sourceHealth } from "../store";
+import { listings, sourceHealth } from "../store.js";
 import { Listing } from "@easyfinderai/shared";
-import { fail, ok } from "../response";
+import { fail, ok } from "../response.js";
 
 const adminOnly = new Set(["admin"]);
 

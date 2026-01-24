@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { watchlists, listings, demoUserId } from "../store";
-import { ok, fail } from "../response";
+import { watchlists, listings, demoUserId } from "../store.js";
+import { ok, fail } from "../response.js";
 import { WatchlistItem } from "@easyfinderai/shared";
 
 export default async function watchlistRoutes(app: FastifyInstance) {

@@ -1,6 +1,6 @@
 import type { FastifyRequest } from "fastify";
-import type { StoredUser } from "./store";
-import { users } from "./store";
+import type { StoredUser } from "./store.js";
+import { users } from "./store.js";
 
 export type AuthUser = {
   id: string;

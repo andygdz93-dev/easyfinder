@@ -1,8 +1,8 @@
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { listings, getScoringConfig } from "../store";
+import { listings, getScoringConfig } from "../store.js";
 import { scoreListing } from "@easyfinderai/shared";
-import { ok, fail } from "../response";
+import { ok, fail } from "../response.js";
 
 const querySchema = z.object({
   state: z.string().length(2).optional(),

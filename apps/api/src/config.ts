@@ -1,12 +1,9 @@
 import dotenv from "dotenv";
-
 dotenv.config();
 
-const requireEnv = (key: string, fallback?: string) => {
+const requireEnv = (key: string, fallback?: string): string => {
   const value = process.env[key] ?? fallback;
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${key}`);
-  }
+  if (!value) throw new Error(`Missing required environment variable: ${key}`);
   return value;
 };
 
@@ -16,5 +13,7 @@ export const config = {
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean),
-  databaseUrl: process.env.DATABASE_URL,
+
+  mongoUrl: requireEnv("MONGO_URL"),
+  dbName: requireEnv("DB_NAME"),
 };

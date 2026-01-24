@@ -6,16 +6,16 @@ import rateLimit from "@fastify/rate-limit";
 import multipart from "@fastify/multipart";
 import { nanoid } from "nanoid";
 
-import { config } from "./config";
-import { getRoleFromRequest } from "./auth";
+import { config } from "./config.js";
+import { getRoleFromRequest } from "./auth.js";
 
-import listingRoutes from "./routes/listings";
-import scoringRoutes from "./routes/scoring";
-import watchlistRoutes from "./routes/watchlist";
-import healthRoutes from "./routes/health";
-import authRoutes from "./routes/auth";
-import adminRoutes from "./routes/admin";
-import sellerRoutes from "./routes/seller";
+import listingRoutes from "./routes/listings.js";
+import scoringRoutes from "./routes/scoring.js";
+import watchlistRoutes from "./routes/watchlist.js";
+import healthRoutes from "./routes/health.js";
+import authRoutes from "./routes/auth.js";
+import adminRoutes from "./routes/admin.js";
+import sellerRoutes from "./routes/seller.js";
 import { ZodError } from "zod";
 
 /**

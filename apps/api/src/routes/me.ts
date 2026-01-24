@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { getUserById } from "../auth";
+import { getUserById } from "../auth.js";
 
 export default async function meRoutes(app: FastifyInstance) {
   app.get("/me", { preHandler: app.authenticate }, async (request, reply) => {
