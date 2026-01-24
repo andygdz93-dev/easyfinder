@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { listings } from "../store";
-import { fail, ok } from "../response";
+import { listings } from "../store.js";
+import { fail, ok } from "../response.js";
 
 const sellerOnly = new Set(["seller", "admin"]);
 

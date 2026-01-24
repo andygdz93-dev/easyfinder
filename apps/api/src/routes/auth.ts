@@ -2,9 +2,9 @@ import { FastifyInstance } from "fastify";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { nanoid } from "nanoid";
-import { users } from "../store";
-import { getUserByEmail, getUserById } from "../auth";
-import { fail, ok } from "../response";
+import { users } from "../store.js";
+import { getUserByEmail, getUserById } from "../auth.js";
+import { fail, ok } from "../response.js";
 
 const registerSchema = z.object({
   email: z.string().email(),

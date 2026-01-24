@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { config } from "../config";
-import { ok } from "../response";
+import { config } from "../config.js";
+import { ok } from "../response.js";
 
 export default async function healthRoutes(app: FastifyInstance) {
   app.get("/health", async (request) => {
