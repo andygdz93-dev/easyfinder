@@ -14,7 +14,7 @@ RUN pnpm --filter @easyfinderai/shared build
 RUN pnpm --filter @easyfinderai/api build
 
 # after your build + deploy step:
-RUN pnpm --filter @easyfinderai/api deploy --prod --legacy /out
+RUN pnpm --filter @easyfinderai/api deploy --prod /out
 
 FROM node:20-alpine AS runtime
 WORKDIR /app
