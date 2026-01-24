@@ -1,359 +1,333 @@
-**🧮 SCORING_MODEL.md — EasyFinder Ranking & Recommendation System**
+# 🧮 SCORING_MODEL.md — EasyFinder Ranking & Recommendation System (v1)
+
+## 0) Why this scoring model exists
+
+EasyFinder is not a listings site — it’s a **decision engine**.
+
+The scoring model is the product:
+- It decides what buyers see first
+- It defines “best value” in a transparent way
+- It produces **rankings + explanations**, not a black box
+- It becomes the moat over time via data, outcomes, and trust
+
+This document defines:
+- What we score
+- How we score it
+- How we explain it
+- How we evolve it safely
+
+---
+
+## 1) Design goals
+
+### Buyer goals (primary)
+1. **Best value** (price vs usage/condition)
+2. **Low risk** (operable preferred, documented, credible source)
+3. **Fast decision** (top options appear immediately)
+4. **Explainable** (buyer can understand the ranking)
+
+### Seller goals (secondary)
+- Sellers can rank higher by improving real signals:
+  - better price
+  - better documentation
+  - better condition
+  - transparency
+
+### Platform goals
+- Deterministic, auditable scoring
+- Resistant to gaming
+- Monetization must not corrupt ranking integrity
+
+---
+
+## 2) Locked policy decisions (IMPORTANT)
+
+### ✅ Operability Rule (LOCKED)
+**Non-operable listings are allowed, but scored very low.**
+- They remain visible (important for rebuild/repair buyers)
+- They can’t be “Best Option”
+- They carry a strong risk penalty and a clear label
+
+### ✅ Preferred States (LOCKED)
+**Preferred states receive a mild boost (soft bias).**
+- Location helps reduce friction, but does not dominate
+- A great deal outside a preferred state can still outrank a mediocre local deal
+
+---
 
-Why the scoring model matters 
+## 3) Listing data requirements (v1)
 
-EasyFinder is not a listings site — it’s a decision engine.  
+Minimum viable fields:
+- `price` (number)
+- `hours` (number)
+- `state` (string)
+- `is_operable` (boolean)
+- `category` (string)
+- `source` (string)
+- `createdAt` / lastSeen (date)
+
+Optional but valuable:
+- year, make, model
+- service history
+- inspection report
+- verified seller/partner
+- photos count
+- seller type (dealer, auction, private)
+- shipping availability
+
+---
+
+## 4) Scoring outputs
 
-The scoring model is the product: 
+Every listing returned to the client should include:
 
-It determines what buyers see first 
+- `totalScore` (0–100)
+- `scores` breakdown:
+  - `priceScore`
+  - `hoursScore`
+  - `locationScore`
+  - `riskScore`
+  - `operabilityScore` (new in v1.1 if desired, see below)
+- `confidenceScore` (0–100)
+- `rationale[]` (array of human explanations)
+- `flags[]` (e.g., `NON_OPERABLE`, `MISSING_HOURS`, `STALE_LISTING`)
+
+---
+
+## 5) Score components (v1)
+
+### 5.1 Price Score (0–100)
+Lower price is better, normalized.
 
-It defines “best deal” objectively 
+**Preferred method (v1+): category benchmarks**
+- Track rolling price distribution per category:
+  - `p50` (median), `p90` (high), optionally `p10`
+- Map listing price into a score:
+  - <= p50 → high score
+  - p50–p90 → mid score
+  - > p90 → low score
 
-It creates trust through explanations 
+**Fallback (v1): configured cap**
+If benchmarks not available:
+- `priceScore = max(0, 100 - (price / maxPrice) * 100)`
+- If price missing → neutral score (e.g., 50) but confidence penalty applies
 
-It becomes the moat (because competitors can’t easily replicate your judgment + data + outcomes) 
+### 5.2 Hours Score (0–100)
+Lower hours generally better. Normalization mirrors price.
 
-This document defines: 
+**Preferred method (v1+): category benchmarks**
+- per-category `hours_p50`, `hours_p90`
 
-What we score 
+**Fallback (v1): configured cap**
+- `hoursScore = max(0, 100 - (hours / maxHours) * 100)`
+- If hours missing → neutral score (e.g., 50) but confidence penalty applies
 
-How we score it 
+### 5.3 Location Score (soft bias) (0–100)
+We apply only a mild preference boost.
 
-How we explain it 
+**v1 mapping**
+- preferred state → **65**
+- non-preferred → **50**
 
-How we improve it over time without breaking trust 
+This ensures location helps but never dominates value.
 
- 
+### 5.4 Risk Score (0–100)
+Risk reflects “how likely this is to become a problem.”
 
-1) Product goals the scoring model must satisfy 
+Inputs that increase risk score:
+- Verified seller/partner
+- Service history
+- Inspection report
+- Good media/photos
+- Fresh listing (recently seen)
 
-Buyer goals (primary) 
+Inputs that reduce risk score:
+- Missing critical fields (price/hours)
+- Stale listing
+- Unknown seller/source
+- Non-operable status (major penalty)
 
-Best value (price vs condition/usage) 
+v1 default baseline:
+- Start at 70 then apply modifiers.
 
-Low risk (operable, documented, reputable source) 
+---
 
-Speed (instant short-list) 
+## 6) Operability handling (LOCKED rule implementation)
 
-Explainable (buyer understands why option #1 is #1) 
+Operability is **not a hard filter**.
 
-Seller goals (secondary) 
+### 6.1 Recommended v1 operability penalty
+If `is_operable === false`:
+- Apply a strong penalty to total score
+- Apply a strong penalty to risk score
+- Add flags and rationale
 
-Fair opportunity to rank higher by: 
+Example policy:
+- `operabilityPenalty = -60` (applied after weighted sum)
+- `riskScore -= 40` (floored at 0)
+- Flag: `NON_OPERABLE`
+- Add rationale: “Non-operable listing: high repair risk.”
 
-better price 
+### 6.2 “Best Option” eligibility (hard rule)
+A listing with `NON_OPERABLE` flag:
+- **cannot** receive the “Best Option” badge
+- may still appear in results with clear labeling
 
-better documentation 
+---
 
-better condition 
+## 7) Confidence Score (0–100)
 
-transparency 
+Confidence answers:
+> “How reliable is this listing’s data and ranking?”
 
-Platform goals 
+Start at 100, subtract penalties:
 
-Rankings must be: 
+Recommended v1 penalties:
+- Missing `price`: -30
+- Missing `hours`: -25
+- Missing `state`: -10
+- Unknown source/seller: -10
+- Stale listing (not updated recently): -10
+- Inconsistent fields: -15
 
-deterministic 
+Confidence categories:
+- 80–100: High
+- 50–79: Medium
+- <50: Low
 
-auditable 
+Confidence never changes the raw score directly; it’s shown alongside results.
 
-robust to spam 
+---
 
-hard to game 
+## 8) Total score formula (v1)
 
-Monetization must not corrupt rankings. 
+### 8.1 Weighted sum
 
- 
+baseTotal =
+w_price * priceScore
 
-2) Scoring philosophy 
+w_hours * hoursScore
 
-EasyFinder produces: 
+w_location * locationScore
 
-A total score (0–100) 
+w_risk * riskScore
 
-Component scores (price/hours/location/condition/risk) 
+Recommended default weights:
+- `w_price = 0.35`
+- `w_hours = 0.35`
+- `w_location = 0.20`  (soft bias still works because range is narrow)
+- `w_risk = 0.10`
 
-An explanation string (rationale) 
+### 8.2 Apply operability penalty (LOCKED)
+totalScore = clamp(baseTotal + operabilityPenalty, 0, 100)
 
-Confidence score (how reliable the input data is) 
 
-We never claim “best machine” universally. We claim: 
+Where:
+- `operabilityPenalty = 0` if operable
+- `operabilityPenalty = -60` if non-operable
 
-“Best option for your criteria based on available data.” 
+---
+
+## 9) Explainability (non-negotiable)
+
+Every scored listing returns a `rationale[]`.
+
+Examples:
+- “Price is below category benchmark (strong value).”
+- “Hours are lower than average for this category.”
+- “Preferred state mild boost applied.”
+- “Non-operable listing: high repair risk (score reduced).”
+- “Confidence reduced: missing hours.”
+
+Rationale should match the scores—no generic fluff.
+
+---
+
+## 10) Anti-gaming rules
+
+To protect trust and the moat:
+
+- No paid ranking
+- Partner promotion must be labeled and must not affect score
+- Penalize suspicious or incomplete listings:
+  - unrealistic price
+  - repeated duplicates
+  - missing critical fields
+  - stale listings
+
+---
+
+## 11) Future upgrades (v2 and v3)
+
+### v2 (personalization + better normalization)
+- Buyer preferences:
+  - budget caps
+  - distance/shipping
+  - urgency
+  - category-specific preferences
+- Category benchmarks powered by real market data
+- Distance score (zip-to-zip)
+- Seller verification scoring
+
+### v3 (learning loop moat)
+- Outcome signals:
+  - click-through
+  - contact events
+  - conversions (commissionable deals)
+- Build “fair market price” estimators per make/model/year
+- Rankings that improve based on real buyer behavior, without losing explainability
+
+---
+
+## 12) “Best Option” labeling rules
+
+A listing may be tagged as “Best Option” only if:
+- `totalScore` is in the top tier for the query
+- `confidenceScore` is above threshold (recommended >= 60)
+- It is **operable** (must not have `NON_OPERABLE`)
+- No critical red flags
+
+This preserves trust.
+
+---
+
+# Appendix A — Example scoring output (shape)
+
+```json
+{
+  "id": "listing_123",
+  "totalScore": 84,
+  "scores": {
+    "priceScore": 88,
+    "hoursScore": 74,
+    "locationScore": 65,
+    "riskScore": 60
+  },
+  "confidenceScore": 82,
+  "flags": [],
+  "rationale": [
+    "Price is below category benchmark (strong value).",
+    "Hours are moderate for this category.",
+    "Mild location preference applied (CA)."
+  ]
+}
+Non-operable example:
+
+{
+  "id": "listing_999",
+  "totalScore": 22,
+  "scores": {
+    "priceScore": 91,
+    "hoursScore": 55,
+    "locationScore": 50,
+    "riskScore": 20
+  },
+  "confidenceScore": 70,
+  "flags": ["NON_OPERABLE"],
+  "rationale": [
+    "Great price for category.",
+    "Non-operable listing: high repair risk (score reduced).",
+    "Not eligible for Best Option."
+  ]
+}
 
- 
-
-3) Data model assumptions 
-
-A listing has (minimum viable fields): 
-
-price (numeric) 
-
-hours (numeric) 
-
-state / location 
-
-is_operable (boolean) 
-
-category (excavator, dozer, telehandler, etc.) 
-
-source (marketplace / partner) 
-
-createdAt / lastSeen 
-
-optional: year, make, model, serial, attachments, service_history, inspection, photos, seller_type 
-
- 
-
-4) Score components (v1) 
-
- 
-
-4.1 Hard filters (gates) 
-
-Some criteria should be treated as gates (not weighted). Example defaults: 
-
-If is_operable = false → score = 0 (or exclude) 
-
-If missing both price and hours → confidence drops sharply (can still show, but penalized) 
-
-4.2 Weighted components (0–100 each) 
-
-A) Price Score (0–100) Lower is better, but must be normalized. We normalize using category-based price caps. 
-
-Recommended approach: 
-
-Maintain per-category price_p50, price_p90 (rolling stats) 
-
-Price score based on where listing price sits in distribution: 
-
-Example: 
-
-price <= p50 → high score 
-
-price between p50–p90 → mid score 
-
-price > p90 → low score 
-
-Fallback if no stats: 
-
-Use configured maxPrice for the category. 
-
-B) Hours Score (0–100) Lower hours generally better, but depends on category. Same approach as price: 
-
-per-category hours_p50, hours_p90 
-
-fallback maxHours 
-
-C) Location / Preference Score (0–100) 
-
-Buyer preferences (preferred states) add value by reducing friction. 
-
-Also consider distance later (zip → zip). 
-
-v1: 
-
-preferred state → 100 
-
-non-preferred → 50 (not zero; still viable) 
-
-D) Condition / Risk Score (0–100) v1 is simple: 
-
-operable already gated 
-
-add bonuses for documentation: 
-
-documented service history 
-
-inspection report 
-
-verified seller / partner 
-
-number of photos 
-
-Risk penalties: 
-
-missing hours/price 
-
-inconsistent fields 
-
-stale listing (not updated recently) 
-
-“unknown” seller 
-
- 
-
-5) Total Score (v1 formula) 
-
-Total score is weighted sum: 
-
-total = w_price * priceScore 
-
- + w_hours * hoursScore 
-
- + w_location * locationScore 
-
- + w_risk * riskScore 
-
- 
-
-Default weights (tuneable): 
-
-price: 0.35 
-
-hours: 0.35 
-
-location: 0.20 
-
-risk: 0.10 
-
-(Your current config looks close to this.) 
-
- 
-
-6) Explainability (non-negotiable) 
-
-Every ranked item returns: 
-
-component scores 
-
-short rationale 
-
-Example rationale template: 
-
-“Operable equipment prioritized.” 
-
-“Price score 82 based on price vs category benchmark.” 
-
-“Hours score 69 based on hours vs category benchmark.” 
-
-“Preferred state boost for CA.” 
-
-“Documentation bonus applied (service history).” 
-
-“Data confidence reduced due to missing hours.” 
-
-This rationale is a moat: 
-
-it builds trust 
-
-it prevents “black box” suspicion 
-
-it helps sellers improve listings 
-
- 
-
-7) Confidence Score (v1) 
-
-Separate from total score. Confidence answers: “How reliable is this ranking?” 
-
-Example: Start at 100 then subtract: 
-
-missing price: -30 
-
-missing hours: -25 
-
-unknown seller: -10 
-
-stale listing: -10 
-
-inconsistent fields: -15 
-
-Display: 
-
-“High confidence” 
-
-“Medium confidence” 
-
-“Low confidence” 
-
-This prevents bad data from dominating rankings. 
-
- 
-
-8) Personalization (v2) 
-
-Once buyer profiles exist, scoring becomes personalized: 
-
-Budget constraints (hard cap vs soft preference) 
-
-Distance / shipping 
-
-Category-specific needs 
-
-Urgency (speed of delivery) 
-
-Risk tolerance 
-
-We still maintain explainability. 
-
- 
-
-9) Anti-gaming rules (moat protection) 
-
-To prevent manipulation: 
-
-No paid ranking 
-
-Partner boosts must be explicit (“Promoted”) and NOT change score 
-
-Penalize: 
-
-unrealistic price 
-
-repeated listing duplicates 
-
-missing critical data 
-
-Prefer verified sources and documented listings (risk score) 
-
- 
-
-10) Iteration plan 
-
-v1 (Now) 
-
-Weighted scores: price/hours/state/risk 
-
-Confidence score 
-
-Explanations 
-
-v2 
-
-Category benchmarks from real market data (p50/p90) 
-
-Distance score 
-
-Seller verification score 
-
-Time-to-sell signals (later) 
-
-v3 
-
-Outcome learning: 
-
-what got clicked 
-
-what got contacted 
-
-what converted (commission success) 
-
-Build “market price” estimate (like Kelley Blue Book for equipment) 
-
- 
-
-11) Definition of “Best Option” 
-
-EasyFinder’s “Best Option” label requires: 
-
-total score in top tier 
-
-confidence above threshold 
-
-no red flags (operability, obviously) 
-
-This protects trust. 
-
- 
