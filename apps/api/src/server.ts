@@ -43,10 +43,6 @@ export const buildServer = () => {
   if (env.DEMO_MODE) {
     app.log.warn("⚠️ DEMO_MODE ENABLED — serving demo inventory");
   }
-  app.register(listingRoutes, { prefix: "/api/listings" });
-
-  return app;
-};
 
   // Ensure requestId exists on request early
   app.decorateRequest("requestId", "");
@@ -147,6 +143,6 @@ export const buildServer = () => {
   app.register(authRoutes, { prefix: "/api/auth" });
   app.register(adminRoutes, { prefix: "/api/admin" });
   app.register(sellerRoutes, { prefix: "/api/seller" });
-
+  
   return app;
 };
