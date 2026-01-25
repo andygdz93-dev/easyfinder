@@ -41,7 +41,7 @@ export const buildServer = () => {
   const app = Fastify({ logger: true });
 
   if (env.DEMO_MODE) {
-    app.log.warn("⚠️ DEMO_MODE ENABLED — serving demo inventory");
+    app.log.warn("DEMO_MODE ENABLED - serving demo inventory");
   }
 
   // Ensure requestId exists on request early
