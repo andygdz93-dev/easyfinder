@@ -254,19 +254,50 @@ Internal port: 8080
 
 HTTPS via Fly proxy
 
-Environment secrets managed via Fly
+## 🔐 Environment Variables
 
-Frontend (Vercel)
+EasyFinder uses environment variables for configuration.
+
+**Never commit real secrets** to the repository.  
+Use `.env` files locally and **Fly/Vercel secrets** in production.
+
+### Backend (Fly.io / `apps/api`)
+
+Required:
+
+| Variable | Description | Example |
+|---|---|---|
+| `MONGO_URL` | Mongo connection string | `mongodb+srv://user:pass@cluster...` |
+| `DB_NAME` | Database name | `easyfinder` |
+| `JWT_SECRET` | JWT signing secret (**min 16 chars**) | `a-very-long-random-string` |
+| `CORS_ORIGINS` | Comma-separated allowed origins | `https://easyfinderai.vercel.app,http://localhost:5173` |
+| `PORT` | API port (default 8080) | `8080` |
+
+Set Fly secrets:
+
+```bash
+fly secrets set \
+  MONGO_URL="..." \
+  DB_NAME="easyfinder" \
+  JWT_SECRET="..." \
+  CORS_ORIGINS="https://easyfinderai.vercel.app"
+
+
+**Frontend (Vercel)**
 
 Root directory: apps/web
 
 Build output: dist
 
-Environment variable:
+Variable: VITE_API_BASE_URL	
 
-VITE_API_BASE_URL=https://easyfinder.fly.dev
+Description: API base URL	
 
-🧪 CI / Quality Gates
+Example: https://easyfinder.fly.dev/api
+		
+
+
+**🧪 CI / Quality Gates**
 
 CI runs on every PR and main branch push.
 
@@ -280,13 +311,13 @@ Build validation
 
 The goal: keep the codebase clean and predictable.
 
-📌 Current Project Status
+**📌 Current Project Status**
 
-✅ Backend live
-✅ Frontend live
-✅ Scoring engine operational
-✅ CI configured
-⚠️ Auth & transactions intentionally deferred
+**✅ Backend live**
+**✅ Frontend live**
+**✅ Scoring engine operational**
+**✅ CI configured**
+**⚠️ Auth & transactions intentionally deferred**
 
 This is a stable foundation, not a prototype.
 

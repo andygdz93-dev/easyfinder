@@ -18,6 +18,10 @@ import adminRoutes from "./routes/admin.js";
 import sellerRoutes from "./routes/seller.js";
 import { ZodError } from "zod";
 
+import { env } from "./env.js";
+
+
+
 /**
  * Type augmentation so TS knows about:
  * - request.requestId
@@ -32,8 +36,13 @@ declare module "fastify" {
   }
 }
 
+
 export const buildServer = () => {
   const app = Fastify({ logger: true });
+
+  if (env.DEMO_MODE) {
+    app.log.warn("DEMO_MODE ENABLED - serving demo inventory");
+  }
 
   // Ensure requestId exists on request early
   app.decorateRequest("requestId", "");
@@ -134,6 +143,6 @@ export const buildServer = () => {
   app.register(authRoutes, { prefix: "/api/auth" });
   app.register(adminRoutes, { prefix: "/api/admin" });
   app.register(sellerRoutes, { prefix: "/api/seller" });
-
+  
   return app;
 };
