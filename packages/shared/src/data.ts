@@ -33,14 +33,70 @@ export const demoUsers: User[] = [
     id: "admin-user",
     email: "admin@easyfinder.ai",
     name: "Admin User",
-    role: "admin",
+    role: "admin",0
   },
 ];
 
-const buildImages = (query: string, seed: number, count = 4) =>
-  Array.from({ length: count }).map(
-    (_, index) => `https://source.unsplash.com/featured/?${query}&sig=${seed + index}`
-  );
+const categoryQueries: Record<string, string[]> = {
+  Excavator: [
+    "excavator digging",
+    "crawler excavator",
+    "hydraulic excavator",
+    "excavator heavy equipment",
+    "excavator worksite",
+    "excavator boom",
+  ],
+  Bulldozer: [
+    "bulldozer pushing dirt",
+    "dozer blade",
+    "track dozer",
+    "bulldozer construction",
+    "bulldozer grading",
+    "bulldozer earthmoving",
+  ],
+  "Wheel Loader": [
+    "wheel loader",
+    "front end loader",
+    "loader bucket",
+    "wheel loader quarry",
+    "loader construction site",
+    "wheel loader equipment",
+  ],
+  "Crawler Crane": [
+    "crawler crane",
+    "mobile crane",
+    "construction crane",
+    "crane lifting",
+    "crane boom",
+    "crane heavy equipment",
+  ],
+  Telehandler: [
+    "telehandler",
+    "telehandler lifting",
+    "telescopic handler",
+    "telehandler boom",
+    "telehandler construction",
+    "telehandler forks",
+  ],
+  "Articulated Dump Truck": [
+    "articulated dump truck",
+    "dump truck hauling",
+    "off road dump truck",
+    "dump truck mining",
+    "haul truck",
+    "construction dump truck",
+  ],
+};
+
+const buildImages = (category: string, seed: number, count = 4) => {
+  const queries = categoryQueries[category] ?? [category.toLowerCase()];
+  return Array.from({ length: count }).map((_, index) => {
+    const query = queries[(seed + index) % queries.length];
+    return `https://source.unsplash.com/featured/1200x800/?${encodeURIComponent(
+      query
+    )}&sig=${seed + index}`;
+  });
+};
 
 export const generateListings = (count = 40): Listing[] =>
   Array.from({ length: count }).map((_, index) => {
@@ -48,7 +104,7 @@ export const generateListings = (count = 40): Listing[] =>
     const category = categories[index % categories.length];
     const price = 65000 + (index % 9) * 22000 + (index % 4) * 8000;
     const hours = 900 + (index % 10) * 520;
-    const images = buildImages(category.toLowerCase(), index * 7 + 1);
+    const images = buildImages(category, index * 7 + 1);
     return {
       id: `listing-${index + 1}`,
       title: `${state} ${category} ${index + 1}`,
