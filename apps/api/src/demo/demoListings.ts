@@ -1,18 +1,21 @@
 import type { Listing } from "@easyfinderai/shared";
 
 type ListingSeed = Omit<Listing, "imageUrl" | "images"> & {
-  imageQuery: string;
+  imageQueries: string[];
   imageSeed: number;
 };
 
-const buildImages = (query: string, seed: number, count = 5) =>
-  Array.from({ length: count }).map(
-    (_, index) => `https://source.unsplash.com/featured/?${query}&sig=${seed + index}`
+const buildImages = (queries: string[], seed: number) =>
+  queries.map(
+    (query, index) =>
+      `https://source.unsplash.com/featured/1200x800/?${encodeURIComponent(query)}&sig=${
+        seed + index
+      }`
   );
 
 const makeListing = (listing: ListingSeed): Listing => {
-  const { imageQuery, imageSeed, ...rest } = listing;
-  const images = buildImages(imageQuery, imageSeed);
+  const { imageQueries, imageSeed, ...rest } = listing;
+  const images = buildImages(imageQueries, imageSeed);
   return {
     ...rest,
     imageUrl: images[0],
@@ -30,7 +33,12 @@ export const demoListings: Listing[] = [
     hours: 1800,
     operable: true,
     category: "Excavator",
-    imageQuery: "excavator",
+    imageQueries: [
+      "cat 320 excavator",
+      "crawler excavator construction",
+      "hydraulic excavator digging",
+      "excavator heavy equipment",
+    ],
     imageSeed: 101,
     source: "auctionplanet",
     createdAt: "2025-12-10T15:12:00.000Z",
@@ -44,7 +52,12 @@ export const demoListings: Listing[] = [
     hours: 3200,
     operable: true,
     category: "Excavator",
-    imageQuery: "excavator",
+    imageQueries: [
+      "komatsu pc210 excavator",
+      "excavator bucket close up",
+      "earthmoving excavator worksite",
+      "construction excavator cab",
+    ],
     imageSeed: 111,
     source: "ironplanet",
     createdAt: "2025-12-08T10:35:00.000Z",
@@ -58,7 +71,12 @@ export const demoListings: Listing[] = [
     hours: 4100,
     operable: true,
     category: "Excavator",
-    imageQuery: "excavator",
+    imageQueries: [
+      "deere excavator",
+      "excavator tracks",
+      "excavator on job site",
+      "excavator boom",
+    ],
     imageSeed: 121,
     source: "machinerytrader",
     createdAt: "2025-12-05T09:20:00.000Z",
@@ -72,7 +90,12 @@ export const demoListings: Listing[] = [
     hours: 950,
     operable: true,
     category: "Excavator",
-    imageQuery: "excavator",
+    imageQueries: [
+      "volvo excavator",
+      "excavator loading dirt",
+      "excavator on construction site",
+      "modern excavator",
+    ],
     imageSeed: 131,
     source: "auctiontime",
     createdAt: "2025-12-12T11:00:00.000Z",
@@ -86,7 +109,12 @@ export const demoListings: Listing[] = [
     hours: 3600,
     operable: true,
     category: "Dozer",
-    imageQuery: "bulldozer",
+    imageQueries: [
+      "cat d6 bulldozer",
+      "bulldozer pushing dirt",
+      "dozer blade earthmoving",
+      "track dozer construction",
+    ],
     imageSeed: 201,
     source: "ritchiebros",
     createdAt: "2025-12-03T14:40:00.000Z",
@@ -100,7 +128,12 @@ export const demoListings: Listing[] = [
     hours: 5200,
     operable: true,
     category: "Dozer",
-    imageQuery: "bulldozer",
+    imageQueries: [
+      "komatsu bulldozer",
+      "dozer on quarry",
+      "bulldozer tracks",
+      "bulldozer worksite",
+    ],
     imageSeed: 211,
     source: "ironplanet",
     createdAt: "2025-11-28T12:15:00.000Z",
@@ -114,7 +147,12 @@ export const demoListings: Listing[] = [
     hours: 1400,
     operable: true,
     category: "Dozer",
-    imageQuery: "bulldozer",
+    imageQueries: [
+      "deere dozer",
+      "bulldozer grading",
+      "dozer blade detail",
+      "bulldozer earthmoving",
+    ],
     imageSeed: 221,
     source: "auctionplanet",
     createdAt: "2025-12-09T09:05:00.000Z",
@@ -128,7 +166,12 @@ export const demoListings: Listing[] = [
     hours: 6400,
     operable: true,
     category: "Dozer",
-    imageQuery: "bulldozer",
+    imageQueries: [
+      "cat d5 bulldozer",
+      "small dozer",
+      "bulldozer compact",
+      "dozer on dirt site",
+    ],
     imageSeed: 231,
     source: "govplanet",
     createdAt: "2025-11-20T16:55:00.000Z",
@@ -142,7 +185,12 @@ export const demoListings: Listing[] = [
     hours: 1100,
     operable: true,
     category: "Skid Steer",
-    imageQuery: "skid-steer",
+    imageQueries: [
+      "cat skid steer",
+      "skid steer loader",
+      "skid steer construction",
+      "compact skid steer",
+    ],
     imageSeed: 301,
     source: "auctiontime",
     createdAt: "2025-12-11T08:30:00.000Z",
@@ -156,7 +204,12 @@ export const demoListings: Listing[] = [
     hours: 1900,
     operable: true,
     category: "Skid Steer",
-    imageQuery: "skid-steer",
+    imageQueries: [
+      "bobcat skid steer",
+      "skid steer bucket",
+      "skid steer worksite",
+      "skid steer attachment",
+    ],
     imageSeed: 311,
     source: "heavyequipment",
     createdAt: "2025-12-01T10:10:00.000Z",
@@ -170,7 +223,12 @@ export const demoListings: Listing[] = [
     hours: 2900,
     operable: true,
     category: "Skid Steer",
-    imageQuery: "skid-steer",
+    imageQueries: [
+      "deere skid steer",
+      "compact track loader",
+      "skid steer cab",
+      "skid steer lifting",
+    ],
     imageSeed: 321,
     source: "machinerytrader",
     createdAt: "2025-11-25T15:20:00.000Z",
@@ -184,7 +242,12 @@ export const demoListings: Listing[] = [
     hours: 800,
     operable: true,
     category: "Skid Steer",
-    imageQuery: "skid-steer",
+    imageQueries: [
+      "takeuchi skid steer",
+      "track skid steer",
+      "skid steer on gravel",
+      "skid steer loader work",
+    ],
     imageSeed: 331,
     source: "auctionplanet",
     createdAt: "2025-12-13T13:25:00.000Z",
@@ -198,7 +261,12 @@ export const demoListings: Listing[] = [
     hours: 2800,
     operable: true,
     category: "Wheel Loader",
-    imageQuery: "wheel-loader",
+    imageQueries: [
+      "cat wheel loader",
+      "front end loader",
+      "wheel loader bucket",
+      "loader at quarry",
+    ],
     imageSeed: 401,
     source: "ironplanet",
     createdAt: "2025-12-07T12:45:00.000Z",
@@ -212,7 +280,12 @@ export const demoListings: Listing[] = [
     hours: 4200,
     operable: true,
     category: "Wheel Loader",
-    imageQuery: "wheel-loader",
+    imageQueries: [
+      "volvo wheel loader",
+      "wheel loader working",
+      "loader construction site",
+      "front loader equipment",
+    ],
     imageSeed: 411,
     source: "ritchiebros",
     createdAt: "2025-12-02T09:00:00.000Z",
@@ -226,7 +299,12 @@ export const demoListings: Listing[] = [
     hours: 6100,
     operable: true,
     category: "Wheel Loader",
-    imageQuery: "wheel-loader",
+    imageQueries: [
+      "deere wheel loader",
+      "wheel loader gravel",
+      "loader tire close up",
+      "loader earthmoving",
+    ],
     imageSeed: 421,
     source: "auctiontime",
     createdAt: "2025-11-22T11:35:00.000Z",
@@ -240,7 +318,12 @@ export const demoListings: Listing[] = [
     hours: 600,
     operable: true,
     category: "Wheel Loader",
-    imageQuery: "wheel-loader",
+    imageQueries: [
+      "komatsu wheel loader",
+      "modern wheel loader",
+      "loader on jobsite",
+      "wheel loader bucket lift",
+    ],
     imageSeed: 431,
     source: "machinerytrader",
     createdAt: "2025-12-14T10:50:00.000Z",
@@ -254,7 +337,12 @@ export const demoListings: Listing[] = [
     hours: 2300,
     operable: true,
     category: "Backhoe",
-    imageQuery: "backhoe",
+    imageQueries: [
+      "cat backhoe loader",
+      "backhoe digging",
+      "backhoe on site",
+      "backhoe loader bucket",
+    ],
     imageSeed: 501,
     source: "govplanet",
     createdAt: "2025-12-04T08:20:00.000Z",
@@ -268,7 +356,12 @@ export const demoListings: Listing[] = [
     hours: 3600,
     operable: true,
     category: "Backhoe",
-    imageQuery: "backhoe",
+    imageQueries: [
+      "deere backhoe",
+      "backhoe construction",
+      "backhoe front loader",
+      "backhoe equipment",
+    ],
     imageSeed: 511,
     source: "auctionplanet",
     createdAt: "2025-11-27T13:05:00.000Z",
@@ -282,7 +375,12 @@ export const demoListings: Listing[] = [
     hours: 1900,
     operable: true,
     category: "Backhoe",
-    imageQuery: "backhoe",
+    imageQueries: [
+      "case backhoe",
+      "backhoe in action",
+      "backhoe loader digging",
+      "backhoe machine",
+    ],
     imageSeed: 521,
     source: "heavyequipment",
     createdAt: "2025-12-06T15:45:00.000Z",
@@ -296,7 +394,12 @@ export const demoListings: Listing[] = [
     hours: 5200,
     operable: true,
     category: "Backhoe",
-    imageQuery: "backhoe",
+    imageQueries: [
+      "backhoe loader",
+      "backhoe worksite",
+      "backhoe bucket",
+      "backhoe construction equipment",
+    ],
     imageSeed: 531,
     source: "auctiontime",
     createdAt: "2025-11-18T09:40:00.000Z",
@@ -310,7 +413,12 @@ export const demoListings: Listing[] = [
     hours: 1500,
     operable: true,
     category: "Telehandler",
-    imageQuery: "telehandler",
+    imageQueries: [
+      "telehandler construction",
+      "jlg telehandler",
+      "telehandler lifting",
+      "telehandler boom",
+    ],
     imageSeed: 601,
     source: "ritchiebros",
     createdAt: "2025-12-12T16:10:00.000Z",
@@ -324,7 +432,12 @@ export const demoListings: Listing[] = [
     hours: 2800,
     operable: true,
     category: "Telehandler",
-    imageQuery: "telehandler",
+    imageQueries: [
+      "genie telehandler",
+      "telehandler on site",
+      "telehandler forks",
+      "telescopic handler",
+    ],
     imageSeed: 611,
     source: "auctionplanet",
     createdAt: "2025-12-01T07:55:00.000Z",
@@ -338,7 +451,12 @@ export const demoListings: Listing[] = [
     hours: 4100,
     operable: true,
     category: "Telehandler",
-    imageQuery: "telehandler",
+    imageQueries: [
+      "cat telehandler",
+      "telehandler equipment",
+      "telehandler lifting pallet",
+      "telehandler worksite",
+    ],
     imageSeed: 621,
     source: "ironplanet",
     createdAt: "2025-11-23T10:30:00.000Z",
@@ -352,7 +470,12 @@ export const demoListings: Listing[] = [
     hours: 900,
     operable: true,
     category: "Telehandler",
-    imageQuery: "telehandler",
+    imageQueries: [
+      "skytrak telehandler",
+      "telehandler boom lift",
+      "telehandler construction equipment",
+      "telehandler warehouse",
+    ],
     imageSeed: 631,
     source: "machinerytrader",
     createdAt: "2025-12-15T14:15:00.000Z",
