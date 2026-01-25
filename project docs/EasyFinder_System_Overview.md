@@ -49,53 +49,53 @@ easyfinder/
 
 ├── apps/
 
-│   ├── api/                # Backend API (Fastify)
+│    ├── api/                   # Backend API (Fastify)
 
-│   │   ├── src/
+│    │    ├── src/
 
-│   │   │   ├── routes/     # API route definitions 
+│    │    │    ├── routes/      # API route definitions 
 
-│   │   │   ├── plugins/    # Fastify plugins (JWT, auth, etc.) 
+│    │    │    ├── plugins/     # Fastify plugins (JWT, auth, etc.) 
 
-│   │   │   ├── services/   # Business logic 
+│    │    │    ├── services/    # Business logic 
 
-│   │   │   ├── scoring/    # Scoring engine logic 
+│    │    │    ├── scoring/     # Scoring engine logic 
 
-│   │   │   ├── types.d.ts  # Global Fastify / JWT typings 
+│    │    │    ├── types.d.ts   # Global Fastify / JWT typings 
 
-│   │   │   └── index.ts    # API entry point 
+│    │    │    └── index.ts     # API entry point 
 
-│   │   ├── tests/          # API & scoring tests 
+│    │    ├── tests/            # API & scoring tests 
 
-│   │   ├── tsconfig.json 
+│    │    ├── tsconfig.json 
 
-│   │   ├── tsconfig.test.json 
+│    │    ├── tsconfig.test.json 
 
-│   │   └── package.json 
+│    │    └── package.json 
 
-│   │ 
+│    │ 
 
-│   └── web/                # Frontend (Vite + React) 
+│    └── web/                   # Frontend (Vite + React) 
 
-│       ├── src/ 
+│        ├── src/ 
 
-│       │   ├── components/ 
+│        │    ├── components/ 
 
-│       │   ├── pages/ 
+│        │    ├── pages/ 
 
-│       │   ├── services/   # API calls 
+│        │    ├── services/     # API calls 
 
-│       │   └── main.tsx 
+│        │    └── main.tsx 
 
-│       ├── vite.config.ts 
+│        ├── vite.config.ts 
 
-│       └── package.json 
+│        └── package.json 
 
 │
 
 ├── packages/ 
 
-│   └── shared/             # Shared types & utilities 
+│   └── shared/                 # Shared types & utilities 
 
 │       ├── src/ 
 
@@ -105,13 +105,13 @@ easyfinder/
 
 ├── .github/ 
 
-│   └── workflows/          # CI (lint, typecheck, build) 
+│    └── workflows/             # CI (lint, typecheck, build) 
 
 │ 
 
-├── Dockerfile              # Backend container 
+├── Dockerfile                  # Backend container 
 
-├── fly.toml                # Fly.io deployment config 
+├── fly.toml                    # Fly.io deployment config 
 
 ├── pnpm-workspace.yaml 
 
