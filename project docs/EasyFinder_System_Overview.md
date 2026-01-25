@@ -46,41 +46,77 @@ Database / Services (MongoDB, future integrations)
 3. Repository Structure 
 
 easyfinder/ 
-├── apps/ 
-│   ├── api/                # Backend API (Fastify) 
-│   │   ├── src/ 
+
+├── apps/
+
+│   ├── api/                # Backend API (Fastify)
+
+│   │   ├── src/
+
 │   │   │   ├── routes/     # API route definitions 
+
 │   │   │   ├── plugins/    # Fastify plugins (JWT, auth, etc.) 
+
 │   │   │   ├── services/   # Business logic 
+
 │   │   │   ├── scoring/    # Scoring engine logic 
+
 │   │   │   ├── types.d.ts  # Global Fastify / JWT typings 
+
 │   │   │   └── index.ts    # API entry point 
+
 │   │   ├── tests/          # API & scoring tests 
+
 │   │   ├── tsconfig.json 
+
 │   │   ├── tsconfig.test.json 
+
 │   │   └── package.json 
+
 │   │ 
+
 │   └── web/                # Frontend (Vite + React) 
+
 │       ├── src/ 
+
 │       │   ├── components/ 
+
 │       │   ├── pages/ 
+
 │       │   ├── services/   # API calls 
+
 │       │   └── main.tsx 
+
 │       ├── vite.config.ts 
+
 │       └── package.json 
-│ 
+
+│
+
 ├── packages/ 
+
 │   └── shared/             # Shared types & utilities 
+
 │       ├── src/ 
+
 │       └── package.json 
+
 │ 
+
 ├── .github/ 
+
 │   └── workflows/          # CI (lint, typecheck, build) 
+
 │ 
+
 ├── Dockerfile              # Backend container 
+
 ├── fly.toml                # Fly.io deployment config 
+
 ├── pnpm-workspace.yaml 
+
 └── README.md 
+
  
 
  
