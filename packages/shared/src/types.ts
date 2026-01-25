@@ -13,12 +13,13 @@ export const listingSchema = z.object({
   operable: z.boolean(),
   category: z.string(),
   imageUrl: z.string().url().optional(),
+  images: z.array(z.string().url()).optional(),
   source: z.string(),
   createdAt: z.string(),
 });
 type ListingBase = z.infer<typeof listingSchema>;
-export type ListingRequired = Required<Omit<ListingBase, "imageUrl">> &
-  Pick<ListingBase, "imageUrl">;
+export type ListingRequired = Required<Omit<ListingBase, "imageUrl" | "images">> &
+  Pick<ListingBase, "imageUrl" | "images">;
 export type Listing = ListingRequired;
 
 export const scoringConfigSchema = z.object({
