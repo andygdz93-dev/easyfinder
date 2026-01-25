@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { DemoListing, getDemoListing, getDemoListings } from "../lib/demoApi";
@@ -43,6 +43,7 @@ const getRankNarrative = (listing: DemoListing, rank?: number, total?: number) =
 export const DemoListingDetail = () => {
   const { id } = useParams();
   const watchlist = useDemoWatchlist();
+  const [activeImage, setActiveImage] = useState(0);
 
   const listingQuery = useQuery({
     queryKey: ["demo-listing", id],
@@ -84,6 +85,25 @@ export const DemoListingDetail = () => {
 
   const listing = listingQuery.data;
   const score = getScoreSummary(listing);
+  const images = listing.images?.length
+    ? listing.images
+    : listing.imageUrl
+    ? [listing.imageUrl]
+    : [];
+
+  useEffect(() => {
+    setActiveImage(0);
+  }, [listing.id]);
+
+  const activeImageUrl = images[activeImage] ?? images[0];
+  const handlePrev = () => {
+    if (!images.length) return;
+    setActiveImage((index) => (index - 1 + images.length) % images.length);
+  };
+  const handleNext = () => {
+    if (!images.length) return;
+    setActiveImage((index) => (index + 1) % images.length);
+  };
 
   return (
     <div className="space-y-8">
@@ -91,8 +111,64 @@ export const DemoListingDetail = () => {
         ← Back to ranked listings
       </Link>
 
-      <section className="grid gap-6 rounded-3xl border border-black/10 bg-white/90 p-8 shadow-xl shadow-orange-100/60 md:grid-cols-[1.2fr_1fr]">
-        <div className="space-y-4">
+      <section className="grid gap-6 rounded-3xl border border-black/10 bg-white/90 p-8 shadow-xl shadow-orange-100/60 lg:grid-cols-[1.1fr_1fr]">
+        <div className="space-y-5">
+          <div className="rounded-3xl border border-black/10 bg-slate-100/80 p-4">
+            <div className="relative overflow-hidden rounded-2xl">
+              {activeImageUrl ? (
+                <img
+                  src={activeImageUrl}
+                  alt={`${listing.title} gallery ${activeImage + 1}`}
+                  className="h-64 w-full object-cover sm:h-72"
+                />
+              ) : (
+                <div className="flex h-64 items-center justify-center text-sm text-slate-500">
+                  No images available.
+                </div>
+              )}
+              {images.length > 1 && (
+                <div className="absolute inset-x-4 bottom-4 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={handlePrev}
+                    className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-700 shadow"
+                  >
+                    Prev
+                  </button>
+                  <div className="rounded-full bg-white/90 px-3 py-1 text-xs text-slate-600 shadow">
+                    {activeImage + 1} / {images.length}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-700 shadow"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </div>
+            {images.length > 1 && (
+              <div className="mt-4 grid grid-cols-4 gap-3 sm:grid-cols-5">
+                {images.map((image, index) => (
+                  <button
+                    key={`${listing.id}-image-${index}`}
+                    type="button"
+                    onClick={() => setActiveImage(index)}
+                    className={`overflow-hidden rounded-xl border ${
+                      index === activeImage ? "border-amber-500" : "border-transparent"
+                    }`}
+                  >
+                    <img
+                      src={image}
+                      alt={`${listing.title} thumbnail ${index + 1}`}
+                      className="h-16 w-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <p className="text-xs uppercase tracking-[0.3em] text-slate-500">{listing.category}</p>
           <h2 className="demo-title text-3xl font-semibold text-slate-900">
             {listing.title || "Listing"}
