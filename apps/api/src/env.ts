@@ -33,7 +33,8 @@ const EnvSchema = z.object({
     .string()
     .default("http://localhost:5173")
     .transform((s) => s.split(",").map((x) => x.trim()).filter(Boolean))
-    
+    .refine((arr) => arr.length > 0),
+
   // Mongo (required)
   MONGO_URL: z.string().min(1, "MONGO_URL is required"),
   DB_NAME: z.string().min(1, "DB_NAME is required"),
