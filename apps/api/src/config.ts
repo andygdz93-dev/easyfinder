@@ -6,4 +6,5 @@ export const config = {
   corsOrigins: env.CORS_ORIGINS,
   mongoUrl: env.MONGO_URL,
   dbName: env.DB_NAME,
+  demoMode: env.DEMO_MODE,
 };
