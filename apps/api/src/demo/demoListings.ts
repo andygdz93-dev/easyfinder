@@ -1,20 +1,28 @@
+// apps/api/src/demo/demoListings.ts
+
 import type { Listing } from "@easyfinderai/shared";
+import { assignDemoImages } from "@easyfinderai/shared/demoImages";
 
-type ListingSeed = Omit<Listing, "imageUrl" | "images"> & {
-  imageQueries: string[];
-  imageSeed: number;
-};
+/**
+ * IMPORTANT RULES (do not break these):
+ * - NO baseUrl here (API must stay origin-agnostic)
+ * - Images must be ROOT-RELATIVE paths: /demo-images/...
+ * - Category names can be human-friendly; normalizeCategory() handles mapping
+ */
 
-const buildImages = (images?: string[]) => images ?? [];
-
-const makeListing = (input: any) => {
-  const images = buildImages(input.images);
+function makeListing(input: Omit<Listing, "images" | "imageUrl">): Listing {
+  const images = assignDemoImages({
+    listingId: String(input.id),
+    category: input.category,
+    count: 5,
+  });
 
   return {
     ...input,
     images,
+    imageUrl: images[0],
   };
-};
+}
 
 export const demoListings: Listing[] = [
   makeListing({
@@ -26,13 +34,6 @@ export const demoListings: Listing[] = [
     hours: 1800,
     operable: true,
     category: "Excavator",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-    
-  ],
     source: "auctionplanet",
     createdAt: "2025-12-10T15:12:00.000Z",
   }),
@@ -45,12 +46,6 @@ export const demoListings: Listing[] = [
     hours: 3200,
     operable: true,
     category: "Excavator",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-  ],
     source: "ironplanet",
     createdAt: "2025-12-08T10:35:00.000Z",
   }),
@@ -63,12 +58,6 @@ export const demoListings: Listing[] = [
     hours: 4100,
     operable: true,
     category: "Excavator",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-  ],
     source: "machinerytrader",
     createdAt: "2025-12-05T09:20:00.000Z",
   }),
@@ -81,15 +70,11 @@ export const demoListings: Listing[] = [
     hours: 950,
     operable: true,
     category: "Excavator",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-  ],
     source: "auctiontime",
     createdAt: "2025-12-12T11:00:00.000Z",
   }),
+
+  // DOZER
   makeListing({
     id: "demo-5",
     title: "2017 CAT D6T Dozer",
@@ -99,12 +84,6 @@ export const demoListings: Listing[] = [
     hours: 3600,
     operable: true,
     category: "Dozer",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-  ],
     source: "ritchiebros",
     createdAt: "2025-12-03T14:40:00.000Z",
   }),
@@ -117,51 +96,11 @@ export const demoListings: Listing[] = [
     hours: 5200,
     operable: true,
     category: "Dozer",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-  ],
     source: "ironplanet",
     createdAt: "2025-11-28T12:15:00.000Z",
   }),
-  makeListing({
-    id: "demo-7",
-    title: "2019 Deere 650K Dozer",
-    description: "Low-hour dozer with GPS-ready blade controls.",
-    state: "TX",
-    price: 214000,
-    hours: 1400,
-    operable: true,
-    category: "Dozer",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-  ],
-    source: "auctionplanet",
-    createdAt: "2025-12-09T09:05:00.000Z",
-  }),
-  makeListing({
-    id: "demo-8",
-    title: "2014 CAT D5K Dozer",
-    description: "Compact dozer, strong for tight sites.",
-    state: "WA",
-    price: 98000,
-    hours: 6400,
-    operable: true,
-    category: "Dozer",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-  ],
-    source: "govplanet",
-    createdAt: "2025-11-20T16:55:00.000Z",
-  }),
+
+  // SKID STEER
   makeListing({
     id: "demo-9",
     title: "2020 CAT 262D Skid Steer",
@@ -171,12 +110,6 @@ export const demoListings: Listing[] = [
     hours: 1100,
     operable: true,
     category: "Skid Steer",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-  ],
     source: "auctiontime",
     createdAt: "2025-12-11T08:30:00.000Z",
   }),
@@ -189,51 +122,11 @@ export const demoListings: Listing[] = [
     hours: 1900,
     operable: true,
     category: "Skid Steer",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-  ],
     source: "heavyequipment",
     createdAt: "2025-12-01T10:10:00.000Z",
   }),
-  makeListing({
-    id: "demo-11",
-    title: "2016 Deere 318G Skid Steer",
-    description: "Well-kept skid steer with enclosed cab.",
-    state: "OR",
-    price: 52000,
-    hours: 2900,
-    operable: true,
-    category: "Skid Steer",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-  ],
-    source: "machinerytrader",
-    createdAt: "2025-11-25T15:20:00.000Z",
-  }),
-  makeListing({
-    id: "demo-12",
-    title: "2021 Takeuchi TL12 Skid Steer",
-    description: "Track skid steer, low hours, clean emissions.",
-    state: "TX",
-    price: 89000,
-    hours: 800,
-    operable: true,
-    category: "Skid Steer",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-  ],
-    source: "auctionplanet",
-    createdAt: "2025-12-13T13:25:00.000Z",
-  }),
+
+  // WHEEL LOADER
   makeListing({
     id: "demo-13",
     title: "2019 CAT 930M Wheel Loader",
@@ -243,12 +136,6 @@ export const demoListings: Listing[] = [
     hours: 2800,
     operable: true,
     category: "Wheel Loader",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-  ],
     source: "ironplanet",
     createdAt: "2025-12-07T12:45:00.000Z",
   }),
@@ -261,51 +148,11 @@ export const demoListings: Listing[] = [
     hours: 4200,
     operable: true,
     category: "Wheel Loader",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-  ],
     source: "ritchiebros",
     createdAt: "2025-12-02T09:00:00.000Z",
   }),
-  makeListing({
-    id: "demo-15",
-    title: "2015 Deere 544K Wheel Loader",
-    description: "Durable loader with strong tire condition.",
-    state: "UT",
-    price: 118000,
-    hours: 6100,
-    operable: true,
-    category: "Wheel Loader",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-  ],
-    source: "auctiontime",
-    createdAt: "2025-11-22T11:35:00.000Z",
-  }),
-  makeListing({
-    id: "demo-16",
-    title: "2022 Komatsu WA270 Wheel Loader",
-    description: "Late-model loader with low hours and warranty.",
-    state: "AZ",
-    price: 224000,
-    hours: 600,
-    operable: true,
-    category: "Wheel Loader",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-  ],
-    source: "machinerytrader",
-    createdAt: "2025-12-14T10:50:00.000Z",
-  }),
+
+  // BACKHOE
   makeListing({
     id: "demo-17",
     title: "2018 CAT 420F Backhoe",
@@ -315,69 +162,11 @@ export const demoListings: Listing[] = [
     hours: 2300,
     operable: true,
     category: "Backhoe",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-  ],
     source: "govplanet",
     createdAt: "2025-12-04T08:20:00.000Z",
   }),
-  makeListing({
-    id: "demo-18",
-    title: "2016 Deere 310SL Backhoe",
-    description: "Fleet-maintained backhoe with strong engine hours.",
-    state: "CO",
-    price: 86000,
-    hours: 3600,
-    operable: true,
-    category: "Backhoe",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-  ],
-    source: "auctionplanet",
-    createdAt: "2025-11-27T13:05:00.000Z",
-  }),
-  makeListing({
-    id: "demo-19",
-    title: "2019 Case 580N Backhoe",
-    description: "Smooth-running backhoe with auxiliary hydraulics.",
-    state: "IA",
-    price: 104000,
-    hours: 1900,
-    operable: true,
-    category: "Backhoe",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-  ],
-    source: "heavyequipment",
-    createdAt: "2025-12-06T15:45:00.000Z",
-  }),
-  makeListing({
-    id: "demo-20",
-    title: "2015 CAT 416F Backhoe",
-    description: "Budget-friendly backhoe with recent service.",
-    state: "NV",
-    price: 78000,
-    hours: 5200,
-    operable: true,
-    category: "Backhoe",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-  ],
-    source: "auctiontime",
-    createdAt: "2025-11-18T09:40:00.000Z",
-  }),
+
+  // TELEHANDLER
   makeListing({
     id: "demo-21",
     title: "2020 JLG 1055 Telehandler",
@@ -387,67 +176,7 @@ export const demoListings: Listing[] = [
     hours: 1500,
     operable: true,
     category: "Telehandler",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-  ],
     source: "ritchiebros",
     createdAt: "2025-12-12T16:10:00.000Z",
-  }),
-  makeListing({
-    id: "demo-22",
-    title: "2017 Genie GTH-1056 Telehandler",
-    description: "Telehandler with stabilized outriggers.",
-    state: "TX",
-    price: 118000,
-    hours: 2800,
-    operable: true,
-    category: "Telehandler",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-  ],
-    source: "auctionplanet",
-    createdAt: "2025-12-01T07:55:00.000Z",
-  }),
-  makeListing({
-    id: "demo-23",
-    title: "2016 CAT TL1055 Telehandler",
-    description: "Reliable telehandler with steady boom control.",
-    state: "OR",
-    price: 98000,
-    hours: 4100,
-    operable: true,
-    category: "Telehandler",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-  ],
-    source: "ironplanet",
-    createdAt: "2025-11-23T10:30:00.000Z",
-  }),
-  makeListing({
-    id: "demo-24",
-    title: "2022 SkyTrak 8042 Telehandler",
-    description: "Late-model telehandler with service contract.",
-    state: "AZ",
-    price: 148000,
-    hours: 900,
-    operable: true,
-    category: "Telehandler",
-    images: [
-    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1590650153855-d9e808231d41?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1581091870627-3c6c1c77f5b4?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80",
-  ],
-    source: "machinerytrader",
-    createdAt: "2025-12-15T14:15:00.000Z",
   }),
 ];

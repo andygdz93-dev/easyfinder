@@ -7,7 +7,11 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "import": "./dist/index.js"
+    },
+    "./demoImages": {
+      "types": "./dist/demoImages.d.ts",
+      "import": "./dist/demoImages.js"
     }
   },
   "scripts": {
