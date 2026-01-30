@@ -1,4 +1,4 @@
-const apiBaseUrl = import.meta.env.VITE_API_URL;
+const apiBaseUrl = import.meta.env.VITE_API_URL ?? process.env.VITE_API_URL;
 
 if (!apiBaseUrl) {
   throw new Error("VITE_API_URL is required");

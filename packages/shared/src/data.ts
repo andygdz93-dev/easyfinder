@@ -33,7 +33,7 @@ export const demoUsers: User[] = [
     id: "admin-user",
     email: "admin@easyfinder.ai",
     name: "Admin User",
-    role: "admin",
+    role: "admin",0
   },
 ];
 
