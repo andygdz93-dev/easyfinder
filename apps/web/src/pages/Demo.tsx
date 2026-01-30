@@ -197,30 +197,41 @@ export const Demo = () => {
                 }`}
               >
                 <div className="overflow-hidden rounded-2xl border border-black/10 bg-slate-100">
-                  {listing.imageUrl ? (
-                    <img
-                      src={listing.imageUrl}
-                      alt={listing.title || "Listing"}
-                      className="h-44 w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-44 items-center justify-center text-sm text-slate-500">
-                      No image available.
-                    </div>
-                  )}
-                  {listing.images?.length ? (
-                    <div className="grid grid-cols-4 gap-2 bg-white/80 p-3">
-                      {listing.images.slice(0, 4).map((image, index) => (
-                        <img
-                          key={`${listing.id}-thumb-${index}`}
-                          src={image}
-                          alt={`${listing.title} preview ${index + 1}`}
-                          className="h-16 w-full rounded-lg object-cover"
-                        />
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
+  {((listing.images && listing.images.length > 0) || listing.imageUrl) ? (
+    <img
+      src={listing.images?.[0] || listing.imageUrl}
+      alt={listing.title || "Listing"}
+      className="h-44 w-full object-cover"
+      onError={(e) => {
+        // fallback if an image URL is bad
+        (e.currentTarget as HTMLImageElement).src =
+          "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=1200&q=80";
+      }}
+    />
+  ) : (
+    <div className="flex h-44 items-center justify-center text-sm text-slate-500">
+      No image available.
+    </div>
+  )}
+
+  {listing.images?.length ? (
+    <div className="grid grid-cols-4 gap-2 bg-white/80 p-3">
+      {listing.images.slice(0, 4).map((image, index) => (
+        <img
+          key={`${listing.id}-thumb-${index}`}
+          src={image}
+          alt={`${listing.title} preview ${index + 1}`}
+          className="h-16 w-full rounded-lg object-cover"
+          onError={(e) => {
+            // hide broken thumbs so you don't see broken icons
+            (e.currentTarget as HTMLImageElement).style.display = "none";
+          }}
+        />
+      ))}
+    </div>
+  ) : null}
+</div>
+
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
