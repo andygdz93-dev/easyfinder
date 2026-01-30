@@ -56,6 +56,14 @@ export const DemoListingDetail = () => {
     queryFn: () => getDemoListings({}),
   });
 
+  const listingId = listingQuery.data?.id;
+
+  useEffect(() => {
+    if (listingId) {
+      setActiveImage(0);
+    }
+  }, [listingId]);
+
   const ranking = useMemo(() => {
     const listings = rankingQuery.data?.listings ?? [];
     const sorted = [...listings].sort((a, b) => {
@@ -90,10 +98,6 @@ export const DemoListingDetail = () => {
     : listing.imageUrl
     ? [listing.imageUrl]
     : [];
-
-  useEffect(() => {
-    setActiveImage(0);
-  }, [listing.id]);
 
   const activeImageUrl = images[activeImage] ?? images[0];
   const handlePrev = () => {
