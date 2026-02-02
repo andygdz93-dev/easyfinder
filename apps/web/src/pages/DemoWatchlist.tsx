@@ -1,14 +1,36 @@
+// apps/web/src/pages/DemoWatchlist.tsx
+
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getDemoListings } from "../lib/demoApi";
+import { DemoListing, getDemoListings } from "../lib/demoApi";
 import { useDemoWatchlist } from "../lib/demoWatchlist";
+
+/**
+ * IMPORTANT
+ * - No assignDemoImages in frontend
+ * - Uses API-provided listing.images / listing.imageUrl only
+ */
 
 const formatCurrency = (value?: number) =>
   Number.isFinite(value) ? `$${Number(value).toLocaleString()}` : "N/A";
 
 const formatHours = (value?: number) =>
   Number.isFinite(value) ? `${Number(value).toLocaleString()} hrs` : "N/A";
+
+const getCardImage = (listing: DemoListing) => {
+  const imgs =
+    listing.images && listing.images.length > 0
+      ? listing.images
+      : listing.imageUrl
+      ? [listing.imageUrl]
+      : [];
+
+  if (!imgs.length) return "/demo-images/other/1.jpg";
+
+  const n = Number(String(listing.id).replace(/\D/g, "")) || 0;
+  return imgs[n % imgs.length];
+};
 
 export const DemoWatchlist = () => {
   const watchlist = useDemoWatchlist();
@@ -29,7 +51,9 @@ export const DemoWatchlist = () => {
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Watchlist</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+            Watchlist
+          </p>
           <h2 className="demo-title text-3xl font-semibold text-slate-900">
             Saved Opportunities
           </h2>
@@ -37,6 +61,7 @@ export const DemoWatchlist = () => {
             Track the equipment that deserves a second look.
           </p>
         </div>
+
         <Link
           to="/demo"
           className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:border-slate-400"
@@ -60,8 +85,21 @@ export const DemoWatchlist = () => {
           {saved.map((listing) => (
             <article
               key={listing.id}
-              className="grid gap-3 rounded-3xl border border-black/10 bg-white/90 p-6 shadow"
+              className="grid gap-4 rounded-3xl border border-black/10 bg-white/90 p-6 shadow"
             >
+              <div className="overflow-hidden rounded-2xl border border-black/10 bg-slate-100">
+                <img
+                  src={getCardImage(listing)}
+                  alt={listing.title || "Listing"}
+                  className="h-44 w-full object-cover"
+                  loading="lazy"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src =
+                      "/demo-images/other/1.jpg";
+                  }}
+                />
+              </div>
+
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
                   {listing.category}
@@ -73,10 +111,12 @@ export const DemoWatchlist = () => {
                   {listing.state || "State N/A"} · {listing.source || "Source N/A"}
                 </p>
               </div>
+
               <div className="flex flex-wrap gap-3 text-sm text-slate-600">
                 <span>{formatCurrency(listing.price)}</span>
                 <span>{formatHours(listing.hours)}</span>
               </div>
+
               <div className="flex flex-wrap items-center gap-3">
                 <Link
                   to={`/demo/listings/${listing.id}`}
@@ -84,6 +124,7 @@ export const DemoWatchlist = () => {
                 >
                   View details
                 </Link>
+
                 <button
                   type="button"
                   onClick={() => watchlist.remove(listing.id)}
