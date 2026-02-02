@@ -14,9 +14,7 @@ export const defaultScoringConfig: ScoringConfig = {
   active: true,
 };
 
-// ✅ Back-compat / dist export mismatch fix:
-// Some builds or consumers expect `DefaultScoringConfig`.
-// Export both names to avoid runtime ESM import errors.
+// Back-compat alias
 export const DefaultScoringConfig = defaultScoringConfig;
 
 const clamp = (value: number, min: number, max: number) =>
@@ -34,11 +32,9 @@ export function scoreListing(
     };
   }
 
-  // Make scoring resilient to missing values
   const hours = Number.isFinite(listing.hours) ? listing.hours : 0;
   const price = Number.isFinite(listing.price) ? listing.price : 0;
 
-  // Avoid division by zero
   const maxHours = config.maxHours > 0 ? config.maxHours : 1;
   const maxPrice = config.maxPrice > 0 ? config.maxPrice : 1;
 

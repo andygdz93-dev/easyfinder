@@ -1,19 +1,19 @@
 // demoImages.ts
 
 export type DemoCategory =
-  | "attachment"
-  | "backhoe"
-  | "crane"
-  | "dozer"
-  | "dump-truck"
   | "excavator"
-  | "forklift"
-  | "grader"
-  | "other"
-  | "roller"
   | "skid-steer"
+  | "dozer"
+  | "wheel-loader"
+  | "backhoe"
+  | "forklift"
+  | "crane"
+  | "roller"
+  | "grader"
   | "telehandler"
-  | "wheel-loader";
+  | "dump-truck"
+  | "attachment"
+  | "other";
 
 const LIB: Record<DemoCategory, string[]> = {
   excavator: [
@@ -121,19 +121,13 @@ function fnv1a32(input: string): number {
 function rotate<T>(arr: T[], start: number, count: number): T[] {
   if (!arr.length) return [];
   const out: T[] = [];
-  for (let i = 0; i < count; i++) {
-    out.push(arr[(start + i) % arr.length]);
-  }
+  for (let i = 0; i < count; i++) out.push(arr[(start + i) % arr.length]);
   return out;
 }
 
-/**
- * STRICT normalization
- * Converts all listing.category strings into the demo image library keys
- */
+// Normalize listing.category -> DemoCategory (hyphen-safe)
 export function normalizeCategory(raw?: string | null): DemoCategory {
   const s = (raw ?? "").toLowerCase();
-
   if (s.includes("excav")) return "excavator";
   if (s.includes("skid")) return "skid-steer";
   if (s.includes("doz")) return "dozer";
@@ -147,7 +141,6 @@ export function normalizeCategory(raw?: string | null): DemoCategory {
   if (s.includes("dump")) return "dump-truck";
   if (s.includes("attach") || s.includes("bucket") || s.includes("hammer"))
     return "attachment";
-
   return "other";
 }
 
@@ -155,17 +148,14 @@ export function assignDemoImages(args: {
   listingId: string;
   category?: string | null;
   count?: number;
-  baseUrl?: string;
+  baseUrl?: string; // optional, e.g. http://localhost:5173
 }): string[] {
   const { listingId, category, count = 5, baseUrl } = args;
-
   const cat = normalizeCategory(category);
   const pool = LIB[cat] ?? LIB.other;
-
-  const seed = fnv1a32(`${listingId}:${cat}`);
+  const seed = fnv1a32(`${listingId}::${cat}`);
   const start = pool.length ? seed % pool.length : 0;
-
-  const picked = rotate(pool, start, Math.min(count, pool.length));
+  const picked = rotate(pool, start, Math.min(count, pool.length || count));
 
   if (!picked.length) {
     const fallback = "/demo-images/other/1.jpg";

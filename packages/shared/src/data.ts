@@ -1,6 +1,8 @@
-import type { Listing, User } from "./types.js";
-import { assignDemoImages } from "./demoImages.js";
+import { Listing, User } from "./types.js";
 
+/**
+ * Demo users
+ */
 export const demoUsers: User[] = [
   {
     id: "demo-user",
@@ -30,30 +32,13 @@ export const demoUsers: User[] = [
 
 /**
  * IMPORTANT
- * - Demo images are root-relative (/demo-images/...)
- * - No Unsplash / external sources
- * - Deterministic per listing.id + category
+ * - DO NOT generate images here
+ * - Images are assigned deterministically elsewhere via assignDemoImages
+ * - This avoids Unsplash / random / cached images
  */
-function makeListing(input: Omit<Listing, "images" | "imageUrl">): Listing {
-  const images = assignDemoImages({
-    listingId: input.id,
-    category: input.category,
-    count: 5,
-  });
 
-  return {
-    ...input,
-    images,
-    imageUrl: images[0],
-  };
-}
-
-/**
- * Demo inventory used by the API store in demo mode.
- * Keep categories aligned with normalizeCategory() in demoImages.ts
- */
 export const demoListings: Listing[] = [
-  makeListing({
+  {
     id: "demo-1",
     title: "2020 CAT 320 Excavator",
     description: "Well-maintained excavator with low hours and clean service logs.",
@@ -64,8 +49,8 @@ export const demoListings: Listing[] = [
     category: "Excavator",
     source: "auctionplanet",
     createdAt: "2025-12-10T15:12:00.000Z",
-  }),
-  makeListing({
+  },
+  {
     id: "demo-2",
     title: "2018 Komatsu PC210 Excavator",
     description: "Job-ready excavator with fresh undercarriage inspection.",
@@ -76,8 +61,8 @@ export const demoListings: Listing[] = [
     category: "Excavator",
     source: "ironplanet",
     createdAt: "2025-12-08T10:35:00.000Z",
-  }),
-  makeListing({
+  },
+  {
     id: "demo-3",
     title: "2016 Deere 210G Excavator",
     description: "Balanced excavator with mid-range hours and strong hydraulics.",
@@ -88,8 +73,8 @@ export const demoListings: Listing[] = [
     category: "Excavator",
     source: "machinerytrader",
     createdAt: "2025-12-05T09:20:00.000Z",
-  }),
-  makeListing({
+  },
+  {
     id: "demo-4",
     title: "2021 Volvo EC250 Excavator",
     description: "Late-model excavator, warranty transfer available.",
@@ -100,8 +85,8 @@ export const demoListings: Listing[] = [
     category: "Excavator",
     source: "auctiontime",
     createdAt: "2025-12-12T11:00:00.000Z",
-  }),
-  makeListing({
+  },
+  {
     id: "demo-5",
     title: "2017 CAT D6T Dozer",
     description: "Strong push power with updated blade hydraulics.",
@@ -112,8 +97,8 @@ export const demoListings: Listing[] = [
     category: "Dozer",
     source: "ritchiebros",
     createdAt: "2025-12-03T14:40:00.000Z",
-  }),
-  makeListing({
+  },
+  {
     id: "demo-6",
     title: "2015 Komatsu D65 Dozer",
     description: "Reliable dozer with premium undercarriage.",
@@ -124,8 +109,8 @@ export const demoListings: Listing[] = [
     category: "Dozer",
     source: "ironplanet",
     createdAt: "2025-11-28T12:15:00.000Z",
-  }),
-  makeListing({
+  },
+  {
     id: "demo-7",
     title: "2019 Deere 650K Dozer",
     description: "Low-hour dozer with GPS-ready blade controls.",
@@ -136,8 +121,8 @@ export const demoListings: Listing[] = [
     category: "Dozer",
     source: "auctionplanet",
     createdAt: "2025-12-09T09:05:00.000Z",
-  }),
-  makeListing({
+  },
+  {
     id: "demo-8",
     title: "2014 CAT D5K Dozer",
     description: "Compact dozer, strong for tight sites.",
@@ -148,8 +133,8 @@ export const demoListings: Listing[] = [
     category: "Dozer",
     source: "govplanet",
     createdAt: "2025-11-20T16:55:00.000Z",
-  }),
-  makeListing({
+  },
+  {
     id: "demo-9",
     title: "2020 CAT 262D Skid Steer",
     description: "Compact skid steer with new tires and cab.",
@@ -160,8 +145,8 @@ export const demoListings: Listing[] = [
     category: "Skid Steer",
     source: "auctiontime",
     createdAt: "2025-12-11T08:30:00.000Z",
-  }),
-  makeListing({
+  },
+  {
     id: "demo-10",
     title: "2018 Bobcat S650 Skid Steer",
     description: "High-flow skid steer with attachment package.",
@@ -172,8 +157,8 @@ export const demoListings: Listing[] = [
     category: "Skid Steer",
     source: "heavyequipment",
     createdAt: "2025-12-01T10:10:00.000Z",
-  }),
-  makeListing({
+  },
+  {
     id: "demo-11",
     title: "2016 Deere 318G Skid Steer",
     description: "Well-kept skid steer with enclosed cab.",
@@ -184,8 +169,8 @@ export const demoListings: Listing[] = [
     category: "Skid Steer",
     source: "machinerytrader",
     createdAt: "2025-11-25T15:20:00.000Z",
-  }),
-  makeListing({
+  },
+  {
     id: "demo-12",
     title: "2021 Takeuchi TL12 Skid Steer",
     description: "Track skid steer, low hours, clean emissions.",
@@ -196,8 +181,8 @@ export const demoListings: Listing[] = [
     category: "Skid Steer",
     source: "auctionplanet",
     createdAt: "2025-12-13T13:25:00.000Z",
-  }),
-  makeListing({
+  },
+  {
     id: "demo-13",
     title: "2019 CAT 930M Wheel Loader",
     description: "Production-ready loader with scale system.",
@@ -208,8 +193,8 @@ export const demoListings: Listing[] = [
     category: "Wheel Loader",
     source: "ironplanet",
     createdAt: "2025-12-07T12:45:00.000Z",
-  }),
-  makeListing({
+  },
+  {
     id: "demo-14",
     title: "2017 Volvo L90 Wheel Loader",
     description: "Efficient loader with updated bucket pins.",
@@ -220,8 +205,8 @@ export const demoListings: Listing[] = [
     category: "Wheel Loader",
     source: "ritchiebros",
     createdAt: "2025-12-02T09:00:00.000Z",
-  }),
-  makeListing({
+  },
+  {
     id: "demo-15",
     title: "2015 Deere 544K Wheel Loader",
     description: "Durable loader with strong tire condition.",
@@ -232,8 +217,8 @@ export const demoListings: Listing[] = [
     category: "Wheel Loader",
     source: "auctiontime",
     createdAt: "2025-11-22T11:35:00.000Z",
-  }),
-  makeListing({
+  },
+  {
     id: "demo-16",
     title: "2022 Komatsu WA270 Wheel Loader",
     description: "Late-model loader with low hours and warranty.",
@@ -244,8 +229,8 @@ export const demoListings: Listing[] = [
     category: "Wheel Loader",
     source: "machinerytrader",
     createdAt: "2025-12-14T10:50:00.000Z",
-  }),
-  makeListing({
+  },
+  {
     id: "demo-17",
     title: "2018 CAT 420F Backhoe",
     description: "Backhoe with extendahoe and clean hydraulics.",
@@ -256,8 +241,8 @@ export const demoListings: Listing[] = [
     category: "Backhoe",
     source: "govplanet",
     createdAt: "2025-12-04T08:20:00.000Z",
-  }),
-  makeListing({
+  },
+  {
     id: "demo-18",
     title: "2016 Deere 310SL Backhoe",
     description: "Fleet-maintained backhoe with strong engine hours.",
@@ -268,8 +253,8 @@ export const demoListings: Listing[] = [
     category: "Backhoe",
     source: "auctionplanet",
     createdAt: "2025-11-27T13:05:00.000Z",
-  }),
-  makeListing({
+  },
+  {
     id: "demo-19",
     title: "2019 Case 580N Backhoe",
     description: "Smooth-running backhoe with auxiliary hydraulics.",
@@ -280,8 +265,8 @@ export const demoListings: Listing[] = [
     category: "Backhoe",
     source: "heavyequipment",
     createdAt: "2025-12-06T15:45:00.000Z",
-  }),
-  makeListing({
+  },
+  {
     id: "demo-20",
     title: "2015 CAT 416F Backhoe",
     description: "Budget-friendly backhoe with recent service.",
@@ -292,8 +277,8 @@ export const demoListings: Listing[] = [
     category: "Backhoe",
     source: "auctiontime",
     createdAt: "2025-11-18T09:40:00.000Z",
-  }),
-  makeListing({
+  },
+  {
     id: "demo-21",
     title: "2020 JLG 1055 Telehandler",
     description: "High-reach telehandler with low hours.",
@@ -304,8 +289,8 @@ export const demoListings: Listing[] = [
     category: "Telehandler",
     source: "ritchiebros",
     createdAt: "2025-12-12T16:10:00.000Z",
-  }),
-  makeListing({
+  },
+  {
     id: "demo-22",
     title: "2017 Genie GTH-1056 Telehandler",
     description: "Telehandler with stabilized outriggers.",
@@ -316,8 +301,8 @@ export const demoListings: Listing[] = [
     category: "Telehandler",
     source: "auctionplanet",
     createdAt: "2025-12-01T07:55:00.000Z",
-  }),
-  makeListing({
+  },
+  {
     id: "demo-23",
     title: "2016 CAT TL1055 Telehandler",
     description: "Reliable telehandler with steady boom control.",
@@ -328,8 +313,8 @@ export const demoListings: Listing[] = [
     category: "Telehandler",
     source: "ironplanet",
     createdAt: "2025-11-23T10:30:00.000Z",
-  }),
-  makeListing({
+  },
+  {
     id: "demo-24",
     title: "2022 SkyTrak 8042 Telehandler",
     description: "Late-model telehandler with service contract.",
@@ -340,5 +325,5 @@ export const demoListings: Listing[] = [
     category: "Telehandler",
     source: "machinerytrader",
     createdAt: "2025-12-15T14:15:00.000Z",
-  }),
+  },
 ];
