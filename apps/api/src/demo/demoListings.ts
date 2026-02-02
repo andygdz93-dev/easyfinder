@@ -1,4 +1,4 @@
-import type { Listing } from "@easyfinderai/shared";
+import type { Listing } from "@EasyFinder/packages/shared/src";
 
 type ListingSeed = Omit<Listing, "imageUrl" | "images"> & {
   imageQueries: string[];
