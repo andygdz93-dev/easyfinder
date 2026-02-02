@@ -1,8 +1,8 @@
 // apps/web/src/pages/demo/Demo.tsx
 
 import { Link } from "react-router-dom";
-import type { Listing } from "@easyfinderai/shared";
-import { demoListings, defaultScoringConfig, scoreListing } from "@easyfinderai/shared";
+import type { Listing } from "@EasyFinder/packages/shared/src";
+import { demoListings, defaultScoringConfig, scoreListing } from "@EasyFinder/packages/shared/src";
 import { assignDemoImages } from "@easyfinderai/shared/demoImages";
 
 export default function Demo() {

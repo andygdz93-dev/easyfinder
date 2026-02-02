@@ -1,11 +1,11 @@
 import { useParams, Link } from "react-router-dom";
 import { demoListings } from "@easyfinderai/shared";
+import { assignDemoImages } from "@easyfinderai/shared/demoImages";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 
 export default function DemoListingDetail() {
   const { id } = useParams();
-
   const listing = demoListings.find((l) => l.id === id);
 
   if (!listing) {
@@ -16,20 +16,32 @@ export default function DemoListingDetail() {
     );
   }
 
-  const images = listing.images ?? [];
+  const images =
+    listing.images?.length
+      ? listing.images
+      : assignDemoImages({
+          listingId: listing.id,
+          category: listing.category,
+          count: 5,
+        });
 
   return (
     <div className="space-y-6">
-      {/* HERO IMAGE */}
-      {images[0] && (
+      {images[0] ? (
         <img
           src={images[0]}
           alt={listing.title}
           className="w-full max-h-[420px] object-cover rounded-xl"
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).src = "/demo-images/other/1.jpg";
+          }}
         />
+      ) : (
+        <div className="rounded-xl bg-slate-100 p-10 text-slate-500">
+          No images available.
+        </div>
       )}
 
-      {/* IMAGE CAROUSEL */}
       {images.length > 1 && (
         <div className="grid grid-cols-4 gap-3">
           {images.slice(1, 5).map((img, idx) => (
@@ -38,12 +50,14 @@ export default function DemoListingDetail() {
               src={img}
               alt={`${listing.title} ${idx + 1}`}
               className="h-28 w-full object-cover rounded-lg"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src = "/demo-images/other/1.jpg";
+              }}
             />
           ))}
         </div>
       )}
 
-      {/* DETAILS */}
       <Card className="p-6 space-y-3">
         <h1 className="text-2xl font-semibold">{listing.title}</h1>
         <p className="text-slate-500">{listing.description}</p>
