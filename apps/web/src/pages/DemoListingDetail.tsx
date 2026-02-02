@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
-import { demoListings } from "@easyfinderai/shared";
-import { assignDemoImages } from "@easyfinderai/shared/demoImages";
+import { demoListings } from "@EasyFinder/packages/shared/src";
+import { assignDemoImages } from "@EasyFinder/packages/shared/src/demoImages";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 
