@@ -1,20 +1,27 @@
 import type { Listing } from "@EasyFinder/packages/shared/src";
+import { assignDemoImages } from "@EasyFinder/packages/shared/src/demoImages";
 
-type ListingSeed = Omit<Listing, "imageUrl" | "images"> & {
-  imageQueries: string[];
-  imageSeed: number;
-};
+// 🔒 DEMO IMAGE HOST (Vercel demo site)
+const DEMO_IMAGE_BASE_URL =
+  "https://web-easyfinder.vercel.app";
 
-const buildImages = (images?: string[]) => images ?? [];
-
-const makeListing = (input: any) => {
-  const images = buildImages(input.images);
+function makeListing(
+  input: Omit<Listing, "images" | "imageUrl">
+): Listing {
+  const images = assignDemoImages({
+    listingId: input.id,
+    category: input.category,
+    count: 5,
+    baseUrl: DEMO_IMAGE_BASE_URL, // ✅ CRITICAL FIX
+  });
 
   return {
     ...input,
     images,
+    imageUrl: images[0],
   };
-};
+}
+
 
 const categoryImages = {
   excavator: [
