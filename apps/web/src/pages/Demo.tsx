@@ -1,4 +1,4 @@
-// apps/web/src/pages/demo/Demo.tsx
+// apps/web/src/pages/Demo.tsx
 
 import { Link } from "react-router-dom";
 import type { Listing } from "@EasyFinder/packages/shared/src";
