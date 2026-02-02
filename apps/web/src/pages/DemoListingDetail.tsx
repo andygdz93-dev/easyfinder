@@ -1,278 +1,78 @@
-import { useMemo } from "react";
-import { Link, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { assignDemoImages } from "@easyfinderai/shared/demoImages";
-import { DemoListing, getDemoListing, getDemoListings } from "../lib/demoApi";
-import { useDemoWatchlist } from "../lib/demoWatchlist";
+import { useParams, Link } from "react-router-dom";
+import { demoListings } from "@EasyFinder/packages/shared/src";
+import { assignDemoImages } from "@EasyFinder/packages/shared/src/demoImages";
+import { Card } from "../components/ui/card";
+import { Button } from "../components/ui/button";
 
-const formatCurrency = (value?: number) =>
-  Number.isFinite(value) ? `$${Number(value).toLocaleString()}` : "N/A";
-
-const formatHours = (value?: number) =>
-  Number.isFinite(value) ? `${Number(value).toLocaleString()} hrs` : "N/A";
-
-const getScoreSummary = (listing: DemoListing) => {
-  const totalScore = listing.totalScore ?? listing.score?.total ?? 0;
-  const breakdown = listing.scoreBreakdown ?? listing.score?.components;
-  const rationale = listing.rationale ?? listing.score?.rationale ?? [];
-  const confidenceScore =
-    listing.confidenceScore ?? Math.min(95, Math.max(55, Math.round(totalScore * 0.9)));
-  const flags = listing.flags ?? [];
-  return { totalScore, breakdown, rationale, confidenceScore, flags };
-};
-
-const getRankNarrative = (listing: DemoListing, rank?: number, total?: number) => {
-  const score = getScoreSummary(listing);
-  const drivers: string[] = [];
-  if (score.breakdown?.hours && score.breakdown.hours >= 80) {
-    drivers.push("low operating hours");
-  }
-  if (score.breakdown?.price && score.breakdown.price >= 80) {
-    drivers.push("competitive pricing");
-  }
-  if (score.breakdown?.state && score.breakdown.state >= 100) {
-    drivers.push("preferred state placement");
-  }
-  if (!drivers.length) {
-    drivers.push("balanced price and usage profile");
-  }
-  const rankText =
-    rank && total ? `Ranked #${rank} of ${total} listings.` : "Ranking computed from the current inventory set.";
-  return `${rankText} It stands out for ${drivers.join(", ")}.`;
-};
-
-export const DemoListingDetail = () => {
+export default function DemoListingDetail() {
   const { id } = useParams();
-  const watchlist = useDemoWatchlist();
-  const fallbackImage = "/demo-images/other/1.jpg";
+  const listing = demoListings.find((l) => l.id === id);
 
-  const listingQuery = useQuery({
-    queryKey: ["demo-listing", id],
-    queryFn: () => getDemoListing(id ?? ""),
-    enabled: Boolean(id),
-  });
-
-  const rankingQuery = useQuery({
-    queryKey: ["demo-listings-ranking"],
-    queryFn: () => getDemoListings({}),
-  });
-
-  const ranking = useMemo(() => {
-    const listings = rankingQuery.data?.listings ?? [];
-    const sorted = [...listings].sort((a, b) => {
-      const aScore = getScoreSummary(a).totalScore;
-      const bScore = getScoreSummary(b).totalScore;
-      if (bScore !== aScore) return bScore - aScore;
-      return (a.price ?? 0) - (b.price ?? 0);
-    });
-    const index = sorted.findIndex((item) => item.id === id);
-    return {
-      rank: index >= 0 ? index + 1 : undefined,
-      total: sorted.length || undefined,
-    };
-  }, [id, rankingQuery.data?.listings]);
-
-  if (listingQuery.isLoading) {
-    return <div className="rounded-2xl bg-white/70 p-6 shadow">Loading listing...</div>;
-  }
-
-  if (listingQuery.isError || !listingQuery.data) {
+  if (!listing) {
     return (
-      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
+      <Card className="p-6 text-sm text-rose-500">
         Unable to load listing details.
-      </div>
+      </Card>
     );
   }
 
-  const listing = listingQuery.data;
-  const score = getScoreSummary(listing);
-  const images = assignDemoImages({
-    listingId: listing.id,
-    category: listing.category,
-    count: 5,
-  });
-  const heroImage = images[0];
-  const carouselImages = images.slice(1, 5);
-  const hasImages = images.length > 0;
+  const images =
+    listing.images?.length
+      ? listing.images
+      : assignDemoImages({
+          listingId: listing.id,
+          category: listing.category,
+          count: 5,
+        });
 
   return (
-    <div className="space-y-8">
-      <Link to="/demo" className="text-sm font-semibold text-slate-600 hover:text-slate-900">
-        ← Back to ranked listings
-      </Link>
+    <div className="space-y-6">
+      {images[0] ? (
+        <img
+          src={images[0]}
+          alt={listing.title}
+          className="w-full max-h-[420px] object-cover rounded-xl"
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).src = "/demo-images/other/1.jpg";
+          }}
+        />
+      ) : (
+        <div className="rounded-xl bg-slate-100 p-10 text-slate-500">
+          No images available.
+        </div>
+      )}
 
-      <section className="grid gap-6 rounded-3xl border border-black/10 bg-white/90 p-8 shadow-xl shadow-orange-100/60 lg:grid-cols-[1.1fr_1fr]">
-        <div className="space-y-5">
-          <div className="rounded-3xl border border-black/10 bg-slate-100/80 p-4">
-            <div className="relative overflow-hidden rounded-2xl">
-              {heroImage ? (
-                <img
-                  src={heroImage}
-                  alt={`${listing.title} hero`}
-                  className="h-64 w-full object-cover sm:h-72"
-                  onError={(e) => {
-                    const target = e.currentTarget as HTMLImageElement;
-                    if (target.src !== fallbackImage) {
-                      target.src = fallbackImage;
-                    }
-                  }}
-                />
-              ) : (
-                <div className="flex h-64 items-center justify-center text-sm text-slate-500">
-                  {hasImages ? "Unable to load images." : "No images available."}
-                </div>
-              )}
-            </div>
-            {carouselImages.length ? (
-              <div className="mt-4 grid grid-cols-4 gap-3">
-                {carouselImages.map((image, index) => (
-                  <div
-                    key={`${listing.id}-image-${index}`}
-                    className="overflow-hidden rounded-xl border border-transparent"
-                  >
-                    <img
-                      src={image}
-                      alt={`${listing.title} thumbnail ${index + 1}`}
-                      className="h-16 w-full object-cover"
-                      onError={(e) => {
-                        const target = e.currentTarget as HTMLImageElement;
-                        if (target.src !== fallbackImage) {
-                          target.src = fallbackImage;
-                        }
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </div>
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-500">{listing.category}</p>
-          <h2 className="demo-title text-3xl font-semibold text-slate-900">
-            {listing.title || "Listing"}
-          </h2>
-          <p className="text-sm text-slate-600">{listing.description || "No description provided."}</p>
-          <div className="flex flex-wrap gap-3 text-sm text-slate-600">
-            <span>{formatCurrency(listing.price)}</span>
-            <span>{formatHours(listing.hours)}</span>
-            <span>{listing.state || "State N/A"}</span>
-            <span>{listing.source || "Source N/A"}</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {score.flags.length ? (
-              score.flags.map((flag) => (
-                <span
-                  key={flag}
-                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                    flag === "Best Option"
-                      ? "bg-slate-900 text-white"
-                      : "bg-slate-100 text-slate-600"
-                  }`}
-                >
-                  {flag}
-                </span>
-              ))
-            ) : (
-              <span className="text-xs text-slate-400">No flags</span>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={() => watchlist.toggle(listing.id)}
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400"
-          >
-            {watchlist.isInWatchlist(listing.id) ? "Remove from watchlist" : "Add to watchlist"}
-          </button>
+      {images.length > 1 && (
+        <div className="grid grid-cols-4 gap-3">
+          {images.slice(1, 5).map((img, idx) => (
+            <img
+              key={idx}
+              src={img}
+              alt={`${listing.title} ${idx + 1}`}
+              className="h-28 w-full object-cover rounded-lg"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src = "/demo-images/other/1.jpg";
+              }}
+            />
+          ))}
         </div>
-        <div className="space-y-4">
-          <div className="rounded-2xl border border-black/10 bg-amber-50/70 p-5">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Score</p>
-            <p className="demo-title text-4xl font-semibold text-slate-900">
-              {score.totalScore}
-            </p>
-            <p className="text-xs text-slate-500">Confidence {score.confidenceScore}%</p>
-            <p className="mt-3 text-sm text-slate-600">
-              {getRankNarrative(listing, ranking.rank, ranking.total)}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-black/10 bg-white p-5">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Score Breakdown</p>
-            <div className="mt-3 space-y-3">
-              {[
-                { key: "operable", label: "Operable", value: score.breakdown?.operable ?? 0 },
-                { key: "hours", label: "Hours", value: score.breakdown?.hours ?? 0 },
-                { key: "price", label: "Price", value: score.breakdown?.price ?? 0 },
-                { key: "state", label: "State Fit", value: score.breakdown?.state ?? 0 },
-              ].map((item) => (
-                <div key={item.key} className="space-y-1 text-sm">
-                  <div className="flex items-center justify-between text-slate-600">
-                    <span>{item.label}</span>
-                    <span className="font-semibold text-slate-900">{item.value}</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-slate-100">
-                    <div
-                      className="h-2 rounded-full bg-amber-400"
-                      style={{ width: `${Math.min(100, Math.max(0, item.value))}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      )}
 
-      <section className="grid gap-6 md:grid-cols-2">
-        <div className="rounded-3xl border border-black/10 bg-white/90 p-6 shadow">
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Ranking Rationale</p>
-          <ul className="mt-4 space-y-2 text-sm text-slate-600">
-            {(score.rationale.length ? score.rationale : ["Score details pending."]).map(
-              (item, index) => (
-                <li key={`${listing.id}-detail-${index}`} className="flex items-start gap-2">
-                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-amber-500" />
-                  <span>{item}</span>
-                </li>
-              )
-            )}
-          </ul>
+      <Card className="p-6 space-y-3">
+        <h1 className="text-2xl font-semibold">{listing.title}</h1>
+        <p className="text-slate-500">{listing.description}</p>
+
+        <div className="text-sm text-slate-600 flex gap-4">
+          <span>${listing.price.toLocaleString()}</span>
+          <span>{listing.hours.toLocaleString()} hrs</span>
+          <span>{listing.state}</span>
+          <span>{listing.category}</span>
         </div>
-        <div className="rounded-3xl border border-black/10 bg-white/90 p-6 shadow">
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Listing Details</p>
-          <dl className="mt-4 grid gap-4 text-sm text-slate-600">
-            <div>
-              <dt className="text-xs uppercase tracking-[0.2em] text-slate-400">Category</dt>
-              <dd className="text-base font-semibold text-slate-900">{listing.category}</dd>
-            </div>
-            <div>
-              <dt className="text-xs uppercase tracking-[0.2em] text-slate-400">Location</dt>
-              <dd className="text-base font-semibold text-slate-900">{listing.state}</dd>
-            </div>
-            <div>
-              <dt className="text-xs uppercase tracking-[0.2em] text-slate-400">Price</dt>
-              <dd className="text-base font-semibold text-slate-900">
-                {formatCurrency(listing.price)}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs uppercase tracking-[0.2em] text-slate-400">Hours</dt>
-              <dd className="text-base font-semibold text-slate-900">
-                {formatHours(listing.hours)}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs uppercase tracking-[0.2em] text-slate-400">Operable</dt>
-              <dd className="text-base font-semibold text-slate-900">
-                {listing.operable ? "Yes" : "No"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs uppercase tracking-[0.2em] text-slate-400">Listed</dt>
-              <dd className="text-base font-semibold text-slate-900">
-                {listing.createdAt ? new Date(listing.createdAt).toLocaleDateString() : "N/A"}
-              </dd>
-            </div>
-          </dl>
-        </div>
-      </section>
+
+        <Link to="/demo">
+          <Button variant="secondary">← Back to demo</Button>
+        </Link>
+      </Card>
     </div>
   );
-};
+}
