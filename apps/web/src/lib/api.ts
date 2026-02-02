@@ -24,10 +24,7 @@ export class ApiError extends Error {
 
 const baseUrl = env.apiBaseUrl.replace(/\/$/, "");
 
-const apiRequest = async <T>(
-  path: string,
-  options: RequestInit = {}
-): Promise<T> => {
+const apiRequest = async <T>(path: string, options: RequestInit = {}): Promise<T> => {
   const res = await fetch(`${baseUrl}${path}`, {
     headers: {
       "Content-Type": "application/json",
@@ -61,9 +58,7 @@ export type ListingFilters = {
 };
 
 export const getHealth = () =>
-  apiRequest<{ status: string; db: boolean; version: string; time: string }>(
-    "/api/health"
-  );
+  apiRequest<{ ok: boolean; mongoConfigured: boolean }>("/health");
 
 export const getListings = (filters: ListingFilters) => {
   const params = new URLSearchParams();
@@ -72,26 +67,27 @@ export const getListings = (filters: ListingFilters) => {
   if (filters.maxPrice) params.set("maxPrice", String(filters.maxPrice));
   if (filters.operable) params.set("operable", "true");
   const query = params.toString();
-  return apiRequest<{ total: number; listings: Array<Listing & { score: ScoreBreakdown }> }>(
-    `/api/listings${query ? `?${query}` : ""}`
-  );
+  return apiRequest<{
+    total: number;
+    listings: Array<Listing & { score: ScoreBreakdown }>;
+  }>(`/listings${query ? `?${query}` : ""}`);
 };
 
 export const getListing = (id: string) =>
-  apiRequest<Listing & { score: ScoreBreakdown }>(`/api/listings/${id}`);
+  apiRequest<Listing & { score: ScoreBreakdown }>(`/listings/${id}`);
 
 export const getScoringConfig = () =>
-  apiRequest<{ config: ScoringConfig }>("/api/scoring-configs");
+  apiRequest<{ config: ScoringConfig }>("/scoring-configs");
 
 export const getWatchlist = () =>
-  apiRequest<{ items: WatchlistItem[] }>("/api/watchlist");
+  apiRequest<{ items: WatchlistItem[] }>("/watchlist");
 
 export const addToWatchlist = (listingId: string) =>
-  apiRequest<{ item: WatchlistItem }>("/api/watchlist", {
+  apiRequest<{ item: WatchlistItem }>("/watchlist", {
     method: "POST",
     body: JSON.stringify({ listingId }),
   });
 
-// Legacy helper for any remaining internal usage.
+// Legacy helper for internal usage
 export const apiFetch = <T>(path: string, options: RequestInit = {}) =>
   apiRequest<T>(path, options);

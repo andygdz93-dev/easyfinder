@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+/**
+ * Allow absolute URLs OR root-relative paths like /demo-images/...
+ */
+const urlOrPath = z.string().refine(
+  (v) => v.startsWith("/") || /^https?:\/\//.test(v),
+  "Must be an absolute URL or a root-relative path"
+);
+
 export const userRoleSchema = z.enum(["demo", "buyer", "seller", "admin"]);
 export type UserRole = z.infer<typeof userRoleSchema>;
 
@@ -12,15 +20,13 @@ export const listingSchema = z.object({
   hours: z.number(),
   operable: z.boolean(),
   category: z.string(),
-  imageUrl: z.string().url().optional(),
-  images: z.array(z.string().url()).optional(),
+  imageUrl: urlOrPath.optional(),
+  images: z.array(urlOrPath).optional(),
   source: z.string(),
   createdAt: z.string(),
 });
-type ListingBase = z.infer<typeof listingSchema>;
-export type ListingRequired = Required<Omit<ListingBase, "imageUrl" | "images">> &
-  Pick<ListingBase, "imageUrl" | "images">;
-export type Listing = ListingRequired;
+
+export type Listing = z.infer<typeof listingSchema>;
 
 export const scoringConfigSchema = z.object({
   id: z.string(),
@@ -47,9 +53,7 @@ export const scoreBreakdownSchema = z.object({
   }),
   rationale: z.array(z.string()),
 });
-type ScoreBreakdownBase = z.infer<typeof scoreBreakdownSchema>;
-export type ScoreBreakdownRequired = Required<ScoreBreakdownBase>;
-export type ScoreBreakdown = ScoreBreakdownRequired;
+export type ScoreBreakdown = z.infer<typeof scoreBreakdownSchema>;
 
 export const userSchema = z.object({
   id: z.string(),
@@ -57,9 +61,7 @@ export const userSchema = z.object({
   name: z.string(),
   role: userRoleSchema,
 });
-type UserBase = z.infer<typeof userSchema>;
-export type UserRequired = Required<UserBase>;
-export type User = UserRequired;
+export type User = z.infer<typeof userSchema>;
 
 // Explicitly named alias for clarity when sharing user data externally.
 export const userPublicSchema = userSchema;
