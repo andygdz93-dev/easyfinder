@@ -1,3 +1,5 @@
+// apps/web/src/lib/demoApi.ts
+
 import { Listing, ScoreBreakdown } from "@easyfinderai/shared";
 import { apiFetch } from "./api";
 
@@ -27,8 +29,10 @@ export const getDemoListings = (filters: DemoListingFilters) => {
   if (filters.maxHours) params.set("maxHours", String(filters.maxHours));
   if (filters.maxPrice) params.set("maxPrice", String(filters.maxPrice));
   const query = params.toString();
-  return apiFetch<DemoListingsResponse>(`/api/listings${query ? `?${query}` : ""}`);
+
+  // ✅ Uses Fly API base via apiFetch()
+  return apiFetch<DemoListingsResponse>(`/listings${query ? `?${query}` : ""}`);
 };
 
 export const getDemoListing = (id: string) =>
-  apiFetch<DemoListing>(`/api/listings/${id}`);
+  apiFetch<DemoListing>(`/listings/${id}`);
