@@ -1,9 +1,8 @@
 import { expect, it, vi } from "vitest";
 
-it("requires api base url", async () => {
+it("falls back to localhost api base url", async () => {
   vi.resetModules();
-  delete process.env.VITE_API_URL;
-  await expect(import("../src/env")).rejects.toThrow(
-    /VITE_API_URL is required/
-  );
+  delete process.env.VITE_API_BASE_URL;
+  const module = await import("../src/env");
+  expect(module.env.apiBaseUrl).toBe("http://localhost:8080/api");
 });

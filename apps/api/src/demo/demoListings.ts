@@ -1,57 +1,73 @@
 import type { Listing } from "@easyfinderai/shared";
+import { assignDemoImages } from "@easyfinderai/shared/demoImages";
 
-type ListingSeed = Omit<Listing, "imageUrl" | "images"> & {
-  imageQueries: string[];
-  imageSeed: number;
-};
+// 🔒 DEMO IMAGE HOST (Vercel demo site)
+const DEMO_IMAGE_BASE_URL =
+  "https://web-easyfinder.vercel.app";
 
-const buildImages = (images?: string[]) => images ?? [];
-
-const makeListing = (input: any) => {
-  const images = buildImages(input.images);
+function makeListing(input: Omit<Listing, "imageUrl">): Listing {
+  const listingId = input.id ?? "demo-listing";
+  const category = input.category ?? "other";
+  const images =
+    input.images?.length
+      ? input.images
+      : assignDemoImages({
+          listingId,
+          category,
+          count: 5,
+          baseUrl: DEMO_IMAGE_BASE_URL, // ✅ CRITICAL FIX
+        });
 
   return {
     ...input,
     images,
+    imageUrl: images[0],
   };
-};
+}
+
 
 const categoryImages = {
-  Excavator: [
-    "https://source.unsplash.com/1600x900/?excavator",
-    "https://source.unsplash.com/1600x900/?hydraulic-excavator",
-    "https://source.unsplash.com/1600x900/?tracked-excavator",
-    "https://source.unsplash.com/1600x900/?construction-excavator",
+  excavator: [
+    "/demo-images/excavator/1.jpg",
+    "/demo-images/excavator/2.jpg",
+    "/demo-images/excavator/3.jpg",
+    "/demo-images/excavator/4.jpg",
+    "/demo-images/excavator/5.jpg",
   ],
-  Dozer: [
-    "https://source.unsplash.com/1600x900/?bulldozer",
-    "https://source.unsplash.com/1600x900/?crawler-dozer",
-    "https://source.unsplash.com/1600x900/?dozer-blade",
-    "https://source.unsplash.com/1600x900/?construction-dozer",
+  dozer: [
+    "/demo-images/dozer/1.jpg",
+    "/demo-images/dozer/2.jpg",
+    "/demo-images/dozer/3.jpg",
+    "/demo-images/dozer/4.jpg",
+    "/demo-images/dozer/5.jpg",
   ],
-  "Skid Steer": [
-    "https://source.unsplash.com/1600x900/?skid-steer",
-    "https://source.unsplash.com/1600x900/?compact-loader",
-    "https://source.unsplash.com/1600x900/?track-loader",
-    "https://source.unsplash.com/1600x900/?mini-loader",
+  "skid-steer": [
+    "/demo-images/skid-steer/1.jpg",
+    "/demo-images/skid-steer/2.jpg",
+    "/demo-images/skid-steer/3.jpg",
+    "/demo-images/skid-steer/4.jpg",
+    "/demo-images/skid-steer/5.jpg",
   ],
-  "Wheel Loader": [
-    "https://source.unsplash.com/1600x900/?wheel-loader",
-    "https://source.unsplash.com/1600x900/?front-loader",
-    "https://source.unsplash.com/1600x900/?construction-loader",
-    "https://source.unsplash.com/1600x900/?loader-bucket",
+  "wheel-loader": [
+    "/demo-images/wheel-loader/1.jpg",
+    "/demo-images/wheel-loader/2.jpg",
+    "/demo-images/wheel-loader/3.jpg",
+    "/demo-images/wheel-loader/4.jpg",
+    "/demo-images/wheel-loader/5.jpg",
   ],
-  Backhoe: [
-    "https://source.unsplash.com/1600x900/?backhoe",
-    "https://source.unsplash.com/1600x900/?backhoe-loader",
-    "https://source.unsplash.com/1600x900/?construction-backhoe",
-    "https://source.unsplash.com/1600x900/?digging-backhoe",
+  backhoe: [
+    "/demo-images/backhoe/1.jpg",
+    "/demo-images/backhoe/2.jpg",
+    "/demo-images/backhoe/3.jpg",
+    "/demo-images/backhoe/4.jpg",
+    "/demo-images/backhoe/5.jpg",
   ],
-  Telehandler: [
-    "https://source.unsplash.com/1600x900/?telehandler",
-    "https://source.unsplash.com/1600x900/?telescopic-handler",
-    "https://source.unsplash.com/1600x900/?construction-telehandler",
-    "https://source.unsplash.com/1600x900/?boom-handler",
+  telehandler: [
+    "/demo-images/telehandler/1.jpg",
+    "/demo-images/telehandler/2.jpg",
+    "/demo-images/telehandler/3.jpg",
+    "/demo-images/telehandler/4.jpg",
+    "/demo-images/telehandler/5.jpg",
   ],
 };
 
@@ -65,7 +81,7 @@ export const demoListings: Listing[] = [
     hours: 1800,
     operable: true,
     category: "Excavator",
-    images: categoryImages.Excavator,
+    images: categoryImages.excavator,
     source: "auctionplanet",
     createdAt: "2025-12-10T15:12:00.000Z",
   }),
@@ -78,7 +94,7 @@ export const demoListings: Listing[] = [
     hours: 3200,
     operable: true,
     category: "Excavator",
-    images: categoryImages.Excavator,
+    images: categoryImages.excavator,
     source: "ironplanet",
     createdAt: "2025-12-08T10:35:00.000Z",
   }),
@@ -91,7 +107,7 @@ export const demoListings: Listing[] = [
     hours: 4100,
     operable: true,
     category: "Excavator",
-    images: categoryImages.Excavator,
+    images: categoryImages.excavator,
     source: "machinerytrader",
     createdAt: "2025-12-05T09:20:00.000Z",
   }),
@@ -104,7 +120,7 @@ export const demoListings: Listing[] = [
     hours: 950,
     operable: true,
     category: "Excavator",
-    images: categoryImages.Excavator,
+    images: categoryImages.excavator,
     source: "auctiontime",
     createdAt: "2025-12-12T11:00:00.000Z",
   }),
@@ -117,7 +133,7 @@ export const demoListings: Listing[] = [
     hours: 3600,
     operable: true,
     category: "Dozer",
-    images: categoryImages.Dozer,
+    images: categoryImages.dozer,
     source: "ritchiebros",
     createdAt: "2025-12-03T14:40:00.000Z",
   }),
@@ -130,7 +146,7 @@ export const demoListings: Listing[] = [
     hours: 5200,
     operable: true,
     category: "Dozer",
-    images: categoryImages.Dozer,
+    images: categoryImages.dozer,
     source: "ironplanet",
     createdAt: "2025-11-28T12:15:00.000Z",
   }),
@@ -143,7 +159,7 @@ export const demoListings: Listing[] = [
     hours: 1400,
     operable: true,
     category: "Dozer",
-    images: categoryImages.Dozer,
+    images: categoryImages.dozer,
     source: "auctionplanet",
     createdAt: "2025-12-09T09:05:00.000Z",
   }),
@@ -156,7 +172,7 @@ export const demoListings: Listing[] = [
     hours: 6400,
     operable: true,
     category: "Dozer",
-    images: categoryImages.Dozer,
+    images: categoryImages.dozer,
     source: "govplanet",
     createdAt: "2025-11-20T16:55:00.000Z",
   }),
@@ -169,7 +185,7 @@ export const demoListings: Listing[] = [
     hours: 1100,
     operable: true,
     category: "Skid Steer",
-    images: categoryImages["Skid Steer"],
+    images: categoryImages["skid-steer"],
     source: "auctiontime",
     createdAt: "2025-12-11T08:30:00.000Z",
   }),
@@ -182,7 +198,7 @@ export const demoListings: Listing[] = [
     hours: 1900,
     operable: true,
     category: "Skid Steer",
-    images: categoryImages["Skid Steer"],
+    images: categoryImages["skid-steer"],
     source: "heavyequipment",
     createdAt: "2025-12-01T10:10:00.000Z",
   }),
@@ -195,7 +211,7 @@ export const demoListings: Listing[] = [
     hours: 2900,
     operable: true,
     category: "Skid Steer",
-    images: categoryImages["Skid Steer"],
+    images: categoryImages["skid-steer"],
     source: "machinerytrader",
     createdAt: "2025-11-25T15:20:00.000Z",
   }),
@@ -208,7 +224,7 @@ export const demoListings: Listing[] = [
     hours: 800,
     operable: true,
     category: "Skid Steer",
-    images: categoryImages["Skid Steer"],
+    images: categoryImages["skid-steer"],
     source: "auctionplanet",
     createdAt: "2025-12-13T13:25:00.000Z",
   }),
@@ -221,7 +237,7 @@ export const demoListings: Listing[] = [
     hours: 2800,
     operable: true,
     category: "Wheel Loader",
-    images: categoryImages["Wheel Loader"],
+    images: categoryImages["wheel-loader"],
     source: "ironplanet",
     createdAt: "2025-12-07T12:45:00.000Z",
   }),
@@ -234,7 +250,7 @@ export const demoListings: Listing[] = [
     hours: 4200,
     operable: true,
     category: "Wheel Loader",
-    images: categoryImages["Wheel Loader"],
+    images: categoryImages["wheel-loader"],
     source: "ritchiebros",
     createdAt: "2025-12-02T09:00:00.000Z",
   }),
@@ -247,7 +263,7 @@ export const demoListings: Listing[] = [
     hours: 6100,
     operable: true,
     category: "Wheel Loader",
-    images: categoryImages["Wheel Loader"],
+    images: categoryImages["wheel-loader"],
     source: "auctiontime",
     createdAt: "2025-11-22T11:35:00.000Z",
   }),
@@ -260,7 +276,7 @@ export const demoListings: Listing[] = [
     hours: 600,
     operable: true,
     category: "Wheel Loader",
-    images: categoryImages["Wheel Loader"],
+    images: categoryImages["wheel-loader"],
     source: "machinerytrader",
     createdAt: "2025-12-14T10:50:00.000Z",
   }),
@@ -273,7 +289,7 @@ export const demoListings: Listing[] = [
     hours: 2300,
     operable: true,
     category: "Backhoe",
-    images: categoryImages.Backhoe,
+    images: categoryImages.backhoe,
     source: "govplanet",
     createdAt: "2025-12-04T08:20:00.000Z",
   }),
@@ -286,7 +302,7 @@ export const demoListings: Listing[] = [
     hours: 3600,
     operable: true,
     category: "Backhoe",
-    images: categoryImages.Backhoe,
+    images: categoryImages.backhoe,
     source: "auctionplanet",
     createdAt: "2025-11-27T13:05:00.000Z",
   }),
@@ -299,7 +315,7 @@ export const demoListings: Listing[] = [
     hours: 1900,
     operable: true,
     category: "Backhoe",
-    images: categoryImages.Backhoe,
+    images: categoryImages.backhoe,
     source: "heavyequipment",
     createdAt: "2025-12-06T15:45:00.000Z",
   }),
@@ -312,7 +328,7 @@ export const demoListings: Listing[] = [
     hours: 5200,
     operable: true,
     category: "Backhoe",
-    images: categoryImages.Backhoe,
+    images: categoryImages.backhoe,
     source: "auctiontime",
     createdAt: "2025-11-18T09:40:00.000Z",
   }),
@@ -325,7 +341,7 @@ export const demoListings: Listing[] = [
     hours: 1500,
     operable: true,
     category: "Telehandler",
-    images: categoryImages.Telehandler,
+    images: categoryImages.telehandler,
     source: "ritchiebros",
     createdAt: "2025-12-12T16:10:00.000Z",
   }),
@@ -338,7 +354,7 @@ export const demoListings: Listing[] = [
     hours: 2800,
     operable: true,
     category: "Telehandler",
-    images: categoryImages.Telehandler,
+    images: categoryImages.telehandler,
     source: "auctionplanet",
     createdAt: "2025-12-01T07:55:00.000Z",
   }),
@@ -351,7 +367,7 @@ export const demoListings: Listing[] = [
     hours: 4100,
     operable: true,
     category: "Telehandler",
-    images: categoryImages.Telehandler,
+    images: categoryImages.telehandler,
     source: "ironplanet",
     createdAt: "2025-11-23T10:30:00.000Z",
   }),
@@ -364,7 +380,7 @@ export const demoListings: Listing[] = [
     hours: 900,
     operable: true,
     category: "Telehandler",
-    images: categoryImages.Telehandler,
+    images: categoryImages.telehandler,
     source: "machinerytrader",
     createdAt: "2025-12-15T14:15:00.000Z",
   }),

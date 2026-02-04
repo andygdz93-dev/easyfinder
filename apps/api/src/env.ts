@@ -40,7 +40,16 @@ const EnvSchema = z.object({
   DB_NAME: z.string().min(1, "DB_NAME is required"),
 });
 
-const parsed = EnvSchema.safeParse(process.env);
+const testDefaults =
+  process.env.NODE_ENV === "test"
+    ? {
+        JWT_SECRET: "test-secret-1234567890",
+        MONGO_URL: "mongodb://localhost:27017",
+        DB_NAME: "easyfinder_test",
+      }
+    : {};
+
+const parsed = EnvSchema.safeParse({ ...process.env, ...testDefaults });
 
 if (!parsed.success) {
   throw new Error(
