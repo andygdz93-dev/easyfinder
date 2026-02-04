@@ -1,9 +1,7 @@
 // apps/web/src/pages/DemoWatchlist.tsx
 
-import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { DemoListing, getDemoListings } from "../lib/demoApi";
+import { demoListings } from "@easyfinderai/shared";
 import { useDemoWatchlist } from "../lib/demoWatchlist";
 
 /**
@@ -18,7 +16,7 @@ const formatCurrency = (value?: number) =>
 const formatHours = (value?: number) =>
   Number.isFinite(value) ? `${Number(value).toLocaleString()} hrs` : "N/A";
 
-const getCardImage = (listing: DemoListing) => {
+const getCardImage = (listing: (typeof demoListings)[number]) => {
   const imgs =
     listing.images && listing.images.length > 0
       ? listing.images
@@ -35,17 +33,7 @@ const getCardImage = (listing: DemoListing) => {
 export const DemoWatchlist = () => {
   const watchlist = useDemoWatchlist();
 
-  const listingsQuery = useQuery({
-    queryKey: ["demo-listings-watchlist"],
-    queryFn: () => getDemoListings({}),
-  });
-
-  const listings = listingsQuery.data?.listings ?? [];
-
-  const saved = useMemo(
-    () => listings.filter((listing) => watchlist.ids.includes(listing.id)),
-    [listings, watchlist.ids]
-  );
+  const saved = demoListings.filter((listing) => watchlist.ids.includes(listing.id));
 
   return (
     <div className="space-y-8">
@@ -70,13 +58,7 @@ export const DemoWatchlist = () => {
         </Link>
       </div>
 
-      {listingsQuery.isLoading ? (
-        <div className="h-40 rounded-3xl bg-white/60" />
-      ) : listingsQuery.isError ? (
-        <div className="rounded-3xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
-          Unable to load watchlist data.
-        </div>
-      ) : saved.length === 0 ? (
+      {saved.length === 0 ? (
         <div className="rounded-3xl border border-black/10 bg-white/80 p-6 text-sm text-slate-600 shadow">
           No saved listings yet. Add listings from the demo page to build a watchlist.
         </div>
@@ -119,10 +101,10 @@ export const DemoWatchlist = () => {
 
               <div className="flex flex-wrap items-center gap-3">
                 <Link
-                  to={`/demo/listings/${listing.id}`}
+                  to={`/demo/${listing.id}`}
                   className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
                 >
-                  View details
+                  View Details
                 </Link>
 
                 <button
