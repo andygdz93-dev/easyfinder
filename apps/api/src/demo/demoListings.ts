@@ -1,19 +1,22 @@
-import type { Listing } from "@EasyFinder/packages/shared/src";
-import { assignDemoImages } from "@EasyFinder/packages/shared/src/demoImages";
+import type { Listing } from "@easyfinderai/shared";
+import { assignDemoImages } from "@easyfinderai/shared/demoImages";
 
 // 🔒 DEMO IMAGE HOST (Vercel demo site)
 const DEMO_IMAGE_BASE_URL =
   "https://web-easyfinder.vercel.app";
 
-function makeListing(
-  input: Omit<Listing, "images" | "imageUrl">
-): Listing {
-  const images = assignDemoImages({
-    listingId: input.id,
-    category: input.category,
-    count: 5,
-    baseUrl: DEMO_IMAGE_BASE_URL, // ✅ CRITICAL FIX
-  });
+function makeListing(input: Omit<Listing, "imageUrl">): Listing {
+  const listingId = input.id ?? "demo-listing";
+  const category = input.category ?? "other";
+  const images =
+    input.images?.length
+      ? input.images
+      : assignDemoImages({
+          listingId,
+          category,
+          count: 5,
+          baseUrl: DEMO_IMAGE_BASE_URL, // ✅ CRITICAL FIX
+        });
 
   return {
     ...input,

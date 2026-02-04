@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-const STORAGE_KEY = "easyfinder.demo.watchlist";
+const STORAGE_KEY = "easyfinder_demo_watchlist";
 
 const readStorage = () => {
   if (typeof window === "undefined") return [] as string[];

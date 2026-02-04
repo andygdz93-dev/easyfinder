@@ -1,35 +1,35 @@
 import { useParams, Link } from "react-router-dom";
-import { demoListings } from "@EasyFinder/packages/shared/src";
-import { assignDemoImages } from "@EasyFinder/packages/shared/src/demoImages";
+import { demoListings, defaultScoringConfig, scoreListing } from "@easyfinderai/shared";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
+import { useDemoWatchlist } from "../lib/demoWatchlist";
 
 export default function DemoListingDetail() {
   const { id } = useParams();
   const listing = demoListings.find((l) => l.id === id);
+  const watchlist = useDemoWatchlist();
 
   if (!listing) {
     return (
-      <Card className="p-6 text-sm text-rose-500">
-        Unable to load listing details.
+      <Card className="p-6 text-sm text-rose-500 space-y-4">
+        <p>Unable to load listing details.</p>
+        <Link to="/demo">
+          <Button variant="secondary">← Back to demo</Button>
+        </Link>
       </Card>
     );
   }
 
-  const images =
-    listing.images?.length
-      ? listing.images
-      : assignDemoImages({
-          listingId: listing.id,
-          category: listing.category,
-          count: 5,
-        });
+  const breakdown = scoreListing(listing, defaultScoringConfig);
+  const hero = listing.images[0];
+  const thumbnails = listing.images.slice(1, 5);
+  const isSaved = watchlist.isInWatchlist(listing.id);
 
   return (
     <div className="space-y-6">
-      {images[0] ? (
+      {hero ? (
         <img
-          src={images[0]}
+          src={hero}
           alt={listing.title}
           className="w-full max-h-[420px] object-cover rounded-xl"
           onError={(e) => {
@@ -42,9 +42,9 @@ export default function DemoListingDetail() {
         </div>
       )}
 
-      {images.length > 1 && (
+      {thumbnails.length > 0 && (
         <div className="grid grid-cols-4 gap-3">
-          {images.slice(1, 5).map((img, idx) => (
+          {thumbnails.map((img, idx) => (
             <img
               key={idx}
               src={img}
@@ -69,9 +69,54 @@ export default function DemoListingDetail() {
           <span>{listing.category}</span>
         </div>
 
-        <Link to="/demo">
-          <Button variant="secondary">← Back to demo</Button>
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="rounded-full bg-amber-400 px-3 py-1 text-xs font-semibold text-black">
+            Total Score {breakdown.total}
+          </span>
+          <Button variant="outline" onClick={() => watchlist.toggle(listing.id)}>
+            {isSaved ? "Remove from Watchlist" : "Add to Watchlist"}
+          </Button>
+          <Link to="/demo">
+            <Button variant="secondary">← Back to demo</Button>
+          </Link>
+        </div>
+      </Card>
+
+      <Card className="p-6 space-y-4" data-testid="score-breakdown">
+        <div>
+          <h2 className="text-lg font-semibold">Score Breakdown</h2>
+          <p className="text-sm text-slate-500">
+            Weighted scoring across operability, hours, price, and location.
+          </p>
+        </div>
+
+        <ul className="grid gap-2 text-sm text-slate-700">
+          <li className="flex items-center justify-between">
+            <span>Operable</span>
+            <span className="font-semibold">{breakdown.components.operable}</span>
+          </li>
+          <li className="flex items-center justify-between">
+            <span>Hours</span>
+            <span className="font-semibold">{breakdown.components.hours}</span>
+          </li>
+          <li className="flex items-center justify-between">
+            <span>Price</span>
+            <span className="font-semibold">{breakdown.components.price}</span>
+          </li>
+          <li className="flex items-center justify-between">
+            <span>State</span>
+            <span className="font-semibold">{breakdown.components.state}</span>
+          </li>
+        </ul>
+
+        <div>
+          <h3 className="text-sm font-semibold text-slate-900">Why this score</h3>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
+            {breakdown.rationale.map((reason) => (
+              <li key={reason}>{reason}</li>
+            ))}
+          </ul>
+        </div>
       </Card>
     </div>
   );
