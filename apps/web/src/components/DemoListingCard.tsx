@@ -1,5 +1,6 @@
 import { Listing } from "@easyfinderai/shared";
 import { useNavigate } from "react-router-dom";
+import { useDemoWatchlist } from "../lib/demoWatchlist";
 
 type Props = {
   listing: Listing;
@@ -7,11 +8,10 @@ type Props = {
 
 export default function DemoListingCard({ listing }: Props) {
   const navigate = useNavigate();
+  const watchlist = useDemoWatchlist();
 
-  const image =
-    listing.imageUrl ||
-    listing.images?.[0] ||
-    "https://drive.google.com/file/d/121bNrBJoVlVCNj4XeDcikd9OdWr_gvkm/view?usp=drive_link";
+  const image = listing.images[0] || listing.imageUrl || "/demo-images/other/1.jpg";
+  const isSaved = watchlist.isInWatchlist(listing.id);
 
   return (
     <div className="rounded-xl bg-white shadow-sm border overflow-hidden">
@@ -40,13 +40,16 @@ export default function DemoListingCard({ listing }: Props) {
         <div className="pt-3 flex gap-3">
           <button
             className="px-4 py-2 rounded-md bg-black text-white text-sm"
-            onClick={() => navigate(`/demo/listings/${listing.id}`)}
+            onClick={() => navigate(`/demo/${listing.id}`)}
           >
-            View details
+            View Details
           </button>
 
-          <button className="px-4 py-2 rounded-md border text-sm">
-            Add to watchlist
+          <button
+            className="px-4 py-2 rounded-md border text-sm"
+            onClick={() => watchlist.toggle(listing.id)}
+          >
+            {isSaved ? "Remove from Watchlist" : "Add to Watchlist"}
           </button>
         </div>
       </div>

@@ -11,7 +11,7 @@ import {
   getRequestId,
   getWatchlist,
 } from "../lib/api";
-import { Listing, ScoreBreakdown, WatchlistItem } from "@EasyFinder/packages/shared/src";
+import { Listing, ScoreBreakdown, WatchlistItem } from "@easyfinderai/shared";
 
 export const Listings = () => {
   const [state, setState] = useState("");

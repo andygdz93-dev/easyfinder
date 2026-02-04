@@ -21,7 +21,7 @@ export const listingSchema = z.object({
   operable: z.boolean(),
   category: z.string(),
   imageUrl: urlOrPath.optional(),
-  images: z.array(urlOrPath).optional(),
+  images: z.array(urlOrPath).min(5),
   source: z.string(),
   createdAt: z.string(),
 });
