@@ -30,14 +30,62 @@ export const demoUsers: User[] = [
   },
 ];
 
-/**
- * IMPORTANT
- * - DO NOT generate images here
- * - Images are assigned deterministically elsewhere via assignDemoImages
- * - This avoids Unsplash / random / cached images
- */
+const demoImageLibrary: Record<string, string[]> = {
+  Excavator: [
+    "/demo-images/excavator/1.jpg",
+    "/demo-images/excavator/2.jpg",
+    "/demo-images/excavator/3.jpg",
+    "/demo-images/excavator/4.jpg",
+    "/demo-images/excavator/5.jpg",
+  ],
+  Dozer: [
+    "/demo-images/dozer/1.jpg",
+    "/demo-images/dozer/2.jpg",
+    "/demo-images/dozer/3.jpg",
+    "/demo-images/dozer/4.jpg",
+    "/demo-images/dozer/5.jpg",
+  ],
+  "Skid Steer": [
+    "/demo-images/skid-steer/1.jpg",
+    "/demo-images/skid-steer/2.jpg",
+    "/demo-images/skid-steer/3.jpg",
+    "/demo-images/skid-steer/4.jpg",
+    "/demo-images/skid-steer/5.jpg",
+  ],
+  "Wheel Loader": [
+    "/demo-images/wheel-loader/1.jpg",
+    "/demo-images/wheel-loader/2.jpg",
+    "/demo-images/wheel-loader/3.jpg",
+    "/demo-images/wheel-loader/4.jpg",
+    "/demo-images/wheel-loader/5.jpg",
+  ],
+  Backhoe: [
+    "/demo-images/backhoe/1.jpg",
+    "/demo-images/backhoe/2.jpg",
+    "/demo-images/backhoe/3.jpg",
+    "/demo-images/backhoe/4.jpg",
+    "/demo-images/backhoe/5.jpg",
+  ],
+  Telehandler: [
+    "/demo-images/telehandler/1.jpg",
+    "/demo-images/telehandler/2.jpg",
+    "/demo-images/telehandler/3.jpg",
+    "/demo-images/telehandler/4.jpg",
+    "/demo-images/telehandler/5.jpg",
+  ],
+  other: [
+    "/demo-images/other/1.jpg",
+    "/demo-images/other/2.jpg",
+    "/demo-images/other/3.jpg",
+    "/demo-images/other/4.jpg",
+    "/demo-images/other/5.jpg",
+  ],
+};
 
-export const demoListings: Listing[] = [
+const getCategoryImages = (category: string) =>
+  demoImageLibrary[category] ?? demoImageLibrary.other;
+
+const demoListingsBase: Omit<Listing, "images">[] = [
   {
     id: "demo-1",
     title: "2020 CAT 320 Excavator",
@@ -327,3 +375,12 @@ export const demoListings: Listing[] = [
     createdAt: "2025-12-15T14:15:00.000Z",
   },
 ];
+
+export const demoListings: Listing[] = demoListingsBase.map((listing) => {
+  const images = getCategoryImages(listing.category);
+  return {
+    ...listing,
+    images,
+    imageUrl: images[0],
+  };
+});

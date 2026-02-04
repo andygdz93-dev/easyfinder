@@ -21,10 +21,11 @@ export default async function listingsRoutes(app: FastifyInstance) {
       };
     });
 
-    return scored.sort(
-      (a, b) =>
-        b.totalScore - a.totalScore || a.price - b.price
-    );
+    return scored.sort((a, b) => {
+      const scoreDiff = (b.totalScore ?? 0) - (a.totalScore ?? 0);
+      if (scoreDiff !== 0) return scoreDiff;
+      return (a.price ?? 0) - (b.price ?? 0);
+    });
   });
 
   /**

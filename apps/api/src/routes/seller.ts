@@ -11,14 +11,14 @@ export default async function sellerRoutes(app: FastifyInstance) {
     }
 
     const atRiskListings = listings
-      .filter((listing) => listing.hours > 7000 || listing.price > 220000)
+      .filter((listing) => (listing.hours ?? 0) > 7000 || (listing.price ?? 0) > 220000)
       .slice(0, 5);
 
     const priceBands = listings.slice(0, 4).map((listing) => ({
       listingId: listing.id,
       range: {
-        min: listing.price * 0.9,
-        max: listing.price * 1.1,
+        min: (listing.price ?? 0) * 0.9,
+        max: (listing.price ?? 0) * 1.1,
       },
       state: listing.state,
     }));

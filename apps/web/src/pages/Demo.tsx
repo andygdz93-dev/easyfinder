@@ -1,17 +1,24 @@
 // apps/web/src/pages/Demo.tsx
 
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import type { Listing } from "@EasyFinder/packages/shared/src";
-import { demoListings, defaultScoringConfig, scoreListing } from "@EasyFinder/packages/shared/src";
-import { assignDemoImages } from "@easyfinderai/shared/demoImages";
+import type { Listing } from "@easyfinderai/shared";
+import { demoListings, defaultScoringConfig, scoreListing } from "@easyfinderai/shared";
+import { useDemoWatchlist } from "../lib/demoWatchlist";
 
 export default function Demo() {
+  const watchlist = useDemoWatchlist();
+  const [showWatchlistOnly, setShowWatchlistOnly] = useState(false);
   const ranked = demoListings
     .map((listing) => ({
       listing,
       score: scoreListing(listing, defaultScoringConfig),
     }))
     .sort((a, b) => b.score.total - a.score.total);
+
+  const visibleListings = showWatchlistOnly
+    ? ranked.filter(({ listing }) => watchlist.isInWatchlist(listing.id))
+    : ranked;
 
   return (
     <div className="space-y-10">
@@ -21,12 +28,30 @@ export default function Demo() {
         <p className="mt-2 text-slate-600">
           AI-assisted heavy equipment sourcing, tuned for capital efficiency.
         </p>
+        <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-slate-600">
+          <span>
+            Saved listings: <strong className="text-slate-900">{watchlist.ids.length}</strong>
+          </span>
+          <button
+            type="button"
+            onClick={() => setShowWatchlistOnly((prev) => !prev)}
+            className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700"
+          >
+            {showWatchlistOnly ? "Show all listings" : "Show watchlist only"}
+          </button>
+        </div>
       </section>
 
       {/* LISTINGS GRID */}
       <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {ranked.map(({ listing, score }) => (
-          <ListingCard key={listing.id} listing={listing} score={score.total} />
+        {visibleListings.map(({ listing, score }) => (
+          <ListingCard
+            key={listing.id}
+            listing={listing}
+            score={score.total}
+            isSaved={watchlist.isInWatchlist(listing.id)}
+            onToggleWatchlist={() => watchlist.toggle(listing.id)}
+          />
         ))}
       </section>
     </div>
@@ -35,23 +60,31 @@ export default function Demo() {
 
 /* ---------------- CARD ---------------- */
 
-function ListingCard({ listing, score }: { listing: Listing; score: number }) {
-  const images = assignDemoImages({
-    listingId: listing.id,
-    category: listing.category,
-    count: 5,
-  });
-
-  const hero = images[0];
-  const thumbs = images.slice(1, 5);
+function ListingCard({
+  listing,
+  score,
+  isSaved,
+  onToggleWatchlist,
+}: {
+  listing: Listing;
+  score: number;
+  isSaved: boolean;
+  onToggleWatchlist: () => void;
+}) {
+  const hero = listing.images[0];
+  const thumbs = listing.images.slice(1, 5);
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-black/10 bg-white shadow-sm">
+    <div
+      className="overflow-hidden rounded-3xl border border-black/10 bg-white shadow-sm"
+      data-testid="listing-card"
+    >
       {/* IMAGE */}
       <div className="bg-slate-100">
         <img
           src={hero}
           alt={listing.title || "Listing image"}
+          data-testid="listing-hero"
           className="h-48 w-full object-cover"
           loading="lazy"
         />
@@ -63,6 +96,7 @@ function ListingCard({ listing, score }: { listing: Listing; score: number }) {
               key={`${listing.id}-thumb-${idx}`}
               src={src}
               alt={`${listing.title || "Listing"} thumbnail ${idx + 1}`}
+              data-testid="listing-thumb"
               className="h-16 w-full rounded-lg object-cover"
               loading="lazy"
             />
@@ -86,12 +120,21 @@ function ListingCard({ listing, score }: { listing: Listing; score: number }) {
             Score {Math.round(score)}
           </span>
 
-          <Link
-            to={`/demo/listings/${listing.id}`}
-            className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white"
-          >
-            View details
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onToggleWatchlist}
+              className="rounded-full border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700"
+            >
+              {isSaved ? "Remove from Watchlist" : "Add to Watchlist"}
+            </button>
+            <Link
+              to={`/demo/${listing.id}`}
+              className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white"
+            >
+              View Details
+            </Link>
+          </div>
         </div>
       </div>
     </div>

@@ -34,11 +34,13 @@ export default async function authRoutes(app: FastifyInstance) {
     };
     users.push(user);
 
-    const token = await reply.jwtSign({ id: user.id, role: user.role });
+    const userId = user.id ?? "unknown-user";
+    const role = user.role ?? "buyer";
+    const token = await reply.jwtSign({ id: userId, role });
 
     return ok(request, {
       token,
-      user: { id: user.id, email: user.email, name: user.name, role: user.role },
+      user: { id: userId, email: user.email, name: user.name, role },
     });
   });
 
@@ -58,11 +60,13 @@ export default async function authRoutes(app: FastifyInstance) {
       return fail(request, reply, "INVALID_CREDENTIALS", "Invalid credentials.", 401);
     }
 
-    const token = await reply.jwtSign({ id: user.id, role: user.role });
+    const userId = user.id ?? "unknown-user";
+    const role = user.role ?? "buyer";
+    const token = await reply.jwtSign({ id: userId, role });
 
     return ok(request, {
       token,
-      user: { id: user.id, email: user.email, name: user.name, role: user.role },
+      user: { id: userId, email: user.email, name: user.name, role },
     });
   });
 
