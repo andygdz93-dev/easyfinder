@@ -7,6 +7,9 @@ export const Landing = () => (
     <header className="flex items-center justify-between px-10 py-6">
       <h1 className="text-xl font-semibold">Easy Finder AI</h1>
       <div className="flex items-center gap-4">
+        <Link to="/demo" className="text-sm font-medium text-slate-100 hover:text-white">
+          Demo
+        </Link>
         <Link to="/login" className="text-sm text-slate-300">
           Sign in
         </Link>
