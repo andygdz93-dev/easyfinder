@@ -11,5 +11,10 @@ it("renders landing page with demo entry", () => {
   expect(
     screen.getByRole("heading", { level: 1, name: /Easy Finder AI/i })
   ).toBeInTheDocument();
-  expect(screen.getByRole("link", { name: /^demo$/i })).toHaveAttribute("href", "/demo");
+
+  const demoLinks = screen.getAllByRole("link", { name: /^demo$/i });
+  expect(demoLinks.length).toBeGreaterThan(0);
+  demoLinks.forEach((link) => {
+    expect(link).toHaveAttribute("href", "/demo");
+  });
 });
