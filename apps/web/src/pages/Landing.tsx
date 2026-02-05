@@ -35,6 +35,9 @@ export const Landing = () => (
             <Link to="/app/listings">
               <Button>Explore listings</Button>
             </Link>
+            <Link to="/demo">
+              <Button variant="secondary">Demo</Button>
+            </Link>
             <Link to="/register">
               <Button variant="outline">Start free demo</Button>
             </Link>

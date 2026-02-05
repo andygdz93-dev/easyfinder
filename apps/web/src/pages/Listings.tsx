@@ -6,12 +6,13 @@ import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
 import {
+  ListingWithScore,
   addToWatchlist,
   getListings,
   getRequestId,
   getWatchlist,
 } from "../lib/api";
-import { Listing, ScoreBreakdown, WatchlistItem } from "@easyfinderai/shared";
+import { WatchlistItem } from "@easyfinderai/shared";
 
 export const Listings = () => {
   const [state, setState] = useState("");
@@ -20,10 +21,7 @@ export const Listings = () => {
   const [operableOnly, setOperableOnly] = useState(true);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const listingsQuery = useQuery<{
-    total: number;
-    listings: Array<Listing & { score: ScoreBreakdown }>;
-  }>({
+  const listingsQuery = useQuery<ListingWithScore[]>({
     queryKey: ["listings", state, maxHours, maxPrice, operableOnly],
     queryFn: () =>
       getListings({
@@ -59,7 +57,7 @@ export const Listings = () => {
     }
   };
 
-  const listings = listingsQuery.data?.listings ?? [];
+  const listings = listingsQuery.data ?? [];
 
   return (
     <div className="space-y-6">
@@ -123,13 +121,18 @@ export const Listings = () => {
         <div className="grid gap-4 md:grid-cols-2">
           {listings.map((listing) => (
             <Card key={listing.id} className="space-y-4">
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold">{listing.title}</h3>
                   <p className="text-xs text-slate-400">{listing.source}</p>
                 </div>
-                <Badge className="bg-accent text-slate-900">{listing.score.total}</Badge>
+                <Badge className="bg-accent text-slate-900">{listing.totalScore}</Badge>
               </div>
+              <img
+                src={listing.imageUrl || listing.images[0]}
+                alt={listing.title}
+                className="h-40 w-full rounded-lg object-cover"
+              />
               <p className="text-sm text-slate-300">{listing.description}</p>
               <div className="flex flex-wrap gap-3 text-xs text-slate-400">
                 <span>${listing.price.toLocaleString()}</span>
@@ -138,7 +141,7 @@ export const Listings = () => {
                 <span>{listing.operable ? "Operable" : "Not operable"}</span>
               </div>
               <div className="flex flex-wrap gap-3">
-                <Link to={`/listings/${listing.id}`}>
+                <Link to={`/app/listings/${listing.id}`}>
                   <Button variant="secondary">View details</Button>
                 </Link>
                 <Button
