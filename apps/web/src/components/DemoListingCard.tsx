@@ -17,7 +17,7 @@ export default function DemoListingCard({ listing }: Props) {
   return (
     <div className="w-full max-w-[460px] overflow-hidden rounded-2xl border bg-white shadow-sm">
       {/* IMAGE */}
-      <div className="h-40 w-full overflow-hidden rounded-xl bg-slate-100 md:h-48" data-testid="demo-card-hero">
+      <div className="h-36 w-full overflow-hidden rounded-xl bg-slate-100 sm:h-40 md:h-44" data-testid="demo-card-hero">
         <img src={image} alt={listing.title} className="h-full w-full object-cover" loading="lazy" />
       </div>
 
