@@ -21,13 +21,13 @@ export const DemoWatchlist = () => {
       <div className="mx-auto w-full max-w-5xl space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-300">
             Watchlist
           </p>
-          <h2 className="demo-title text-3xl font-semibold text-slate-900">
+          <h2 className="demo-title text-3xl font-semibold text-slate-100">
             Saved Opportunities
           </h2>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-slate-300">
             Track the equipment that deserves a second look.
           </p>
         </div>
@@ -41,7 +41,7 @@ export const DemoWatchlist = () => {
       </div>
 
       {saved.length === 0 ? (
-        <div className="rounded-2xl border border-black/10 bg-white/80 px-4 py-6 text-sm text-slate-600 shadow">
+        <div className="rounded-2xl border border-black/10 bg-white/80 px-4 py-6 text-sm text-slate-300 shadow">
           No saved listings yet. Add listings from the demo page to build a watchlist.
         </div>
       ) : (

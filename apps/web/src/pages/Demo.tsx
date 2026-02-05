@@ -25,18 +25,18 @@ export default function Demo() {
     <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 md:px-6 md:py-8">
       {/* HEADER */}
       <section className="space-y-3">
-        <h1 className="text-3xl font-semibold text-slate-900">EasyFinder Ranked Inventory</h1>
-        <p className="mt-2 text-slate-600">
+        <h1 className="text-3xl font-semibold text-slate-100">EasyFinder Ranked Inventory</h1>
+        <p className="mt-2 text-slate-300">
           AI-assisted heavy equipment sourcing, tuned for capital efficiency.
         </p>
-        <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
+        <div className="flex flex-wrap items-center gap-4 text-sm text-slate-300">
           <span>
-            Saved listings: <strong className="text-slate-900">{watchlist.ids.length}</strong>
+            Saved listings: <strong className="text-slate-100">{watchlist.ids.length}</strong>
           </span>
           <button
             type="button"
             onClick={() => setShowWatchlistOnly((prev) => !prev)}
-            className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700"
+            className="rounded-full border border-slate-500 px-3 py-1 text-xs font-semibold text-slate-100 hover:border-slate-300"
           >
             {showWatchlistOnly ? "Show all listings" : "Show watchlist only"}
           </button>
