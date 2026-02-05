@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import type { Listing } from "@easyfinderai/shared";
 import { demoListings, defaultScoringConfig, scoreListing } from "@easyfinderai/shared";
 import { useDemoWatchlist } from "../lib/demoWatchlist";
+import { formatCategory } from "../lib/formatters";
 
 export default function Demo() {
   const watchlist = useDemoWatchlist();
@@ -21,14 +22,14 @@ export default function Demo() {
     : ranked;
 
   return (
-    <div className="space-y-10">
+    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 md:px-6 md:py-8">
       {/* HEADER */}
-      <section>
+      <section className="space-y-3">
         <h1 className="text-3xl font-semibold text-slate-900">EasyFinder Ranked Inventory</h1>
         <p className="mt-2 text-slate-600">
           AI-assisted heavy equipment sourcing, tuned for capital efficiency.
         </p>
-        <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-slate-600">
+        <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
           <span>
             Saved listings: <strong className="text-slate-900">{watchlist.ids.length}</strong>
           </span>
@@ -76,37 +77,45 @@ function ListingCard({
 
   return (
     <div
-      className="overflow-hidden rounded-3xl border border-black/10 bg-white shadow-sm"
+      className="overflow-hidden rounded-2xl border border-black/10 bg-white shadow-sm"
       data-testid="listing-card"
     >
       {/* IMAGE */}
-      <div className="bg-slate-100">
-        <img
-          src={hero}
-          alt={listing.title || "Listing image"}
-          data-testid="listing-hero"
-          className="h-48 w-full object-cover"
-          loading="lazy"
-        />
+      <div className="space-y-3 p-4 md:p-5">
+        <div className="h-44 w-full overflow-hidden rounded-lg bg-slate-100 md:h-52">
+          <img
+            src={hero}
+            alt={listing.title || "Listing image"}
+            data-testid="listing-hero"
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+        </div>
 
         {/* THUMBNAILS */}
-        <div className="grid grid-cols-4 gap-2 bg-white/80 p-3">
+        <div className="grid grid-cols-4 gap-2">
           {thumbs.map((src, idx) => (
-            <img
+            <div
               key={`${listing.id}-thumb-${idx}`}
-              src={src}
-              alt={`${listing.title || "Listing"} thumbnail ${idx + 1}`}
-              data-testid="listing-thumb"
-              className="h-16 w-full rounded-lg object-cover"
-              loading="lazy"
-            />
+              className="h-16 overflow-hidden rounded-md md:h-20"
+            >
+              <img
+                src={src}
+                alt={`${listing.title || "Listing"} thumbnail ${idx + 1}`}
+                data-testid="listing-thumb"
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+            </div>
           ))}
         </div>
       </div>
 
       {/* CONTENT */}
-      <div className="space-y-3 p-5">
-        <p className="text-xs uppercase tracking-wide text-slate-500">{listing.category}</p>
+      <div className="space-y-3 px-4 pb-4 md:px-5 md:pb-5">
+        <p className="text-xs uppercase tracking-wide text-slate-500">
+          {formatCategory(listing.category)}
+        </p>
 
         <h3 className="text-lg font-semibold text-slate-900">{listing.title}</h3>
 
