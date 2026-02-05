@@ -12,6 +12,12 @@ type ApiEnvelope<T> = {
   requestId?: string;
 };
 
+export type ListingWithScore = Listing & {
+  totalScore: number;
+  scores: ScoreBreakdown["components"];
+  rationale: string[];
+};
+
 export class ApiError extends Error {
   requestId?: string;
 
@@ -66,14 +72,10 @@ export const getListings = (filters: ListingFilters) => {
   if (filters.maxPrice) params.set("maxPrice", String(filters.maxPrice));
   if (filters.operable) params.set("operable", "true");
   const query = params.toString();
-  return apiRequest<{
-    total: number;
-    listings: Array<Listing & { score: ScoreBreakdown }>;
-  }>(`/listings${query ? `?${query}` : ""}`);
+  return apiRequest<ListingWithScore[]>(`/listings${query ? `?${query}` : ""}`);
 };
 
-export const getListing = (id: string) =>
-  apiRequest<Listing & { score: ScoreBreakdown }>(`/listings/${id}`);
+export const getListing = (id: string) => apiRequest<ListingWithScore>(`/listings/${id}`);
 
 export const getScoringConfig = () =>
   apiRequest<{ config: ScoringConfig }>("/scoring-configs");
