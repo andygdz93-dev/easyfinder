@@ -22,7 +22,7 @@ beforeEach(() => {
     ok: true,
     json: async () => ({ data: { total: 0, listings: [] } }),
   }) as unknown as typeof fetch;
-  process.env.VITE_API_URL = "http://localhost:3001";
+  process.env.VITE_API_BASE_URL = "http://localhost:3001";
 });
 
 it("renders listings page", async () => {

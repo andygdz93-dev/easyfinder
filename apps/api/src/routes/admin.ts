@@ -6,6 +6,13 @@ import { Listing } from "@easyfinderai/shared";
 import { fail, ok } from "../response.js";
 
 const adminOnly = new Set(["admin"]);
+const fallbackImages = [
+  "/demo-images/other/1.jpg",
+  "/demo-images/other/2.jpg",
+  "/demo-images/other/3.jpg",
+  "/demo-images/other/4.jpg",
+  "/demo-images/other/5.jpg",
+];
 
 const csvSchema = z.object({
   title: z.string(),
@@ -45,7 +52,8 @@ export default async function adminRoutes(app: FastifyInstance) {
         hours: parsed.hours,
         operable: parsed.operable,
         category: parsed.category,
-        imageUrl: undefined,
+        images: fallbackImages,
+        imageUrl: fallbackImages[0],
         source: parsed.source,
         createdAt: new Date().toISOString(),
       };
@@ -75,7 +83,8 @@ export default async function adminRoutes(app: FastifyInstance) {
       hours: 4200,
       operable: true,
       category: "Excavator",
-      imageUrl: undefined,
+      images: fallbackImages,
+      imageUrl: fallbackImages[0],
       source: "mock-feed",
       createdAt: now,
     });
