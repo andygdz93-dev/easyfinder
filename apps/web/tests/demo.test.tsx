@@ -116,6 +116,27 @@ describe("Demo experience", () => {
     }
   });
 
+  it("swaps hero image when clicking a detail thumbnail", async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter initialEntries={["/demo/demo-22"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    const hero = await screen.findByTestId("demo-hero") as HTMLImageElement;
+    const thumb1 = await screen.findByTestId("demo-thumb-1");
+    const thumb1Image = within(thumb1).getByRole("img") as HTMLImageElement;
+
+    const initialHeroSrc = hero.src;
+    const initialThumbSrc = thumb1Image.src;
+
+    await user.click(thumb1);
+
+    expect((screen.getByTestId("demo-hero") as HTMLImageElement).src).toBe(initialThumbSrc);
+    expect((within(screen.getByTestId("demo-thumb-1")).getByRole("img") as HTMLImageElement).src).toBe(initialHeroSrc);
+  });
+
   it("renders demo detail route without API env vars", async () => {
     const previousUrl = process.env.VITE_API_URL;
     const previousBase = process.env.VITE_API_BASE_URL;
