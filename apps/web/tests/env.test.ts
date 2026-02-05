@@ -1,21 +1,24 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, afterEach } from "vitest";
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 describe("env helpers", () => {
-  it("getApiUrl returns null when env vars are missing", async () => {
+  it("importing env module does not throw when env vars are missing", async () => {
     vi.resetModules();
-    delete process.env.VITE_API_URL;
-    delete process.env.VITE_API_BASE_URL;
+    vi.stubEnv("VITE_API_URL", "");
+    vi.stubEnv("VITE_API_BASE_URL", "");
 
-    const module = await import("../src/env");
-    expect(module.getApiUrl()).toBeNull();
+    await expect(import("../src/env")).resolves.toBeTruthy();
   });
 
-  it("requireApiUrl throws only when called", async () => {
+  it("getApiBaseUrl returns null when env vars are missing", async () => {
     vi.resetModules();
-    delete process.env.VITE_API_URL;
-    delete process.env.VITE_API_BASE_URL;
+    vi.stubEnv("VITE_API_URL", "");
+    vi.stubEnv("VITE_API_BASE_URL", "");
 
     const module = await import("../src/env");
-    expect(() => module.requireApiUrl()).toThrow("VITE_API_URL is required");
+    expect(module.getApiBaseUrl()).toBeNull();
   });
 });

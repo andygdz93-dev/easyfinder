@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { useAuth } from "../lib/auth";
-import { requireApiUrl } from "../env";
+import { requireApiBaseUrl } from "../env";
 
 export const AdminSources = () => {
   const { token, user } = useAuth();
@@ -13,7 +13,7 @@ export const AdminSources = () => {
   const { data } = useQuery({
     queryKey: ["sources"],
     queryFn: async () => {
-      const baseUrl = requireApiUrl();
+      const baseUrl = requireApiBaseUrl();
       const res = await fetch(`${baseUrl}/api/admin/sources`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -24,7 +24,7 @@ export const AdminSources = () => {
 
   const syncSources = useMutation({
     mutationFn: async () => {
-      const baseUrl = requireApiUrl();
+      const baseUrl = requireApiBaseUrl();
       const res = await fetch(`${baseUrl}/api/admin/sources/sync`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
@@ -39,7 +39,7 @@ export const AdminSources = () => {
       if (!file) return null;
       const formData = new FormData();
       formData.append("file", file);
-      const baseUrl = requireApiUrl();
+      const baseUrl = requireApiBaseUrl();
       const res = await fetch(`${baseUrl}/api/admin/ingest/csv`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
