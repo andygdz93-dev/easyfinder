@@ -42,8 +42,15 @@ describe("Demo experience", () => {
     const viewLinks = await screen.findAllByRole("link", { name: /view details/i });
     await user.click(viewLinks[0]);
 
-    expect(await screen.findByTestId("score-breakdown")).toBeInTheDocument();
+    expect(await screen.findByTestId("demo-detail-breakdown")).toBeInTheDocument();
+    expect(screen.getByText(/total score/i)).toBeInTheDocument();
+    expect(screen.getAllByText("Operable").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Hours").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Price").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("State").length).toBeGreaterThan(0);
     expect(screen.getByText(/why this score/i)).toBeInTheDocument();
+    const rationaleItems = screen.getAllByRole("listitem");
+    expect(rationaleItems.length).toBeGreaterThan(0);
     const detailImages = screen.getAllByRole("img");
     expect(detailImages.length).toBeGreaterThanOrEqual(5);
   });
@@ -79,5 +86,33 @@ describe("Demo experience", () => {
         within(refreshedCard).getByRole("button", { name: /remove from watchlist/i })
       ).toBeInTheDocument();
     });
+  });
+
+  it("renders saved listings on the watchlist route", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(
+      <MemoryRouter>
+        <Demo />
+      </MemoryRouter>
+    );
+
+    const firstCard = screen.getAllByTestId("listing-card")[0];
+    const listingTitle = within(firstCard).getByRole("heading").textContent;
+    await user.click(
+      within(firstCard).getByRole("button", { name: /add to watchlist/i })
+    );
+
+    unmount();
+
+    render(
+      <MemoryRouter initialEntries={["/demo/watchlist"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText(/saved opportunities/i)).toBeInTheDocument();
+    if (listingTitle) {
+      expect(screen.getByText(listingTitle)).toBeInTheDocument();
+    }
   });
 });

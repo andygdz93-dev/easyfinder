@@ -21,10 +21,16 @@ export const listingSchema = z.object({
   operable: z.boolean(),
   category: z.string(),
   imageUrl: urlOrPath.optional(),
-  images: z.array(urlOrPath).min(5),
+  images: z
+    .array(urlOrPath)
+    .min(5, "Listing must have at least 5 images (hero + 4)"),
   source: z.string(),
   createdAt: z.string(),
-});
+})
+  .transform((listing) => ({
+    ...listing,
+    imageUrl: listing.imageUrl ?? listing.images[0],
+  }));
 
 export type Listing = z.infer<typeof listingSchema>;
 
