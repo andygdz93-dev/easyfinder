@@ -2,10 +2,8 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Card } from "../components/ui/card";
-import { getListings, getRequestId, getWatchlist } from "../lib/api";
-import { Listing, ScoreBreakdown, WatchlistItem } from "@easyfinderai/shared";
-
-type ListingWithScore = Listing & { score: ScoreBreakdown };
+import { ListingWithScore, getListings, getRequestId, getWatchlist, removeFromWatchlist } from "../lib/api";
+import { WatchlistItem } from "@easyfinderai/shared";
 
 export const Watchlist = () => {
   const watchlistQuery = useQuery<{ items: WatchlistItem[] }>({
@@ -13,16 +11,13 @@ export const Watchlist = () => {
     queryFn: () => getWatchlist(),
   });
 
-  const listingsQuery = useQuery<{
-    total: number;
-    listings: Array<Listing & { score: ScoreBreakdown }>;
-  }>({
+  const listingsQuery = useQuery<ListingWithScore[]>({
     queryKey: ["listings"],
-    queryFn: () => getListings({ operable: true }),
+    queryFn: () => getListings({}),
   });
 
   const listingMap = useMemo(() => {
-    const items = listingsQuery.data?.listings ?? [];
+    const items = listingsQuery.data ?? [];
     return new Map(items.map((listing) => [listing.id, listing]));
   }, [listingsQuery.data]);
 
@@ -61,16 +56,27 @@ export const Watchlist = () => {
               <h3 className="text-lg font-semibold">{listing.title}</h3>
               <p className="text-xs text-slate-400">{listing.state}</p>
             </div>
-            <span className="text-xs text-slate-300">Score {listing.score.total}</span>
+            <span className="text-xs text-slate-300">Score {listing.totalScore}</span>
           </div>
           <div className="flex flex-wrap gap-3 text-xs text-slate-400">
             <span>${listing.price.toLocaleString()}</span>
             <span>{listing.hours.toLocaleString()} hrs</span>
             <span>{listing.operable ? "Operable" : "Not operable"}</span>
           </div>
-          <Link className="text-sm text-sky-300 hover:text-sky-200" to={`/listings/${listing.id}`}>
-            View details
-          </Link>
+          <div className="flex items-center justify-between">
+            <Link className="text-sm text-sky-300 hover:text-sky-200" to={`/app/listings/${listing.id}`}>
+              View details
+            </Link>
+            <button
+              className="text-xs text-rose-300 hover:text-rose-200"
+              onClick={async () => {
+                await removeFromWatchlist(listing.id);
+                await watchlistQuery.refetch();
+              }}
+            >
+              Remove
+            </button>
+          </div>
         </Card>
       ))}
     </div>

@@ -8,6 +8,7 @@ import { Badge } from "../components/ui/badge";
 import {
   ListingWithScore,
   addToWatchlist,
+  removeFromWatchlist,
   getListings,
   getRequestId,
   getWatchlist,
@@ -42,10 +43,14 @@ export const Listings = () => {
     return new Set(items.map((item: WatchlistItem) => item.listingId));
   }, [watchlistQuery.data]);
 
-  const handleAdd = async (listingId: string) => {
+  const handleToggleWatchlist = async (listingId: string) => {
     setActionError(null);
     try {
-      await addToWatchlist(listingId);
+      if (watchlistIds.has(listingId)) {
+        await removeFromWatchlist(listingId);
+      } else {
+        await addToWatchlist(listingId);
+      }
       await watchlistQuery.refetch();
     } catch (error) {
       const requestId = getRequestId(error);
@@ -146,10 +151,10 @@ export const Listings = () => {
                 </Link>
                 <Button
                   variant="outline"
-                  onClick={() => handleAdd(listing.id)}
-                  disabled={watchlistIds.has(listing.id) || watchlistQuery.isLoading}
+                  onClick={() => handleToggleWatchlist(listing.id)}
+                  disabled={watchlistQuery.isLoading}
                 >
-                  {watchlistIds.has(listing.id) ? "In watchlist" : "Add to watchlist"}
+                  {watchlistIds.has(listing.id) ? "Remove from watchlist" : "Add to watchlist"}
                 </Button>
               </div>
             </Card>

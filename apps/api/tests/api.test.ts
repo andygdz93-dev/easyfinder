@@ -67,6 +67,22 @@ describe("API", () => {
     expect(res.status).toBe(200);
   });
 
+
+  it("supports watchlist add/remove endpoints", async () => {
+    const addRes = await supertest(app.server).post("/api/watchlist/demo-1");
+    expect(addRes.status).toBe(200);
+    expect(addRes.body.data.item.listingId).toBe("demo-1");
+
+    const listRes = await supertest(app.server).get("/api/watchlist");
+    expect(listRes.status).toBe(200);
+    expect(Array.isArray(listRes.body.data.items)).toBe(true);
+    expect(listRes.body.data.items.some((item: any) => item.listingId === "demo-1")).toBe(true);
+
+    const removeRes = await supertest(app.server).delete("/api/watchlist/demo-1");
+    expect(removeRes.status).toBe(200);
+    expect(removeRes.body.data.removed).toBe(true);
+  });
+
   it("seller-only endpoint blocked for buyer", async () => {
     const loginRes = await supertest(app.server)
       .post("/api/auth/login")
