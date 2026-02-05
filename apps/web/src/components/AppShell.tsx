@@ -6,7 +6,8 @@ const navItems = [
   { to: "/app/listings", label: "Listings" },
   { to: "/app/scoring", label: "Scoring" },
   { to: "/app/seller", label: "Seller" },
-  { to: "/app/admin", label: "Admin" },
+  { to: "/app/admin/sources", label: "Admin" },
+  { to: "/demo", label: "Demo" },
   { to: "/app/upgrade", label: "Upgrade" },
 ];
 
