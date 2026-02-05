@@ -15,9 +15,9 @@ export default function DemoListingCard({ listing }: Props) {
   const isSaved = watchlist.isInWatchlist(listing.id);
 
   return (
-    <div className="rounded-xl bg-white shadow-sm border overflow-hidden">
+    <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
       {/* IMAGE */}
-      <div className="h-48 w-full overflow-hidden bg-gray-100">
+      <div className="h-44 w-full overflow-hidden rounded-lg bg-slate-100 md:h-52">
         <img
           src={image}
           alt={listing.title}
@@ -27,7 +27,7 @@ export default function DemoListingCard({ listing }: Props) {
       </div>
 
       {/* CONTENT */}
-      <div className="p-5 space-y-2">
+      <div className="space-y-2 p-4 md:p-5">
         <div className="text-xs uppercase tracking-wide text-gray-500">
           {formatCategory(listing.category)}
         </div>
