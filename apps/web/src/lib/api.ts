@@ -5,6 +5,7 @@ import {
   WatchlistItem,
 } from "@easyfinderai/shared";
 import { requireApiBaseUrl } from "../env";
+import { getStoredAuthToken } from "./auth";
 
 type ApiEnvelope<T> = {
   data?: T;
@@ -30,12 +31,18 @@ export class ApiError extends Error {
 
 const apiRequest = async <T>(path: string, options: RequestInit = {}): Promise<T> => {
   const baseUrl = requireApiBaseUrl();
+  const token = getStoredAuthToken();
+  const headers = new Headers(options.headers ?? {});
+  if (!headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
   const res = await fetch(`${baseUrl}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers ?? {}),
-    },
     ...options,
+    headers,
   });
 
   const payload = (await res.json()) as ApiEnvelope<T>;

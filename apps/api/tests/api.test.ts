@@ -26,12 +26,14 @@ describe("API", () => {
       .send({ email, password: "TestPass123!", name: "Tester" });
     expect(registerRes.status).toBe(200);
     expect(registerRes.body.data.token).toBeTruthy();
+    expect(registerRes.body.data.user).toBeTruthy();
 
     const loginRes = await supertest(app.server)
       .post("/api/auth/login")
       .send({ email, password: "TestPass123!" });
     expect(loginRes.status).toBe(200);
     expect(loginRes.body.data.token).toBeTruthy();
+    expect(loginRes.body.data.user).toBeTruthy();
   });
 
   it("demo cannot POST scoring configs", async () => {
