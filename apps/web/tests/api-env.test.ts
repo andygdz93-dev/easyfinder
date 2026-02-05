@@ -37,6 +37,8 @@ describe("api env handling", () => {
     vi.resetModules();
     process.env.VITE_API_URL = "https://example.com/api";
     process.env.VITE_API_BASE_URL = "https://example.com/api";
+    vi.stubEnv("VITE_API_URL", "https://example.com/api");
+    vi.stubEnv("VITE_API_BASE_URL", "https://example.com/api");
 
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
