@@ -1,29 +1,42 @@
-import { describe, expect, it, vi, afterEach } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { AUTH_SESSION_STORAGE_KEY } from "../src/lib/auth";
 
+const ORIGINAL_ENV = { ...process.env };
+
 afterEach(() => {
+  vi.resetModules();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
   localStorage.clear();
+  process.env = { ...ORIGINAL_ENV };
 });
 
 describe("api env handling", () => {
-  it("requireApiBaseUrl throws when called and env is missing", async () => {
+  it("uses localhost fallback when env is missing", async () => {
     vi.resetModules();
-    vi.stubEnv("VITE_API_URL", "");
-    vi.stubEnv("VITE_API_BASE_URL", "");
+    delete process.env.VITE_API_URL;
+    delete process.env.VITE_API_BASE_URL;
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: { token: "t", user: { id: "1" } } }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
 
     const apiModule = await import("../src/lib/api");
+    await apiModule.apiFetch("/auth/login", { method: "POST" });
 
-    await expect(apiModule.apiFetch("/auth/login", { method: "POST" })).rejects.toThrow(
-      "VITE_API_BASE_URL is required"
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:8080/auth/login",
+      expect.objectContaining({ method: "POST" })
     );
   });
 
   it("builds auth URL with a single /api prefix", async () => {
     vi.resetModules();
-    vi.stubEnv("VITE_API_BASE_URL", "https://example.com/api");
+    process.env.VITE_API_URL = "https://example.com/api";
+    process.env.VITE_API_BASE_URL = "https://example.com/api";
 
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
@@ -42,7 +55,7 @@ describe("api env handling", () => {
 
   it("includes Authorization header when token exists", async () => {
     vi.resetModules();
-    vi.stubEnv("VITE_API_BASE_URL", "https://example.com/api");
+    process.env.VITE_API_BASE_URL = "https://example.com/api";
     localStorage.setItem(
       AUTH_SESSION_STORAGE_KEY,
       JSON.stringify({
