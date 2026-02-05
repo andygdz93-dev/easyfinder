@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import type { Listing } from "@easyfinderai/shared";
 import { demoListings, defaultScoringConfig, scoreListing } from "@easyfinderai/shared";
 import { useDemoWatchlist } from "../lib/demoWatchlist";
+import { formatCategory } from "../lib/formatters";
 
 export default function Demo() {
   const watchlist = useDemoWatchlist();
@@ -21,21 +22,21 @@ export default function Demo() {
     : ranked;
 
   return (
-    <div className="space-y-10">
+    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 md:px-6 md:py-8">
       {/* HEADER */}
-      <section>
-        <h1 className="text-3xl font-semibold text-slate-900">EasyFinder Ranked Inventory</h1>
-        <p className="mt-2 text-slate-600">
+      <section className="space-y-3">
+        <h1 className="text-3xl font-semibold text-slate-100">EasyFinder Ranked Inventory</h1>
+        <p className="mt-2 text-slate-300">
           AI-assisted heavy equipment sourcing, tuned for capital efficiency.
         </p>
-        <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-slate-600">
+        <div className="flex flex-wrap items-center gap-4 text-sm text-slate-300">
           <span>
-            Saved listings: <strong className="text-slate-900">{watchlist.ids.length}</strong>
+            Saved listings: <strong className="text-slate-100">{watchlist.ids.length}</strong>
           </span>
           <button
             type="button"
             onClick={() => setShowWatchlistOnly((prev) => !prev)}
-            className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700"
+            className="rounded-full border border-slate-500 px-3 py-1 text-xs font-semibold text-slate-100 hover:border-slate-300"
           >
             {showWatchlistOnly ? "Show all listings" : "Show watchlist only"}
           </button>
@@ -43,7 +44,7 @@ export default function Demo() {
       </section>
 
       {/* LISTINGS GRID */}
-      <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <section className="grid place-items-start gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {visibleListings.map(({ listing, score }) => (
           <ListingCard
             key={listing.id}
@@ -76,51 +77,59 @@ function ListingCard({
 
   return (
     <div
-      className="overflow-hidden rounded-3xl border border-black/10 bg-white shadow-sm"
+      className="w-full max-w-[460px] justify-self-center overflow-hidden rounded-2xl border border-black/10 bg-white shadow-sm"
       data-testid="listing-card"
     >
       {/* IMAGE */}
-      <div className="bg-slate-100">
-        <img
-          src={hero}
-          alt={listing.title || "Listing image"}
-          data-testid="listing-hero"
-          className="h-48 w-full object-cover"
-          loading="lazy"
-        />
+      <div className="space-y-3 p-4 md:p-5">
+        <div className="h-36 w-full overflow-hidden rounded-xl bg-slate-100 sm:h-40 md:h-44" data-testid="demo-card-hero">
+          <img
+            src={hero}
+            alt={listing.title || "Listing image"}
+            data-testid="listing-hero"
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+        </div>
 
         {/* THUMBNAILS */}
-        <div className="grid grid-cols-4 gap-2 bg-white/80 p-3">
+        <div className="mt-3 grid grid-cols-4 gap-2" data-testid="demo-card-thumbs">
           {thumbs.map((src, idx) => (
-            <img
+            <div
               key={`${listing.id}-thumb-${idx}`}
-              src={src}
-              alt={`${listing.title || "Listing"} thumbnail ${idx + 1}`}
-              data-testid="listing-thumb"
-              className="h-16 w-full rounded-lg object-cover"
-              loading="lazy"
-            />
+              className="h-10 overflow-hidden rounded-lg bg-slate-100 sm:h-12"
+            >
+              <img
+                src={src}
+                alt={`${listing.title || "Listing"} thumbnail ${idx + 1}`}
+                data-testid="listing-thumb"
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+            </div>
           ))}
         </div>
       </div>
 
       {/* CONTENT */}
-      <div className="space-y-3 p-5">
-        <p className="text-xs uppercase tracking-wide text-slate-500">{listing.category}</p>
+      <div className="space-y-2 p-4 md:p-5">
+        <p className="text-xs uppercase tracking-wide text-slate-500">
+          {formatCategory(listing.category)}
+        </p>
 
-        <h3 className="text-lg font-semibold text-slate-900">{listing.title}</h3>
+        <h3 className="text-base font-semibold leading-tight text-slate-900 md:text-lg">{listing.title}</h3>
 
         <div className="text-sm text-slate-600">
           ${Number(listing.price ?? 0).toLocaleString()} •{" "}
           {Number(listing.hours ?? 0).toLocaleString()} hrs • {listing.state}
         </div>
 
-        <div className="flex items-center justify-between pt-3">
+        <div className="mt-3 flex items-center justify-between gap-2">
           <span className="rounded-full bg-amber-400 px-3 py-1 text-xs font-semibold text-black">
             Score {Math.round(score)}
           </span>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <button
               type="button"
               onClick={onToggleWatchlist}
