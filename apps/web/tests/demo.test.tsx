@@ -42,8 +42,15 @@ describe("Demo experience", () => {
     const viewLinks = await screen.findAllByRole("link", { name: /view details/i });
     await user.click(viewLinks[0]);
 
-    expect(await screen.findByTestId("score-breakdown")).toBeInTheDocument();
+    expect(await screen.findByTestId("demo-detail-breakdown")).toBeInTheDocument();
+    expect(screen.getByText(/total score/i)).toBeInTheDocument();
+    expect(screen.getAllByText("Operable").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Hours").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Price").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("State").length).toBeGreaterThan(0);
     expect(screen.getByText(/why this score/i)).toBeInTheDocument();
+    const rationaleItems = screen.getAllByRole("listitem");
+    expect(rationaleItems.length).toBeGreaterThan(0);
     const detailImages = screen.getAllByRole("img");
     expect(detailImages.length).toBeGreaterThanOrEqual(5);
   });
@@ -80,4 +87,51 @@ describe("Demo experience", () => {
       ).toBeInTheDocument();
     });
   });
+
+  it("renders saved listings on the watchlist route", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(
+      <MemoryRouter>
+        <Demo />
+      </MemoryRouter>
+    );
+
+    const firstCard = screen.getAllByTestId("listing-card")[0];
+    const listingTitle = within(firstCard).getByRole("heading").textContent;
+    await user.click(
+      within(firstCard).getByRole("button", { name: /add to watchlist/i })
+    );
+
+    unmount();
+
+    render(
+      <MemoryRouter initialEntries={["/demo/watchlist"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText(/saved opportunities/i)).toBeInTheDocument();
+    if (listingTitle) {
+      expect(screen.getByText(listingTitle)).toBeInTheDocument();
+    }
+  });
+
+  it("renders demo detail route without API env vars", async () => {
+    const previousUrl = process.env.VITE_API_URL;
+    const previousBase = process.env.VITE_API_BASE_URL;
+    delete process.env.VITE_API_URL;
+    delete process.env.VITE_API_BASE_URL;
+
+    render(
+      <MemoryRouter initialEntries={["/demo/demo-22"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText(/2017 Genie GTH-1056 Telehandler/i)).toBeInTheDocument();
+
+    process.env.VITE_API_URL = previousUrl;
+    process.env.VITE_API_BASE_URL = previousBase;
+  });
+
 });
