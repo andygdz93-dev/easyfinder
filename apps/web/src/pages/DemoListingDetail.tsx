@@ -3,6 +3,7 @@ import { demoListings, defaultScoringConfig, scoreListing } from "@easyfinderai/
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { useDemoWatchlist } from "../lib/demoWatchlist";
+import { formatCategory } from "../lib/formatters";
 
 export default function DemoListingDetail() {
   const { id } = useParams();
@@ -26,18 +27,20 @@ export default function DemoListingDetail() {
   const isSaved = watchlist.isInWatchlist(listing.id);
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto w-full max-w-5xl space-y-6 px-4">
       {hero ? (
-        <img
-          src={hero}
-          alt={listing.title}
-          className="w-full max-h-[420px] object-cover rounded-xl"
-          onError={(e) => {
-            (e.currentTarget as HTMLImageElement).src = "/demo-images/other/1.jpg";
-          }}
-        />
+        <div className="h-[240px] w-full overflow-hidden rounded-xl bg-slate-900 md:h-[420px]">
+          <img
+            src={hero}
+            alt={listing.title}
+            className="h-full w-full object-cover"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src = "/demo-images/other/1.jpg";
+            }}
+          />
+        </div>
       ) : (
-        <div className="rounded-xl bg-slate-100 p-10 text-slate-500">
+        <div className="h-[240px] w-full rounded-xl bg-slate-100 p-10 text-slate-500 md:h-[420px]">
           No images available.
         </div>
       )}
@@ -49,7 +52,7 @@ export default function DemoListingDetail() {
               key={idx}
               src={img}
               alt={`${listing.title} ${idx + 1}`}
-              className="h-28 w-full object-cover rounded-lg"
+              className="h-20 w-full rounded-lg object-cover md:h-24"
               onError={(e) => {
                 (e.currentTarget as HTMLImageElement).src = "/demo-images/other/1.jpg";
               }}
@@ -58,7 +61,7 @@ export default function DemoListingDetail() {
         </div>
       )}
 
-      <Card className="p-6 space-y-3">
+      <Card className="rounded-xl border p-4 md:p-6 space-y-3">
         <h1 className="text-2xl font-semibold">{listing.title}</h1>
         <p className="text-slate-500">{listing.description}</p>
 
@@ -66,7 +69,7 @@ export default function DemoListingDetail() {
           <span>${listing.price.toLocaleString()}</span>
           <span>{listing.hours.toLocaleString()} hrs</span>
           <span>{listing.state}</span>
-          <span>{listing.category}</span>
+          <span>{formatCategory(listing.category)}</span>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -82,7 +85,7 @@ export default function DemoListingDetail() {
         </div>
       </Card>
 
-      <Card className="p-6 space-y-4" data-testid="score-breakdown">
+      <Card className="rounded-xl border p-4 md:p-6 space-y-4" data-testid="score-breakdown">
         <div>
           <h2 className="text-lg font-semibold">Score Breakdown</h2>
           <p className="text-sm text-slate-500">
