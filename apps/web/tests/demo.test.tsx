@@ -31,6 +31,19 @@ describe("Demo experience", () => {
     });
   });
 
+  it("keeps /demo public when unauthenticated", async () => {
+    window.localStorage.clear();
+
+    render(
+      <MemoryRouter initialEntries={["/demo"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole("heading", { name: /easyfinder ranked inventory/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /sign in/i })).not.toBeInTheDocument();
+  });
+
   it("navigates to detail view with scoring breakdown", async () => {
     const user = userEvent.setup();
     render(
