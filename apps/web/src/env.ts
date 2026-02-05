@@ -1,17 +1,18 @@
-function mustGet(key: string, fallback?: string) {
-  const v = (import.meta as any).env?.[key] as string | undefined;
-  if (v && v.trim()) return v.trim();
-  if (fallback) return fallback;
-  throw new Error(`Missing required env var: ${key}`);
-}
+const readEnv = (key: string) => {
+  const value = (import.meta as any).env?.[key] as string | undefined;
+  if (!value) return null;
+  const trimmed = value.trim();
+  return trimmed.length ? trimmed : null;
+};
 
-export const env = {
-  /**
-   * Frontend Contract:
-   * VITE_API_BASE_URL = https://easyfinder.fly.dev/api
-   *
-   * Local fallback:
-   * http://localhost:8080/api
-   */
-  apiBaseUrl: mustGet("VITE_API_BASE_URL", "http://localhost:8080/api").replace(/\/$/, ""),
+export const getApiUrl = (): string | null => {
+  return readEnv("VITE_API_URL") ?? readEnv("VITE_API_BASE_URL");
+};
+
+export const requireApiUrl = (): string => {
+  const apiUrl = getApiUrl();
+  if (!apiUrl) {
+    throw new Error("VITE_API_URL is required");
+  }
+  return apiUrl.replace(/\/$/, "");
 };

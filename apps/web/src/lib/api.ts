@@ -4,7 +4,7 @@ import {
   ScoringConfig,
   WatchlistItem,
 } from "@easyfinderai/shared";
-import { env } from "../env";
+import { requireApiUrl } from "../env";
 
 type ApiEnvelope<T> = {
   data?: T;
@@ -22,9 +22,8 @@ export class ApiError extends Error {
   }
 }
 
-const baseUrl = env.apiBaseUrl.replace(/\/$/, "");
-
 const apiRequest = async <T>(path: string, options: RequestInit = {}): Promise<T> => {
+  const baseUrl = requireApiUrl();
   const res = await fetch(`${baseUrl}${path}`, {
     headers: {
       "Content-Type": "application/json",
