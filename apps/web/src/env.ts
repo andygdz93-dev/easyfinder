@@ -9,16 +9,12 @@ const readEnv = (key: string) => {
   return trimmed.length ? trimmed : null;
 };
 
-export const getApiBaseUrl = (): string | null => {
-  return readEnv("VITE_API_URL") ?? readEnv("VITE_API_BASE_URL");
+export const getApiBaseUrl = (): string => {
+  return readEnv("VITE_API_URL") ?? readEnv("VITE_API_BASE_URL") ?? "http://localhost:8080";
 };
 
 export const requireApiBaseUrl = (): string => {
-  const apiBaseUrl = getApiBaseUrl();
-  if (!apiBaseUrl) {
-    throw new Error("VITE_API_BASE_URL is required");
-  }
-  return apiBaseUrl.replace(/\/$/, "");
+  return getApiBaseUrl().replace(/\/$/, "");
 };
 
 // Backward-compatible aliases
