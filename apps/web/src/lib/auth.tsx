@@ -1,10 +1,15 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 
 type User = {
   id: string;
   email: string;
   name: string;
   role: "demo" | "buyer" | "seller" | "admin";
+};
+
+type Session = {
+  token: string;
+  user: User;
 };
 
 type AuthContextValue = {
@@ -14,45 +19,60 @@ type AuthContextValue = {
   clearSession: () => void;
 };
 
+export const AUTH_SESSION_STORAGE_KEY = "easyfinder_auth_session";
+
+const readStoredSession = (): Session | null => {
+  const raw = localStorage.getItem(AUTH_SESSION_STORAGE_KEY);
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw) as Session;
+  } catch {
+    localStorage.removeItem(AUTH_SESSION_STORAGE_KEY);
+    return null;
+  }
+};
+
+const writeStoredSession = (session: Session | null) => {
+  if (!session) {
+    localStorage.removeItem(AUTH_SESSION_STORAGE_KEY);
+    // cleanup old keys from previous storage format
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    return;
+  }
+
+  localStorage.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify(session));
+  // cleanup old keys from previous storage format
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+};
+
+export const getStoredAuthToken = (): string | null => {
+  const session = readStoredSession();
+  return session?.token ?? null;
+};
+
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem("token"));
-  const [user, setUser] = useState<User | null>(() => {
-    const raw = localStorage.getItem("user");
-    return raw ? (JSON.parse(raw) as User) : null;
-  });
-
-  useEffect(() => {
-    if (token) {
-      localStorage.setItem("token", token);
-    } else {
-      localStorage.removeItem("token");
-    }
-  }, [token]);
-
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem("user", JSON.stringify(user));
-    } else {
-      localStorage.removeItem("user");
-    }
-  }, [user]);
+  const [session, setSessionState] = useState<Session | null>(() => readStoredSession());
 
   const value = useMemo(
     () => ({
-      token,
-      user,
+      token: session?.token ?? null,
+      user: session?.user ?? null,
       setSession: (newToken: string, newUser: User) => {
-        setToken(newToken);
-        setUser(newUser);
+        const nextSession = { token: newToken, user: newUser };
+        setSessionState(nextSession);
+        writeStoredSession(nextSession);
       },
       clearSession: () => {
-        setToken(null);
-        setUser(null);
+        setSessionState(null);
+        writeStoredSession(null);
       },
     }),
-    [token, user]
+    [session]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
