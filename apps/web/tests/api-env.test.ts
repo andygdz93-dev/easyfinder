@@ -5,12 +5,8 @@ const ORIGINAL_ENV = { ...process.env };
 
 afterEach(() => {
   vi.resetModules();
-  vi.unmock("../src/env");
+  vi.doUnmock("../env"); // must match same string
   vi.restoreAllMocks();
-  vi.unstubAllGlobals();
-  vi.unstubAllEnvs();
-  localStorage.clear();
-  process.env = { ...ORIGINAL_ENV };
 });
 
 describe("api env handling", () => {
@@ -35,28 +31,31 @@ describe("api env handling", () => {
   });
 
   it("builds auth URL with a single /api prefix", async () => {
-    vi.resetModules();
-    vi.doMock("../src/env", () => ({
-      getApiBaseUrl: () => "https://example.com/api",
-      requireApiBaseUrl: () => "https://example.com/api",
-      getApiUrl: () => "https://example.com/api",
-      requireApiUrl: () => "https://example.com/api",
-    }));
+  vi.resetModules();
 
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ data: { token: "t", user: { id: "1" } } }),
-    });
-    vi.stubGlobal("fetch", fetchMock);
+  // IMPORTANT: this string MUST match the import inside src/lib/api.ts
+  vi.doMock("../env", () => ({
+    getApiBaseUrl: () => "https://example.com/api",
+    requireApiBaseUrl: () => "https://example.com/api",
+    // include aliases ONLY if api.ts imports them
+    getApiUrl: () => "https://example.com/api",
+    requireApiUrl: () => "https://example.com/api",
+  }));
 
-    const apiModule = await import("../src/lib/api");
-    await apiModule.apiFetch("/auth/login", { method: "POST" });
+  const fetchMock = vi.fn(async () => new Response(JSON.stringify({ data: {} })));
+  // @ts-expect-error test override
+  globalThis.fetch = fetchMock;
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://example.com/api/auth/login",
-      expect.objectContaining({ method: "POST" })
-    );
-  });
+  const apiModule = await import("../src/lib/api");
+
+  await apiModule.apiFetch("/auth/login", { method: "POST" });
+
+  expect(fetchMock).toHaveBeenCalledWith(
+    "https://example.com/api/auth/login",
+    expect.objectContaining({ method: "POST" })
+  );
+});
+
 
   it("includes Authorization header when token exists", async () => {
     vi.resetModules();
