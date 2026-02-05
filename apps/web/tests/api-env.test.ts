@@ -35,6 +35,7 @@ describe("api env handling", () => {
 
   it("builds auth URL with a single /api prefix", async () => {
     vi.resetModules();
+    process.env.VITE_API_URL = "https://example.com/api";
     process.env.VITE_API_BASE_URL = "https://example.com/api";
 
     const fetchMock = vi.fn().mockResolvedValue({
