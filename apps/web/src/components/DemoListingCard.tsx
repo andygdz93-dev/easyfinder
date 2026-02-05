@@ -1,6 +1,7 @@
 import { Listing } from "@easyfinderai/shared";
 import { useNavigate } from "react-router-dom";
 import { useDemoWatchlist } from "../lib/demoWatchlist";
+import { formatCategory } from "../lib/formatters";
 
 type Props = {
   listing: Listing;
@@ -28,7 +29,7 @@ export default function DemoListingCard({ listing }: Props) {
       {/* CONTENT */}
       <div className="p-5 space-y-2">
         <div className="text-xs uppercase tracking-wide text-gray-500">
-          {listing.category}
+          {formatCategory(listing.category)}
         </div>
 
         <h3 className="font-semibold text-lg">{listing.title}</h3>
