@@ -91,9 +91,13 @@ export const getWatchlist = () =>
   apiRequest<{ items: WatchlistItem[] }>("/watchlist");
 
 export const addToWatchlist = (listingId: string) =>
-  apiRequest<{ item: WatchlistItem }>("/watchlist", {
+  apiRequest<{ item: WatchlistItem }>(`/watchlist/${listingId}`, {
     method: "POST",
-    body: JSON.stringify({ listingId }),
+  });
+
+export const removeFromWatchlist = (listingId: string) =>
+  apiRequest<{ removed: boolean }>(`/watchlist/${listingId}`, {
+    method: "DELETE",
   });
 
 // Legacy helper for internal usage

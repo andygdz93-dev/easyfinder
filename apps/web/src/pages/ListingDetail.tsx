@@ -7,6 +7,7 @@ import { Button } from "../components/ui/button";
 import {
   ApiError,
   addToWatchlist,
+  removeFromWatchlist,
   getListing,
   getRequestId,
   getWatchlist,
@@ -63,7 +64,11 @@ export const ListingDetail = () => {
     if (!id) return;
     setActionError(null);
     try {
-      await addToWatchlist(id);
+      if (watchlistIds.has(id)) {
+        await removeFromWatchlist(id);
+      } else {
+        await addToWatchlist(id);
+      }
       await watchlistQuery.refetch();
     } catch (error) {
       const requestId = getRequestId(error);
@@ -116,9 +121,8 @@ export const ListingDetail = () => {
           <Button
             variant="secondary"
             onClick={handleWatchlist}
-            disabled={watchlistIds.has(data.id)}
           >
-            {watchlistIds.has(data.id) ? "In watchlist" : "Add to watchlist"}
+            {watchlistIds.has(data.id) ? "Remove from watchlist" : "Add to watchlist"}
           </Button>
         </div>
         {actionError && <div className="text-xs text-rose-200">{actionError}</div>}
