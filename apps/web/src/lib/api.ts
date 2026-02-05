@@ -4,12 +4,19 @@ import {
   ScoringConfig,
   WatchlistItem,
 } from "@easyfinderai/shared";
-import { requireApiUrl } from "../env";
+import { requireApiBaseUrl } from "../env";
+import { getStoredAuthToken } from "./auth";
 
 type ApiEnvelope<T> = {
   data?: T;
   error?: { code: string; message: string };
   requestId?: string;
+};
+
+export type ListingWithScore = Listing & {
+  totalScore: number;
+  scores: ScoreBreakdown["components"];
+  rationale: string[];
 };
 
 export class ApiError extends Error {
@@ -23,13 +30,19 @@ export class ApiError extends Error {
 }
 
 const apiRequest = async <T>(path: string, options: RequestInit = {}): Promise<T> => {
-  const baseUrl = requireApiUrl();
+  const baseUrl = requireApiBaseUrl();
+  const token = getStoredAuthToken();
+  const headers = new Headers(options.headers ?? {});
+  if (!headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
   const res = await fetch(`${baseUrl}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers ?? {}),
-    },
     ...options,
+    headers,
   });
 
   const payload = (await res.json()) as ApiEnvelope<T>;
@@ -66,14 +79,10 @@ export const getListings = (filters: ListingFilters) => {
   if (filters.maxPrice) params.set("maxPrice", String(filters.maxPrice));
   if (filters.operable) params.set("operable", "true");
   const query = params.toString();
-  return apiRequest<{
-    total: number;
-    listings: Array<Listing & { score: ScoreBreakdown }>;
-  }>(`/listings${query ? `?${query}` : ""}`);
+  return apiRequest<ListingWithScore[]>(`/listings${query ? `?${query}` : ""}`);
 };
 
-export const getListing = (id: string) =>
-  apiRequest<Listing & { score: ScoreBreakdown }>(`/listings/${id}`);
+export const getListing = (id: string) => apiRequest<ListingWithScore>(`/listings/${id}`);
 
 export const getScoringConfig = () =>
   apiRequest<{ config: ScoringConfig }>("/scoring-configs");
@@ -82,9 +91,13 @@ export const getWatchlist = () =>
   apiRequest<{ items: WatchlistItem[] }>("/watchlist");
 
 export const addToWatchlist = (listingId: string) =>
-  apiRequest<{ item: WatchlistItem }>("/watchlist", {
+  apiRequest<{ item: WatchlistItem }>(`/watchlist/${listingId}`, {
     method: "POST",
-    body: JSON.stringify({ listingId }),
+  });
+
+export const removeFromWatchlist = (listingId: string) =>
+  apiRequest<{ removed: boolean }>(`/watchlist/${listingId}`, {
+    method: "DELETE",
   });
 
 // Legacy helper for internal usage
