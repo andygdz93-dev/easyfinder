@@ -3,6 +3,7 @@
 import { Link } from "react-router-dom";
 import { demoListings } from "@easyfinderai/shared";
 import { useDemoWatchlist } from "../lib/demoWatchlist";
+import { formatCategory } from "../lib/formatters";
 
 /**
  * IMPORTANT
@@ -84,7 +85,7 @@ export const DemoWatchlist = () => {
 
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                  {listing.category}
+                  {formatCategory(listing.category)}
                 </p>
                 <h3 className="demo-title text-xl font-semibold text-slate-900">
                   {listing.title || "Listing"}
