@@ -2,6 +2,7 @@ import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import App from "../src/App";
+import { AuthProvider } from "../src/lib/auth";
 import Demo from "../src/pages/Demo";
 
 describe("Demo experience", () => {
@@ -36,7 +37,9 @@ describe("Demo experience", () => {
 
     render(
       <MemoryRouter initialEntries={["/demo"]}>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </MemoryRouter>
     );
 
@@ -44,11 +47,28 @@ describe("Demo experience", () => {
     expect(screen.queryByRole("heading", { name: /sign in/i })).not.toBeInTheDocument();
   });
 
+
+  it("redirects unauthenticated users from /app/listings to /login", async () => {
+    window.localStorage.clear();
+
+    render(
+      <MemoryRouter initialEntries={["/app/listings"]}>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole("heading", { name: /sign in/i })).toBeInTheDocument();
+  });
+
   it("navigates to detail view with scoring breakdown", async () => {
     const user = userEvent.setup();
     render(
       <MemoryRouter initialEntries={["/demo"]}>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </MemoryRouter>
     );
 
@@ -119,7 +139,9 @@ describe("Demo experience", () => {
 
     render(
       <MemoryRouter initialEntries={["/demo/watchlist"]}>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </MemoryRouter>
     );
 
@@ -133,7 +155,9 @@ describe("Demo experience", () => {
     const user = userEvent.setup();
     render(
       <MemoryRouter initialEntries={["/demo/demo-22"]}>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </MemoryRouter>
     );
 
@@ -158,7 +182,9 @@ describe("Demo experience", () => {
 
     render(
       <MemoryRouter initialEntries={["/demo/demo-22"]}>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </MemoryRouter>
     );
 
