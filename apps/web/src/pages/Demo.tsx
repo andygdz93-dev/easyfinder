@@ -82,7 +82,7 @@ function ListingCard({
     >
       {/* IMAGE */}
       <div className="space-y-3 p-4 md:p-5">
-        <div className="h-40 w-full overflow-hidden rounded-xl bg-slate-100 md:h-48" data-testid="demo-card-hero">
+        <div className="h-36 w-full overflow-hidden rounded-xl bg-slate-100 sm:h-40 md:h-44" data-testid="demo-card-hero">
           <img
             src={hero}
             alt={listing.title || "Listing image"}
@@ -97,7 +97,7 @@ function ListingCard({
           {thumbs.map((src, idx) => (
             <div
               key={`${listing.id}-thumb-${idx}`}
-              className="h-12 overflow-hidden rounded-lg bg-slate-100 md:h-14"
+              className="h-10 overflow-hidden rounded-lg bg-slate-100 sm:h-12"
             >
               <img
                 src={src}
