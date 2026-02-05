@@ -5,6 +5,7 @@ const ORIGINAL_ENV = { ...process.env };
 
 afterEach(() => {
   vi.resetModules();
+  vi.unmock("../src/env");
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
@@ -35,10 +36,12 @@ describe("api env handling", () => {
 
   it("builds auth URL with a single /api prefix", async () => {
     vi.resetModules();
-    process.env.VITE_API_URL = "https://example.com/api";
-    process.env.VITE_API_BASE_URL = "https://example.com/api";
-    vi.stubEnv("VITE_API_URL", "https://example.com/api");
-    vi.stubEnv("VITE_API_BASE_URL", "https://example.com/api");
+    vi.doMock("../src/env", () => ({
+      getApiBaseUrl: () => "https://example.com/api",
+      requireApiBaseUrl: () => "https://example.com/api",
+      getApiUrl: () => "https://example.com/api",
+      requireApiUrl: () => "https://example.com/api",
+    }));
 
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
