@@ -42,7 +42,7 @@ describe("Demo experience", () => {
     const viewLinks = await screen.findAllByRole("link", { name: /view details/i });
     await user.click(viewLinks[0]);
 
-    expect(await screen.findByTestId("score-breakdown")).toBeInTheDocument();
+    expect(await screen.findByTestId("demo-detail-breakdown")).toBeInTheDocument();
     expect(screen.getByText(/total score/i)).toBeInTheDocument();
     expect(screen.getAllByText("Operable").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Hours").length).toBeGreaterThan(0);

@@ -18,6 +18,7 @@ export const DemoWatchlist = () => {
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 md:px-6 md:py-8">
+      <div className="mx-auto w-full max-w-5xl space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
@@ -40,16 +41,17 @@ export const DemoWatchlist = () => {
       </div>
 
       {saved.length === 0 ? (
-        <div className="rounded-2xl border border-black/10 bg-white/80 p-4 text-sm text-slate-600 shadow">
+        <div className="rounded-2xl border border-black/10 bg-white/80 px-4 py-6 text-sm text-slate-600 shadow">
           No saved listings yet. Add listings from the demo page to build a watchlist.
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid place-items-start gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {saved.map((listing) => (
             <DemoListingCard key={listing.id} listing={listing} />
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 };

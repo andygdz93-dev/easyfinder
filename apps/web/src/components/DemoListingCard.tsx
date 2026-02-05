@@ -15,15 +15,10 @@ export default function DemoListingCard({ listing }: Props) {
   const isSaved = watchlist.isInWatchlist(listing.id);
 
   return (
-    <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
+    <div className="w-full max-w-[460px] overflow-hidden rounded-2xl border bg-white shadow-sm">
       {/* IMAGE */}
-      <div className="h-44 w-full overflow-hidden rounded-lg bg-slate-100 md:h-52">
-        <img
-          src={image}
-          alt={listing.title}
-          className="h-full w-full object-cover"
-          loading="lazy"
-        />
+      <div className="h-40 w-full overflow-hidden rounded-xl bg-slate-100 md:h-48" data-testid="demo-card-hero">
+        <img src={image} alt={listing.title} className="h-full w-full object-cover" loading="lazy" />
       </div>
 
       {/* CONTENT */}
@@ -32,22 +27,22 @@ export default function DemoListingCard({ listing }: Props) {
           {formatCategory(listing.category)}
         </div>
 
-        <h3 className="font-semibold text-lg">{listing.title}</h3>
+        <h3 className="text-base font-semibold leading-tight text-slate-900 md:text-lg">{listing.title}</h3>
 
         <div className="text-sm text-gray-600">
           ${listing.price.toLocaleString()} · {listing.hours} hrs · {listing.state}
         </div>
 
-        <div className="pt-3 flex gap-3">
+        <div className="mt-3 flex items-center justify-between gap-2">
           <button
-            className="px-4 py-2 rounded-md bg-black text-white text-sm"
+            className="rounded-md bg-black px-3 py-2 text-sm text-white"
             onClick={() => navigate(`/demo/${listing.id}`)}
           >
             View Details
           </button>
 
           <button
-            className="px-4 py-2 rounded-md border text-sm"
+            className="rounded-md border px-3 py-2 text-sm"
             onClick={() => watchlist.toggle(listing.id)}
           >
             {isSaved ? "Remove from Watchlist" : "Add to Watchlist"}
