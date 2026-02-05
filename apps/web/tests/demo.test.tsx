@@ -115,4 +115,23 @@ describe("Demo experience", () => {
       expect(screen.getByText(listingTitle)).toBeInTheDocument();
     }
   });
+
+  it("renders demo detail route without API env vars", async () => {
+    const previousUrl = process.env.VITE_API_URL;
+    const previousBase = process.env.VITE_API_BASE_URL;
+    delete process.env.VITE_API_URL;
+    delete process.env.VITE_API_BASE_URL;
+
+    render(
+      <MemoryRouter initialEntries={["/demo/demo-22"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText(/2017 Genie GTH-1056 Telehandler/i)).toBeInTheDocument();
+
+    process.env.VITE_API_URL = previousUrl;
+    process.env.VITE_API_BASE_URL = previousBase;
+  });
+
 });
