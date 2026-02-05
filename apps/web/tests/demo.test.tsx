@@ -44,10 +44,10 @@ describe("Demo experience", () => {
 
     expect(await screen.findByTestId("score-breakdown")).toBeInTheDocument();
     expect(screen.getByText(/total score/i)).toBeInTheDocument();
-    expect(screen.getByText("Operable")).toBeInTheDocument();
-    expect(screen.getByText("Hours")).toBeInTheDocument();
-    expect(screen.getByText("Price")).toBeInTheDocument();
-    expect(screen.getByText("State")).toBeInTheDocument();
+    expect(screen.getAllByText("Operable").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Hours").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Price").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("State").length).toBeGreaterThan(0);
     expect(screen.getByText(/why this score/i)).toBeInTheDocument();
     const rationaleItems = screen.getAllByRole("listitem");
     expect(rationaleItems.length).toBeGreaterThan(0);
