@@ -10,7 +10,7 @@ export default async function listingsRoutes(app: FastifyInstance) {
    * GET /api/listings
    * Returns ranked demo listings
    */
-  app.get("/listings", async () => {
+  app.get("/", async () => {
     const scored = demoListings.map((listing) => {
       const score = scoreListing(listing, defaultScoringConfig);
       return {
@@ -32,9 +32,7 @@ export default async function listingsRoutes(app: FastifyInstance) {
    * GET /api/listings/:id
    * REQUIRED for demo detail pages
    */
-  app.get<{ Params: { id: string } }>(
-    "/listings/:id",
-    async (request, reply) => {
+  app.get<{ Params: { id: string } }>("/:id", async (request, reply) => {
       const { id } = request.params;
 
       // Demo-only safeguard
