@@ -1,5 +1,6 @@
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { AppShell } from "./components/AppShell";
+import { RequireAuth } from "./components/RequireAuth";
 import Demo from "./pages/Demo";
 import DemoListingDetail from "./pages/DemoListingDetail";
 import { DemoWatchlist } from "./pages/DemoWatchlist";
@@ -24,9 +25,11 @@ export default function App() {
       <Route
         path="/app"
         element={
-          <AppShell>
-            <Outlet />
-          </AppShell>
+          <RequireAuth>
+            <AppShell>
+              <Outlet />
+            </AppShell>
+          </RequireAuth>
         }
       >
         <Route index element={<Navigate to="listings" replace />} />
