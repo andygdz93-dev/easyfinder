@@ -23,7 +23,7 @@ export default function App() {
       <Route path="/register" element={<Register />} />
 
       <Route
-        path="/app"
+        path="/app/*"
         element={
           <RequireAuth>
             <AppShell>
@@ -45,7 +45,6 @@ export default function App() {
       <Route path="/demo" element={<Demo />} />
       <Route path="/demo/watchlist" element={<DemoWatchlist />} />
       <Route path="/demo/:id" element={<DemoListingDetail />} />
-      <Route path="/demo/listings/:id" element={<DemoListingDetail />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
