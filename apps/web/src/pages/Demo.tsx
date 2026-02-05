@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import type { Listing } from "@easyfinderai/shared";
 import { demoListings, defaultScoringConfig, scoreListing } from "@easyfinderai/shared";
 import { useDemoWatchlist } from "../lib/demoWatchlist";
+import { formatCategory } from "../lib/formatters";
 
 export default function Demo() {
   const watchlist = useDemoWatchlist();
@@ -106,7 +107,9 @@ function ListingCard({
 
       {/* CONTENT */}
       <div className="space-y-3 p-5">
-        <p className="text-xs uppercase tracking-wide text-slate-500">{listing.category}</p>
+        <p className="text-xs uppercase tracking-wide text-slate-500">
+          {formatCategory(listing.category)}
+        </p>
 
         <h3 className="text-lg font-semibold text-slate-900">{listing.title}</h3>
 

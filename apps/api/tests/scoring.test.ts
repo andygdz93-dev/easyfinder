@@ -10,7 +10,14 @@ const baseListing = {
   hours: 2000,
   operable: true,
   category: "Loader",
-  imageUrl: "https://example.com/img.png",
+  images: [
+    "/demo-images/other/1.jpg",
+    "/demo-images/other/2.jpg",
+    "/demo-images/other/3.jpg",
+    "/demo-images/other/4.jpg",
+    "/demo-images/other/5.jpg",
+  ],
+  imageUrl: "/demo-images/other/1.jpg",
   source: "mock",
   createdAt: new Date().toISOString(),
 } satisfies Listing;
