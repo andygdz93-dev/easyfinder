@@ -4,12 +4,18 @@ import {
   ScoringConfig,
   WatchlistItem,
 } from "@easyfinderai/shared";
-import { requireApiUrl } from "../env";
+import { requireApiBaseUrl } from "../env";
 
 type ApiEnvelope<T> = {
   data?: T;
   error?: { code: string; message: string };
   requestId?: string;
+};
+
+export type ListingWithScore = Listing & {
+  totalScore: number;
+  scores: ScoreBreakdown["components"];
+  rationale: string[];
 };
 
 export class ApiError extends Error {
@@ -23,7 +29,7 @@ export class ApiError extends Error {
 }
 
 const apiRequest = async <T>(path: string, options: RequestInit = {}): Promise<T> => {
-  const baseUrl = requireApiUrl();
+  const baseUrl = requireApiBaseUrl();
   const res = await fetch(`${baseUrl}${path}`, {
     headers: {
       "Content-Type": "application/json",
@@ -66,14 +72,10 @@ export const getListings = (filters: ListingFilters) => {
   if (filters.maxPrice) params.set("maxPrice", String(filters.maxPrice));
   if (filters.operable) params.set("operable", "true");
   const query = params.toString();
-  return apiRequest<{
-    total: number;
-    listings: Array<Listing & { score: ScoreBreakdown }>;
-  }>(`/listings${query ? `?${query}` : ""}`);
+  return apiRequest<ListingWithScore[]>(`/listings${query ? `?${query}` : ""}`);
 };
 
-export const getListing = (id: string) =>
-  apiRequest<Listing & { score: ScoreBreakdown }>(`/listings/${id}`);
+export const getListing = (id: string) => apiRequest<ListingWithScore>(`/listings/${id}`);
 
 export const getScoringConfig = () =>
   apiRequest<{ config: ScoringConfig }>("/scoring-configs");
