@@ -36,6 +36,16 @@ describe("API", () => {
     expect(loginRes.body.data.user).toBeTruthy();
   });
 
+  it("allows CORS preflight from vercel preview origins", async () => {
+    const origin = "https://web-abc123-easyfinder.vercel.app";
+    const res = await supertest(app.server)
+      .options("/api/auth/register")
+      .set("Origin", origin)
+      .set("Access-Control-Request-Method", "POST");
+    expect(res.status).toBe(204);
+    expect(res.headers["access-control-allow-origin"]).toBe(origin);
+  });
+
   it("demo cannot POST scoring configs", async () => {
     const res = await supertest(app.server)
       .post("/api/scoring-configs")
