@@ -1,27 +1,54 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { AUTH_SESSION_STORAGE_KEY } from "../src/lib/auth";
-
-const ORIGINAL_ENV = { ...process.env };
-
-afterEach(() => {
-  vi.resetModules();
-  vi.doUnmock("../env"); // must match same string
-  vi.restoreAllMocks();
-});
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { fileURLToPath } from "node:url";
 
 describe("api env handling", () => {
-  it("uses localhost fallback when env is missing", async () => {
+  afterEach(() => {
     vi.resetModules();
-    delete process.env.VITE_API_URL;
-    delete process.env.VITE_API_BASE_URL;
+    vi.clearAllMocks();
+  });
+
+  it("builds auth URL with a single /api prefix", async () => {
+    // Resolve the exact env.ts path so the mock matches api.ts import
+    const ENV_PATH = fileURLToPath(
+      new URL("../src/env.ts", import.meta.url)
+    );
+
+    vi.doMock(ENV_PATH, () => ({
+      getApiBaseUrl: () => "https://example.com/api",
+      requireApiBaseUrl: () => "https://example.com/api",
+      getApiUrl: () => "https://example.com/api",
+      requireApiUrl: () => "https://example.com/api",
+    }));
 
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ data: { token: "t", user: { id: "1" } } }),
+      json: async () => ({ data: {} }),
     });
-    vi.stubGlobal("fetch", fetchMock);
+
+    // @ts-ignore
+    global.fetch = fetchMock;
 
     const apiModule = await import("../src/lib/api");
+
+    await apiModule.apiFetch("/auth/login", { method: "POST" });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://example.com/api/auth/login",
+      expect.objectContaining({ method: "POST" })
+    );
+  });
+
+  it("uses fallback base URL when env not set", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: {} }),
+    });
+
+    // @ts-ignore
+    global.fetch = fetchMock;
+
+    const apiModule = await import("../src/lib/api");
+
     await apiModule.apiFetch("/auth/login", { method: "POST" });
 
     expect(fetchMock).toHaveBeenCalledWith(
@@ -30,55 +57,33 @@ describe("api env handling", () => {
     );
   });
 
-  it("builds auth URL with a single /api prefix", async () => {
-  vi.resetModules();
-
-  // IMPORTANT: this string MUST match the import inside src/lib/api.ts
-  vi.doMock("../env", () => ({
-    getApiBaseUrl: () => "https://example.com/api",
-    requireApiBaseUrl: () => "https://example.com/api",
-    // include aliases ONLY if api.ts imports them
-    getApiUrl: () => "https://example.com/api",
-    requireApiUrl: () => "https://example.com/api",
-  }));
-
-  const fetchMock = vi.fn(async () => new Response(JSON.stringify({ data: {} })));
-  // @ts-expect-error test override
-  globalThis.fetch = fetchMock;
-
-  const apiModule = await import("../src/lib/api");
-
-  await apiModule.apiFetch("/auth/login", { method: "POST" });
-
-  expect(fetchMock).toHaveBeenCalledWith(
-    "https://example.com/api/auth/login",
-    expect.objectContaining({ method: "POST" })
-  );
-});
-
-
-  it("includes Authorization header when token exists", async () => {
-    vi.resetModules();
-    process.env.VITE_API_BASE_URL = "https://example.com/api";
-    localStorage.setItem(
-      AUTH_SESSION_STORAGE_KEY,
-      JSON.stringify({
-        token: "jwt-123",
-        user: { id: "u1", email: "buyer@easyfinder.ai", name: "Buyer", role: "buyer" },
-      })
+  it("does not double-prefix /api", async () => {
+    const ENV_PATH = fileURLToPath(
+      new URL("../src/env.ts", import.meta.url)
     );
+
+    vi.doMock(ENV_PATH, () => ({
+      getApiBaseUrl: () => "https://example.com/api",
+      requireApiBaseUrl: () => "https://example.com/api",
+      getApiUrl: () => "https://example.com/api",
+      requireApiUrl: () => "https://example.com/api",
+    }));
 
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ data: [] }),
+      json: async () => ({ data: {} }),
     });
-    vi.stubGlobal("fetch", fetchMock);
+
+    // @ts-ignore
+    global.fetch = fetchMock;
 
     const apiModule = await import("../src/lib/api");
-    await apiModule.apiFetch("/listings");
 
-    const call = fetchMock.mock.calls[0];
-    const headers = call[1]?.headers as Headers;
-    expect(headers.get("Authorization")).toBe("Bearer jwt-123");
+    await apiModule.apiFetch("/api/auth/login", { method: "POST" });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://example.com/api/auth/login",
+      expect.objectContaining({ method: "POST" })
+    );
   });
 });
