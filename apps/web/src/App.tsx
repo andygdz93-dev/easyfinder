@@ -10,11 +10,13 @@ import { SellerDashboard } from "./pages/app/SellerDashboard";
 import { Upgrade } from "./pages/app/Upgrade";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
+import { NdaGate } from "./pages/NdaGate";
 import DemoListings from "./pages/demo/Listings";
 import DemoListingDetail from "./pages/demo/ListingDetail";
 import { DemoWatchlist } from "./pages/demo/Watchlist";
 import { DemoLayout } from "./layouts/DemoLayout";
 import { LiveLayout } from "./layouts/LiveLayout";
+import { RequireNda } from "./components/RequireNda";
 
 export default function App() {
   return (
@@ -24,6 +26,7 @@ export default function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/app/login" element={<Login />} />
       <Route path="/app/register" element={<Register />} />
+      <Route path="/nda" element={<NdaGate />} />
 
       <Route
         path="/app/*"
@@ -48,9 +51,11 @@ export default function App() {
       <Route
         path="/demo/*"
         element={
-          <DemoLayout>
-            <Outlet />
-          </DemoLayout>
+          <RequireNda>
+            <DemoLayout>
+              <Outlet />
+            </DemoLayout>
+          </RequireNda>
         }
       >
         <Route index element={<Navigate to="listings" replace />} />
