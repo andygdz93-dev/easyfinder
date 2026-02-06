@@ -30,9 +30,9 @@ export const getDemoListings = (filters: DemoListingFilters) => {
   if (filters.maxPrice) params.set("maxPrice", String(filters.maxPrice));
   const query = params.toString();
 
-  // ✅ Uses Fly API base via apiFetch()
-  return apiFetch<DemoListingsResponse>(`/listings${query ? `?${query}` : ""}`);
+  // ✅ Demo namespace only
+  return apiFetch<DemoListingsResponse>(`/demo/listings${query ? `?${query}` : ""}`);
 };
 
 export const getDemoListing = (id: string) =>
-  apiFetch<DemoListing>(`/listings/${id}`);
+  apiFetch<DemoListing>(`/demo/listings/${id}`);

@@ -10,6 +10,7 @@ import { config } from "./config.js";
 import { getRoleFromRequest } from "./auth.js";
 
 import listingRoutes from "./routes/listings.js";
+import demoListingRoutes from "./routes/demo-listings.js";
 import scoringRoutes from "./routes/scoring.js";
 import watchlistRoutes from "./routes/watchlist.js";
 import healthRoutes from "./routes/health.js";
@@ -137,6 +138,7 @@ export const buildServer = () => {
 
   // Routes
   app.register(healthRoutes, { prefix: "/api" });
+  app.register(demoListingRoutes, { prefix: "/api/demo/listings" });
   app.register(listingRoutes, { prefix: "/api/listings" });
   app.register(scoringRoutes, { prefix: "/api/scoring-configs" });
   app.register(watchlistRoutes, { prefix: "/api/watchlist" });
