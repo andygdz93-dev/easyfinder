@@ -17,6 +17,7 @@ import healthRoutes from "./routes/health.js";
 import authRoutes from "./routes/auth.js";
 import adminRoutes from "./routes/admin.js";
 import sellerRoutes from "./routes/seller.js";
+import ndaRoutes from "./routes/nda.js";
 import { ZodError } from "zod";
 
 import { env } from "./env.js";
@@ -145,6 +146,7 @@ export const buildServer = () => {
   app.register(authRoutes, { prefix: "/api/auth" });
   app.register(adminRoutes, { prefix: "/api/admin" });
   app.register(sellerRoutes, { prefix: "/api/seller" });
+  app.register(ndaRoutes, { prefix: "/api/nda" });
   
   return app;
 };

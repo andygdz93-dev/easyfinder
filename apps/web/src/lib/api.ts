@@ -19,6 +19,12 @@ export type ListingWithScore = Listing & {
   rationale: string[];
 };
 
+export type NdaStatus = {
+  accepted: boolean;
+  acceptedAt?: string;
+  ndaVersion?: string;
+};
+
 export class ApiError extends Error {
   requestId?: string;
 
@@ -132,6 +138,14 @@ export const addToWatchlist = (listingId: string) =>
 export const removeFromWatchlist = (listingId: string) =>
   apiRequest<{ removed: boolean }>(`/watchlist/${listingId}`, {
     method: "DELETE",
+  });
+
+export const getNdaStatus = () => apiRequest<NdaStatus>("/nda/status");
+
+export const acceptNda = () =>
+  apiRequest<NdaStatus>("/nda/accept", {
+    method: "POST",
+    body: JSON.stringify({ accepted: true }),
   });
 
 // Legacy helper for internal usage
