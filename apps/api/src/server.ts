@@ -55,11 +55,20 @@ export const buildServer = () => {
       // Allow non-browser tools (curl/postman) or same-origin cases where origin is undefined
       if (!origin) return cb(null, true);
 
-      if (config.corsOrigins.includes(origin)) return cb(null, true);
+      const normalizedOrigin = origin.toLowerCase();
+      const isVercelOrigin = /^https?:\/\/.+\.vercel\.app$/i.test(normalizedOrigin);
+      const isLocalOrigin =
+        normalizedOrigin === "http://localhost:5173" ||
+        normalizedOrigin === "http://127.0.0.1:5173";
 
-      return cb(new Error("Origin not allowed"), false);
+      if (config.corsOrigins.includes(origin) || isVercelOrigin || isLocalOrigin) {
+        return cb(null, true);
+      }
+
+      return cb(null, false);
     },
     credentials: true,
+    optionsSuccessStatus: 204,
   });
 
   // Security headers

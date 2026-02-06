@@ -10,14 +10,15 @@ type UserDocument = {
 };
 
 export default async function meRoutes(app: FastifyInstance) {
-  const usersCollection = getCollection<UserDocument>("users");
+  const usersCollection = () => getCollection<UserDocument>("users");
 
   app.get("/me", { preHandler: app.authenticate }, async (request, reply) => {
+    const col = usersCollection();
     if (!ObjectId.isValid(request.user.id)) {
       reply.status(404);
       return { error: { code: "NOT_FOUND", message: "User not found." } };
     }
-    const user = await usersCollection.findOne({ _id: new ObjectId(request.user.id) });
+    const user = await col.findOne({ _id: new ObjectId(request.user.id) });
     if (!user) {
       reply.status(404);
       return { error: { code: "NOT_FOUND", message: "User not found." } };
