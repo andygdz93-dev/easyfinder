@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import { Card } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
+import ImageGallery from "../../components/ImageGallery";
 import {
   ApiError,
   addToWatchlist,
@@ -80,8 +81,11 @@ export const ListingDetail = () => {
     }
   };
 
-  const images = data.images ?? [];
-  const heroImage = images[0] || data.imageUrl;
+  const images = data.images?.length
+    ? data.images
+    : data.imageUrl
+    ? [data.imageUrl]
+    : [];
   const displayPrice = data.price ? `$${data.price.toLocaleString()}` : "—";
   const displayHours = data.hours ? `${data.hours.toLocaleString()} hrs` : "—";
   const scores = data.scores ?? {};
@@ -96,24 +100,16 @@ export const ListingDetail = () => {
           <Badge className="bg-accent text-slate-900">Score {data.totalScore}</Badge>
         </div>
 
-        {heroImage && (
-          <img
-            src={heroImage}
-            alt={data.title}
-            className="h-72 w-full rounded-lg object-cover"
+        {images.length > 0 && (
+          <ImageGallery
+            images={images}
+            alt={data.title ?? "Listing image"}
+            maxThumbs={4}
+            imagesKey={data.id ?? data.title}
+            heroClassName="h-72 rounded-lg"
+            thumbClassName="h-20 rounded-md"
           />
         )}
-
-        <div className="grid grid-cols-4 gap-2">
-          {images.slice(1, 5).map((image, index) => (
-            <img
-              key={`${image}-${index}`}
-              src={image}
-              alt={`${data.title} ${index + 2}`}
-              className="h-20 w-full rounded-md object-cover"
-            />
-          ))}
-        </div>
 
         <p className="text-sm text-slate-300">{data.description}</p>
         <div className="flex flex-wrap gap-4 text-xs text-slate-400">

@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { demoListings, defaultScoringConfig, scoreListing } from "@easyfinderai/shared";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
+import ImageGallery from "../../components/ImageGallery";
 import { useDemoWatchlist } from "../../lib/demoWatchlist";
 import { formatCategory } from "../../lib/formatters";
 
@@ -31,79 +32,36 @@ export default function DemoListingDetail() {
     return imageSet.filter(Boolean);
   }, [listing.id, listing.imageUrl, listing.images]);
 
-  const [gallery, setGallery] = useState<string[]>(initialGallery);
-
-  useEffect(() => {
-    setGallery(initialGallery);
-  }, [initialGallery]);
-
   const breakdown = scoreListing(listing, defaultScoringConfig);
   const components = breakdown?.components ?? {};
   const rationale = breakdown?.rationale ?? [];
-  const hero = gallery[0];
-  const thumbnails = gallery.slice(1, 5);
   const listingId = listing.id ?? "";
   const isSaved = listingId ? watchlist.isInWatchlist(listingId) : false;
   const displayPrice = listing.price ? `$${listing.price.toLocaleString()}` : "—";
   const displayHours = listing.hours ? `${listing.hours.toLocaleString()} hrs` : "—";
 
-  const swapHero = (actualIndex: number) => {
-    setGallery((current) => {
-      if (actualIndex <= 0 || actualIndex >= current.length) return current;
-      const next = [...current];
-      [next[0], next[actualIndex]] = [next[actualIndex], next[0]];
-      return next;
-    });
-  };
-
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 md:px-6">
       <div className="grid gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3">
-          {hero ? (
-            <div
-              className="h-[220px] w-full overflow-hidden rounded-2xl bg-slate-100 ring-2 ring-amber-300/70 sm:h-[240px] lg:h-[320px]"
-              data-testid="demo-detail-hero"
-            >
-              <img
-                src={hero}
-                alt={listing.title}
-                data-testid="demo-hero"
-                className="h-full w-full object-cover object-center"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = "/demo-images/other/1.jpg";
-                }}
-              />
-            </div>
+          {initialGallery.length > 0 ? (
+            <ImageGallery
+              images={initialGallery}
+              alt={listing.title ?? "Listing image"}
+              maxThumbs={4}
+              imagesKey={listing.id ?? listing.title}
+              heroClassName="h-[220px] rounded-2xl ring-2 ring-amber-300/70 sm:h-[240px] lg:h-[320px]"
+              heroImageClassName="object-center"
+              heroTestId="demo-detail-hero"
+              heroImageTestId="demo-hero"
+              thumbsClassName="mt-3"
+              thumbClassName="h-12 sm:h-14 transition hover:ring-2 hover:ring-amber-300/70 focus:outline-none focus:ring-2 focus:ring-amber-300"
+              fallbackSrc="/demo-images/other/1.jpg"
+              getThumbTestId={(index) => `demo-thumb-${index}`}
+            />
           ) : (
             <div className="h-[220px] w-full rounded-2xl bg-slate-100 p-6 text-slate-500 sm:h-[240px] lg:h-[320px]">
               No images available.
-            </div>
-          )}
-
-          {thumbnails.length > 0 && (
-            <div className="mt-3 grid grid-cols-4 gap-2">
-              {thumbnails.map((img, idx) => {
-                const actualIndex = idx + 1;
-                return (
-                  <button
-                    key={`${img}-${actualIndex}`}
-                    type="button"
-                    data-testid={`demo-thumb-${actualIndex}`}
-                    className="h-12 overflow-hidden rounded-lg bg-slate-100 transition hover:ring-2 hover:ring-amber-300/70 focus:outline-none focus:ring-2 focus:ring-amber-300 sm:h-14"
-                    onClick={() => swapHero(actualIndex)}
-                  >
-                    <img
-                      src={img}
-                      alt={`${listing.title} ${actualIndex}`}
-                      className="h-full w-full object-cover"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).src = "/demo-images/other/1.jpg";
-                      }}
-                    />
-                  </button>
-                );
-              })}
             </div>
           )}
         </div>
