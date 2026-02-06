@@ -55,7 +55,7 @@ describe("ListingDetail", () => {
   });
 
   it("renders images, total score, breakdown, and rationale from API data", async () => {
-    const { ListingDetail } = await import("../src/pages/ListingDetail");
+    const { ListingDetail } = await import("../src/pages/app/ListingDetail");
     const queryClient = new QueryClient();
 
     render(

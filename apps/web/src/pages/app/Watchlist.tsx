@@ -1,8 +1,14 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Card } from "../components/ui/card";
-import { ListingWithScore, getListings, getRequestId, getWatchlist, removeFromWatchlist } from "../lib/api";
+import { Card } from "../../components/ui/card";
+import {
+  ListingWithScore,
+  getListings,
+  getRequestId,
+  getWatchlist,
+  removeFromWatchlist,
+} from "../../lib/api";
 import { WatchlistItem } from "@easyfinderai/shared";
 
 export const Watchlist = () => {
@@ -49,8 +55,10 @@ export const Watchlist = () => {
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      {watchedListings.map((listing) => (
-        <Card key={listing.id} className="space-y-3">
+      {watchedListings.map((listing) => {
+        const listingId = listing.id ?? "";
+        return (
+        <Card key={listingId || listing.title || "listing"} className="space-y-3">
           <div className="flex items-start justify-between">
             <div>
               <h3 className="text-lg font-semibold">{listing.title}</h3>
@@ -59,18 +67,29 @@ export const Watchlist = () => {
             <span className="text-xs text-slate-300">Score {listing.totalScore}</span>
           </div>
           <div className="flex flex-wrap gap-3 text-xs text-slate-400">
-            <span>${listing.price.toLocaleString()}</span>
-            <span>{listing.hours.toLocaleString()} hrs</span>
-            <span>{listing.operable ? "Operable" : "Not operable"}</span>
+            <span>
+              {listing.price ? `$${listing.price.toLocaleString()}` : "—"}
+            </span>
+            <span>
+              {listing.hours ? `${listing.hours.toLocaleString()} hrs` : "—"}
+            </span>
+            <span>
+              {listing.operable === undefined
+                ? "—"
+                : listing.operable
+                ? "Operable"
+                : "Not operable"}
+            </span>
           </div>
           <div className="flex items-center justify-between">
-            <Link className="text-sm text-sky-300 hover:text-sky-200" to={`/app/listings/${listing.id}`}>
+            <Link className="text-sm text-sky-300 hover:text-sky-200" to={`/app/listings/${listingId}`}>
               View details
             </Link>
             <button
               className="text-xs text-rose-300 hover:text-rose-200"
               onClick={async () => {
-                await removeFromWatchlist(listing.id);
+                if (!listingId) return;
+                await removeFromWatchlist(listingId);
                 await watchlistQuery.refetch();
               }}
             >
@@ -78,7 +97,8 @@ export const Watchlist = () => {
             </button>
           </div>
         </Card>
-      ))}
+        );
+      })}
     </div>
   );
 };
