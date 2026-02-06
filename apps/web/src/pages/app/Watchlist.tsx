@@ -1,8 +1,14 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Card } from "../components/ui/card";
-import { ListingWithScore, getListings, getRequestId, getWatchlist, removeFromWatchlist } from "../lib/api";
+import { Card } from "../../components/ui/card";
+import {
+  ListingWithScore,
+  getListings,
+  getRequestId,
+  getWatchlist,
+  removeFromWatchlist,
+} from "../../lib/api";
 import { WatchlistItem } from "@easyfinderai/shared";
 
 export const Watchlist = () => {

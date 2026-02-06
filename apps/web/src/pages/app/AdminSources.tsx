@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "../components/ui/button";
-import { Card } from "../components/ui/card";
-import { useAuth } from "../lib/auth";
-import { requireApiBaseUrl } from "../env";
+import { Button } from "../../components/ui/button";
+import { Card } from "../../components/ui/card";
+import { useAuth } from "../../lib/auth";
+import { requireApiBaseUrl } from "../../env";
 
 export const AdminSources = () => {
   const { token, user } = useAuth();

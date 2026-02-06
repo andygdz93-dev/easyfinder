@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
-import { Card } from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
-import { Button } from "../components/ui/button";
+import { Card } from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
+import { Button } from "../../components/ui/button";
 import {
   ApiError,
   addToWatchlist,
@@ -11,7 +11,7 @@ import {
   getListing,
   getRequestId,
   getWatchlist,
-} from "../lib/api";
+} from "../../lib/api";
 import { WatchlistItem } from "@easyfinderai/shared";
 
 export const ListingDetail = () => {

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { demoListings, defaultScoringConfig, scoreListing } from "@easyfinderai/shared";
-import { Card } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { useDemoWatchlist } from "../lib/demoWatchlist";
-import { formatCategory } from "../lib/formatters";
+import { Card } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { useDemoWatchlist } from "../../lib/demoWatchlist";
+import { formatCategory } from "../../lib/formatters";
 
 export default function DemoListingDetail() {
   const { id } = useParams();
@@ -15,7 +15,7 @@ export default function DemoListingDetail() {
     return (
       <Card className="p-6 text-sm text-rose-500 space-y-4">
         <p>Unable to load listing details.</p>
-        <Link to="/demo">
+        <Link to="/demo/listings">
           <Button variant="secondary">← Back to demo</Button>
         </Link>
       </Card>
@@ -142,7 +142,7 @@ export default function DemoListingDetail() {
               <Button variant="outline" onClick={() => watchlist.toggle(listing.id)}>
                 {isSaved ? "Remove from Watchlist" : "Add to Watchlist"}
               </Button>
-              <Link to="/demo">
+              <Link to="/demo/listings">
                 <Button variant="secondary">← Back to demo</Button>
               </Link>
             </div>

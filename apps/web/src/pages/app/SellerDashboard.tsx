@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { Card } from "../components/ui/card";
-import { apiFetch } from "../lib/api";
-import { useAuth } from "../lib/auth";
+import { Card } from "../../components/ui/card";
+import { apiFetch } from "../../lib/api";
+import { useAuth } from "../../lib/auth";
 
 type SellerInsights = {
   atRiskListings: Array<{ id: string; title: string }>;
