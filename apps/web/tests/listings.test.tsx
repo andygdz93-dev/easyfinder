@@ -61,7 +61,7 @@ describe("Listings", () => {
   });
 
   it("renders listings from API data", async () => {
-    const { Listings } = await import("../src/pages/Listings");
+    const { Listings } = await import("../src/pages/app/Listings");
     renderWithProviders(Listings);
 
     expect(await screen.findByText("API Listing")).toBeInTheDocument();

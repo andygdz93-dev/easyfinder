@@ -38,9 +38,14 @@ export default function DemoListingDetail() {
   }, [initialGallery]);
 
   const breakdown = scoreListing(listing, defaultScoringConfig);
+  const components = breakdown?.components ?? {};
+  const rationale = breakdown?.rationale ?? [];
   const hero = gallery[0];
   const thumbnails = gallery.slice(1, 5);
-  const isSaved = watchlist.isInWatchlist(listing.id);
+  const listingId = listing.id ?? "";
+  const isSaved = listingId ? watchlist.isInWatchlist(listingId) : false;
+  const displayPrice = listing.price ? `$${listing.price.toLocaleString()}` : "—";
+  const displayHours = listing.hours ? `${listing.hours.toLocaleString()} hrs` : "—";
 
   const swapHero = (actualIndex: number) => {
     setGallery((current) => {
@@ -117,29 +122,35 @@ export default function DemoListingDetail() {
               <div className="flex items-center justify-between">
                 <span className="text-slate-600">Total score</span>
                 <span className="rounded-full bg-amber-400 px-3 py-1 text-xs font-semibold text-black">
-                  {breakdown.total}
+                  {breakdown?.total ?? 0}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-600">Price</span>
-                <span>${listing.price.toLocaleString()}</span>
+                <span>{displayPrice}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-600">Hours</span>
-                <span>{listing.hours.toLocaleString()} hrs</span>
+                <span>{displayHours}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-600">State</span>
-                <span>{listing.state}</span>
+                <span>{listing.state ?? "—"}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-600">Source</span>
-                <span className="capitalize">{listing.source}</span>
+                <span className="capitalize">{listing.source ?? "—"}</span>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <Button variant="outline" onClick={() => watchlist.toggle(listing.id)}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (!listingId) return;
+                  watchlist.toggle(listingId);
+                }}
+              >
                 {isSaved ? "Remove from Watchlist" : "Add to Watchlist"}
               </Button>
               <Link to="/demo/listings">
@@ -162,19 +173,19 @@ export default function DemoListingDetail() {
           <ul className="mt-3 text-sm text-slate-700">
             <li className="flex items-center justify-between border-b py-2 text-sm last:border-b-0">
               <span>Operable</span>
-              <span className="font-semibold">{breakdown.components.operable}</span>
+              <span className="font-semibold">{components.operable ?? "—"}</span>
             </li>
             <li className="flex items-center justify-between border-b py-2 text-sm last:border-b-0">
               <span>Hours</span>
-              <span className="font-semibold">{breakdown.components.hours}</span>
+              <span className="font-semibold">{components.hours ?? "—"}</span>
             </li>
             <li className="flex items-center justify-between border-b py-2 text-sm last:border-b-0">
               <span>Price</span>
-              <span className="font-semibold">{breakdown.components.price}</span>
+              <span className="font-semibold">{components.price ?? "—"}</span>
             </li>
             <li className="flex items-center justify-between border-b py-2 text-sm last:border-b-0">
               <span>State</span>
-              <span className="font-semibold">{breakdown.components.state}</span>
+              <span className="font-semibold">{components.state ?? "—"}</span>
             </li>
           </ul>
         </div>
@@ -182,7 +193,7 @@ export default function DemoListingDetail() {
         <div className="rounded-2xl border bg-white p-4 md:p-5" data-testid="demo-detail-rationale">
           <h3 className="text-sm font-semibold text-slate-900">Why this score</h3>
           <ul className="mt-2 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-700">
-            {breakdown.rationale.map((reason) => (
+            {rationale.map((reason) => (
               <li key={reason}>{reason}</li>
             ))}
           </ul>
