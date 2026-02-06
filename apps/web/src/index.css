@@ -9,12 +9,18 @@ body {
 }
 
 .demo-shell {
-  --demo-bg: radial-gradient(1200px 800px at 5% 5%, #fff3cf 0%, #f5efe4 45%, #efe2d0 100%);
-  --demo-ink: #1f1b16;
-  --demo-muted: #6f6a5f;
-  background: var(--demo-bg);
-  color: var(--demo-ink);
+  background:
+    radial-gradient(1200px 800px at 5% 5%, rgba(251, 191, 36, 0.18) 0%, rgba(15, 23, 42, 0.92) 55%),
+    #0f172a;
+  color: #f8fafc;
   font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+}
+
+.live-shell {
+  background:
+    radial-gradient(1200px 800px at 5% 5%, rgba(56, 189, 248, 0.18) 0%, rgba(2, 6, 23, 0.96) 60%),
+    #020617;
+  color: #f8fafc;
 }
 
 .demo-title {

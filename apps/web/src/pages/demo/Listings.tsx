@@ -1,13 +1,11 @@
-// apps/web/src/pages/Demo.tsx
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import type { Listing } from "@easyfinderai/shared";
 import { demoListings, defaultScoringConfig, scoreListing } from "@easyfinderai/shared";
-import { useDemoWatchlist } from "../lib/demoWatchlist";
-import { formatCategory } from "../lib/formatters";
+import { useDemoWatchlist } from "../../lib/demoWatchlist";
+import { formatCategory } from "../../lib/formatters";
 
-export default function Demo() {
+export default function DemoListings() {
   const watchlist = useDemoWatchlist();
   const [showWatchlistOnly, setShowWatchlistOnly] = useState(false);
   const ranked = demoListings
@@ -15,10 +13,12 @@ export default function Demo() {
       listing,
       score: scoreListing(listing, defaultScoringConfig),
     }))
-    .sort((a, b) => b.score.total - a.score.total);
+    .sort((a, b) => (b.score.total ?? 0) - (a.score.total ?? 0));
 
   const visibleListings = showWatchlistOnly
-    ? ranked.filter(({ listing }) => watchlist.isInWatchlist(listing.id))
+    ? ranked.filter(({ listing }) =>
+        listing.id ? watchlist.isInWatchlist(listing.id) : false
+      )
     : ranked;
 
   return (
@@ -33,6 +33,12 @@ export default function Demo() {
           <span>
             Saved listings: <strong className="text-slate-100">{watchlist.ids.length}</strong>
           </span>
+          <Link
+            to="/demo/watchlist"
+            className="rounded-full border border-amber-200/40 px-3 py-1 text-xs font-semibold text-amber-100 hover:border-amber-200/70"
+          >
+            View watchlist
+          </Link>
           <button
             type="button"
             onClick={() => setShowWatchlistOnly((prev) => !prev)}
@@ -45,15 +51,21 @@ export default function Demo() {
 
       {/* LISTINGS GRID */}
       <section className="grid place-items-start gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {visibleListings.map(({ listing, score }) => (
+        {visibleListings.map(({ listing, score }) => {
+          const listingId = listing.id ?? "";
+          return (
           <ListingCard
-            key={listing.id}
+            key={listingId || listing.title || "listing"}
             listing={listing}
-            score={score.total}
-            isSaved={watchlist.isInWatchlist(listing.id)}
-            onToggleWatchlist={() => watchlist.toggle(listing.id)}
+            score={score.total ?? 0}
+            isSaved={listingId ? watchlist.isInWatchlist(listingId) : false}
+            onToggleWatchlist={() => {
+              if (!listingId) return;
+              watchlist.toggle(listingId);
+            }}
           />
-        ))}
+          );
+        })}
       </section>
     </div>
   );
@@ -72,8 +84,11 @@ function ListingCard({
   isSaved: boolean;
   onToggleWatchlist: () => void;
 }) {
-  const hero = listing.images[0];
-  const thumbs = listing.images.slice(1, 5);
+  const images = listing.images ?? [];
+  const hero = images[0] || listing.imageUrl || "/demo-images/other/1.jpg";
+  const thumbs = images.slice(1, 5);
+  const displayPrice = listing.price ? `$${listing.price.toLocaleString()}` : "—";
+  const displayHours = listing.hours ? `${listing.hours.toLocaleString()} hrs` : "—";
 
   return (
     <div
@@ -120,13 +135,12 @@ function ListingCard({
         <h3 className="text-base font-semibold leading-tight text-slate-900 md:text-lg">{listing.title}</h3>
 
         <div className="text-sm text-slate-600">
-          ${Number(listing.price ?? 0).toLocaleString()} •{" "}
-          {Number(listing.hours ?? 0).toLocaleString()} hrs • {listing.state}
+          {displayPrice} • {displayHours} • {listing.state ?? "—"}
         </div>
 
         <div className="mt-3 flex items-center justify-between gap-2">
           <span className="rounded-full bg-amber-400 px-3 py-1 text-xs font-semibold text-black">
-            Score {Math.round(score)}
+            Score {Math.round(score ?? 0)}
           </span>
 
           <div className="flex flex-wrap items-center justify-end gap-2">
@@ -138,7 +152,7 @@ function ListingCard({
               {isSaved ? "Remove from Watchlist" : "Add to Watchlist"}
             </button>
             <Link
-              to={`/demo/${listing.id}`}
+              to={`/demo/listings/${listing.id}`}
               className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white"
             >
               View Details
