@@ -7,7 +7,6 @@ import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import {
   ListingWithScore,
-  ApiError,
   addToWatchlist,
   removeFromWatchlist,
   getListings,
@@ -63,7 +62,9 @@ export const Listings = () => {
     }
   };
 
-  const listings = listingsQuery.data ?? [];
+  const data = listingsQuery.data;
+  const listings = Array.isArray(data) ? data : [];
+  const hasInvalidData = data !== undefined && !Array.isArray(data);
 
   return (
     <div className="space-y-6">
@@ -114,16 +115,9 @@ export const Listings = () => {
             <Card key={index} className="h-40 animate-pulse" />
           ))}
         </div>
-      ) : listingsQuery.isError ? (
-        <Card className="border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-100">
-          {listingsQuery.error instanceof ApiError
-            ? listingsQuery.error.message
-            : "Failed to load listings."}
-          {getRequestId(listingsQuery.error) && (
-            <span className="ml-2 text-xs text-rose-200">
-              Request ID: {getRequestId(listingsQuery.error)}
-            </span>
-          )}
+      ) : listingsQuery.isError || hasInvalidData ? (
+        <Card className="border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-300">
+          Live listings are not available in DEMO_MODE.
         </Card>
       ) : listings.length === 0 ? (
         <Card className="border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-300">
