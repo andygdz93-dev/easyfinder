@@ -12,6 +12,8 @@ type UserDocument = {
   name: string;
   role: "buyer" | "seller" | "admin";
   passwordHash: string;
+  ndaAcceptedAt?: Date;
+  ndaVersion?: string;
   createdAt: Date;
   updatedAt: Date;
 };
