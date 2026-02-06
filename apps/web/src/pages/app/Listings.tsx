@@ -131,8 +131,10 @@ export const Listings = () => {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {listings.map((listing) => (
-            <Card key={listing.id} className="space-y-4">
+          {listings.map((listing) => {
+            const listingId = listing.id ?? "";
+            return (
+            <Card key={listingId || listing.title || "listing"} className="space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold">{listing.title}</h3>
@@ -141,31 +143,47 @@ export const Listings = () => {
                 <Badge className="bg-accent text-slate-900">{listing.totalScore}</Badge>
               </div>
               <img
-                src={listing.imageUrl || listing.images[0]}
+                src={(listing.images ?? [])[0] || listing.imageUrl || "/demo-images/other/1.jpg"}
                 alt={listing.title}
                 className="h-40 w-full rounded-lg object-cover"
               />
               <p className="text-sm text-slate-300">{listing.description}</p>
               <div className="flex flex-wrap gap-3 text-xs text-slate-400">
-                <span>${listing.price.toLocaleString()}</span>
-                <span>{listing.hours.toLocaleString()} hrs</span>
-                <span>{listing.state}</span>
-                <span>{listing.operable ? "Operable" : "Not operable"}</span>
+                <span>
+                  {listing.price ? `$${listing.price.toLocaleString()}` : "—"}
+                </span>
+                <span>
+                  {listing.hours ? `${listing.hours.toLocaleString()} hrs` : "—"}
+                </span>
+                <span>{listing.state ?? "—"}</span>
+                <span>
+                  {listing.operable === undefined
+                    ? "—"
+                    : listing.operable
+                    ? "Operable"
+                    : "Not operable"}
+                </span>
               </div>
               <div className="flex flex-wrap gap-3">
-                <Link to={`/app/listings/${listing.id}`}>
+                <Link to={`/app/listings/${listingId}`}>
                   <Button variant="secondary">View details</Button>
                 </Link>
                 <Button
                   variant="outline"
-                  onClick={() => handleToggleWatchlist(listing.id)}
+                  onClick={() => {
+                    if (!listingId) return;
+                    handleToggleWatchlist(listingId);
+                  }}
                   disabled={watchlistQuery.isLoading}
                 >
-                  {watchlistIds.has(listing.id) ? "Remove from watchlist" : "Add to watchlist"}
+                  {listingId && watchlistIds.has(listingId)
+                    ? "Remove from watchlist"
+                    : "Add to watchlist"}
                 </Button>
               </div>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

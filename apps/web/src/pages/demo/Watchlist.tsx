@@ -14,7 +14,9 @@ import DemoListingCard from "../../components/DemoListingCard";
 export const DemoWatchlist = () => {
   const watchlist = useDemoWatchlist();
 
-  const saved = demoListings.filter((listing) => watchlist.ids.includes(listing.id));
+  const saved = demoListings.filter((listing) =>
+    listing.id ? watchlist.ids.includes(listing.id) : false
+  );
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 md:px-6 md:py-8">

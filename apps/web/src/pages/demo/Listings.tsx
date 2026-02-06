@@ -13,10 +13,12 @@ export default function DemoListings() {
       listing,
       score: scoreListing(listing, defaultScoringConfig),
     }))
-    .sort((a, b) => b.score.total - a.score.total);
+    .sort((a, b) => (b.score.total ?? 0) - (a.score.total ?? 0));
 
   const visibleListings = showWatchlistOnly
-    ? ranked.filter(({ listing }) => watchlist.isInWatchlist(listing.id))
+    ? ranked.filter(({ listing }) =>
+        listing.id ? watchlist.isInWatchlist(listing.id) : false
+      )
     : ranked;
 
   return (
@@ -49,15 +51,21 @@ export default function DemoListings() {
 
       {/* LISTINGS GRID */}
       <section className="grid place-items-start gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {visibleListings.map(({ listing, score }) => (
+        {visibleListings.map(({ listing, score }) => {
+          const listingId = listing.id ?? "";
+          return (
           <ListingCard
-            key={listing.id}
+            key={listingId || listing.title || "listing"}
             listing={listing}
-            score={score.total}
-            isSaved={watchlist.isInWatchlist(listing.id)}
-            onToggleWatchlist={() => watchlist.toggle(listing.id)}
+            score={score.total ?? 0}
+            isSaved={listingId ? watchlist.isInWatchlist(listingId) : false}
+            onToggleWatchlist={() => {
+              if (!listingId) return;
+              watchlist.toggle(listingId);
+            }}
           />
-        ))}
+          );
+        })}
       </section>
     </div>
   );
@@ -76,8 +84,11 @@ function ListingCard({
   isSaved: boolean;
   onToggleWatchlist: () => void;
 }) {
-  const hero = listing.images[0];
-  const thumbs = listing.images.slice(1, 5);
+  const images = listing.images ?? [];
+  const hero = images[0] || listing.imageUrl || "/demo-images/other/1.jpg";
+  const thumbs = images.slice(1, 5);
+  const displayPrice = listing.price ? `$${listing.price.toLocaleString()}` : "—";
+  const displayHours = listing.hours ? `${listing.hours.toLocaleString()} hrs` : "—";
 
   return (
     <div
@@ -124,13 +135,12 @@ function ListingCard({
         <h3 className="text-base font-semibold leading-tight text-slate-900 md:text-lg">{listing.title}</h3>
 
         <div className="text-sm text-slate-600">
-          ${Number(listing.price ?? 0).toLocaleString()} •{" "}
-          {Number(listing.hours ?? 0).toLocaleString()} hrs • {listing.state}
+          {displayPrice} • {displayHours} • {listing.state ?? "—"}
         </div>
 
         <div className="mt-3 flex items-center justify-between gap-2">
           <span className="rounded-full bg-amber-400 px-3 py-1 text-xs font-semibold text-black">
-            Score {Math.round(score)}
+            Score {Math.round(score ?? 0)}
           </span>
 
           <div className="flex flex-wrap items-center justify-end gap-2">

@@ -80,7 +80,13 @@ export const ListingDetail = () => {
     }
   };
 
-  const heroImage = data.images[0] || data.imageUrl;
+  const images = data.images ?? [];
+  const heroImage = images[0] || data.imageUrl;
+  const displayPrice = data.price ? `$${data.price.toLocaleString()}` : "—";
+  const displayHours = data.hours ? `${data.hours.toLocaleString()} hrs` : "—";
+  const scores = data.scores ?? {};
+  const rationale = data.rationale ?? [];
+  const listingId = data.id ?? "";
 
   return (
     <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
@@ -99,7 +105,7 @@ export const ListingDetail = () => {
         )}
 
         <div className="grid grid-cols-4 gap-2">
-          {data.images.slice(1, 5).map((image, index) => (
+          {images.slice(1, 5).map((image, index) => (
             <img
               key={`${image}-${index}`}
               src={image}
@@ -111,24 +117,26 @@ export const ListingDetail = () => {
 
         <p className="text-sm text-slate-300">{data.description}</p>
         <div className="flex flex-wrap gap-4 text-xs text-slate-400">
-          <span>${data.price.toLocaleString()}</span>
-          <span>{data.hours.toLocaleString()} hrs</span>
-          <span>{data.state}</span>
-          {data.category && <span>{data.category}</span>}
-          <span>{data.source}</span>
+          <span>{displayPrice}</span>
+          <span>{displayHours}</span>
+          <span>{data.state ?? "—"}</span>
+          <span>{data.category ?? "—"}</span>
+          <span>{data.source ?? "—"}</span>
         </div>
         <div>
           <Button
             variant="secondary"
             onClick={handleWatchlist}
           >
-            {watchlistIds.has(data.id) ? "Remove from watchlist" : "Add to watchlist"}
+            {listingId && watchlistIds.has(listingId)
+              ? "Remove from watchlist"
+              : "Add to watchlist"}
           </Button>
         </div>
         {actionError && <div className="text-xs text-rose-200">{actionError}</div>}
 
         <div className="grid gap-3 text-xs text-slate-300">
-          {Object.entries(data.scores).map(([key, value]) => (
+          {Object.entries(scores).map(([key, value]) => (
             <div key={key} className="flex items-center justify-between">
               <span className="capitalize">{key}</span>
               <span>{value}</span>
@@ -139,7 +147,7 @@ export const ListingDetail = () => {
       <Card className="space-y-3">
         <h3 className="text-lg font-semibold">Score explanation</h3>
         <ul className="space-y-2 text-sm text-slate-300">
-          {data.rationale.map((item) => (
+          {rationale.map((item) => (
             <li key={item}>- {item}</li>
           ))}
         </ul>
