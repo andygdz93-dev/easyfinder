@@ -30,10 +30,10 @@ export class ErrorBoundary extends Component<Props, State> {
             <h1 className="text-lg font-semibold">Something went wrong</h1>
             <p className="mt-2 text-sm text-rose-100">{this.state.error.message}</p>
             <Link
-              to="/demo"
+              to="/"
               className="mt-4 inline-flex rounded-md bg-slate-100 px-3 py-2 text-sm font-medium text-slate-900"
             >
-              Go to demo
+              Back to mode selector
             </Link>
           </div>
         </div>

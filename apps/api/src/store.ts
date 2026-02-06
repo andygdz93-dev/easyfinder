@@ -1,4 +1,4 @@
-import { defaultScoringConfig, demoListings, demoUsers } from "@easyfinderai/shared";
+import { defaultScoringConfig, demoUsers } from "@easyfinderai/shared";
 import bcrypt from "bcryptjs";
 import type { Listing, User, WatchlistItem, ScoringConfig } from "@easyfinderai/shared";
 export type StoredUser = User & { passwordHash?: string };
@@ -11,7 +11,7 @@ const seedPasswords: Record<string, string> = {
   "admin@easyfinder.ai": "AdminPass123!",
 };
 
-export const listings: Listing[] = demoListings;
+export const listings: Listing[] = [];
 export const users: StoredUser[] = demoUsers.map((user) => {
   if (!user.email) throw new Error("Seed user must have an email");
 
