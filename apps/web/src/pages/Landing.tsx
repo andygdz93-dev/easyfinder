@@ -29,6 +29,9 @@ export const Landing = () => (
           <p className="text-sm text-slate-300">
             Explore demo inventory, scoring, and watchlists using sample data.
           </p>
+          <p className="text-xs uppercase tracking-[0.3em] text-amber-200">
+            NDA required
+          </p>
           <Link to="/demo" className="inline-flex">
             <Button>Try Demo</Button>
           </Link>
