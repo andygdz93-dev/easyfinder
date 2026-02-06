@@ -121,6 +121,14 @@ EasyFinder doesn’t just list equipment — it tells you what’s worth buying 
 
 **└── README.md**
 
+## Windows / PowerShell workflow
+
+- Always run installs from the repo root
+- Use pnpm only
+- Clean: `pnpm clean`
+- Install: `pnpm install`
+- Dev: `pnpm -w dev`
+
 
 **⚙️ Tech Stack**
 
