@@ -14,6 +14,9 @@ console.log("Loaded ENV:", {
 // ✅ Import the rest AFTER dotenv is loaded
 const { buildServer } = await import("./server.js");
 const { config } = await import("./config.js");
+const { connectToDatabase } = await import("./db.js");
+
+await connectToDatabase();
 
 const app = await buildServer();
 
