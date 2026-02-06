@@ -1,5 +1,6 @@
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { RequireAuth } from "./components/RequireAuth";
+import { RequireLiveNda } from "./components/RequireLiveNda";
 import { Landing } from "./pages/Landing";
 import { Listings } from "./pages/app/Listings";
 import { ListingDetail } from "./pages/app/ListingDetail";
@@ -8,6 +9,7 @@ import { AdminSources } from "./pages/app/AdminSources";
 import { ScoringConfigs } from "./pages/app/ScoringConfigs";
 import { SellerDashboard } from "./pages/app/SellerDashboard";
 import { Upgrade } from "./pages/app/Upgrade";
+import { Nda } from "./pages/app/Nda";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import DemoListings from "./pages/demo/Listings";
@@ -15,6 +17,7 @@ import DemoListingDetail from "./pages/demo/ListingDetail";
 import { DemoWatchlist } from "./pages/demo/Watchlist";
 import { DemoLayout } from "./layouts/DemoLayout";
 import { LiveLayout } from "./layouts/LiveLayout";
+import { NdaProvider } from "./lib/nda";
 
 export default function App() {
   return (
@@ -29,9 +32,11 @@ export default function App() {
         path="/app/*"
         element={
           <RequireAuth>
-            <LiveLayout>
-              <Outlet />
-            </LiveLayout>
+            <NdaProvider>
+              <LiveLayout>
+                <RequireLiveNda />
+              </LiveLayout>
+            </NdaProvider>
           </RequireAuth>
         }
       >
@@ -43,6 +48,7 @@ export default function App() {
         <Route path="scoring" element={<ScoringConfigs />} />
         <Route path="seller" element={<SellerDashboard />} />
         <Route path="upgrade" element={<Upgrade />} />
+        <Route path="nda" element={<Nda />} />
       </Route>
 
       <Route
