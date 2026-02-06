@@ -1,5 +1,7 @@
 import { FastifyInstance, FastifyRequest } from "fastify";
 import { watchlists, listings, demoUserId } from "../store.js";
+import { env } from "../env.js";
+import { demoListings } from "@easyfinderai/shared";
 import { ok, fail } from "../response.js";
 import { WatchlistItem } from "@easyfinderai/shared";
 
@@ -16,7 +18,11 @@ export default async function watchlistRoutes(app: FastifyInstance) {
     const userId = resolveUserId(request);
     const { listingId } = request.params;
 
-    if (!listings.find((listing) => listing.id === listingId)) {
+    const liveListing = listings.find((listing) => listing.id === listingId);
+    const allowDemo = env.DEMO_MODE || env.NODE_ENV === "test";
+    const demoListing = allowDemo ? demoListings.find((listing) => listing.id === listingId) : null;
+
+    if (!liveListing && !demoListing) {
       return fail(request, reply, "NOT_FOUND", "Listing not found.", 404);
     }
 
