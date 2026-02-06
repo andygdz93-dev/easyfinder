@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import App from "../src/App";
 import { AuthProvider } from "../src/lib/auth";
-import Demo from "../src/pages/Demo";
+import DemoListings from "../src/pages/demo/Listings";
 
 describe("Demo experience", () => {
   beforeEach(() => {
@@ -13,7 +13,7 @@ describe("Demo experience", () => {
   it("renders listings with hero and carousel images", () => {
     render(
       <MemoryRouter>
-        <Demo />
+        <DemoListings />
       </MemoryRouter>
     );
 
@@ -65,7 +65,7 @@ describe("Demo experience", () => {
   it("navigates to detail view with scoring breakdown", async () => {
     const user = userEvent.setup();
     render(
-      <MemoryRouter initialEntries={["/demo"]}>
+      <MemoryRouter initialEntries={["/demo/listings"]}>
         <AuthProvider>
           <App />
         </AuthProvider>
@@ -92,7 +92,7 @@ describe("Demo experience", () => {
     const user = userEvent.setup();
     const { unmount } = render(
       <MemoryRouter>
-        <Demo />
+        <DemoListings />
       </MemoryRouter>
     );
 
@@ -109,7 +109,7 @@ describe("Demo experience", () => {
 
     render(
       <MemoryRouter>
-        <Demo />
+        <DemoListings />
       </MemoryRouter>
     );
 
@@ -125,7 +125,7 @@ describe("Demo experience", () => {
     const user = userEvent.setup();
     const { unmount } = render(
       <MemoryRouter>
-        <Demo />
+        <DemoListings />
       </MemoryRouter>
     );
 
@@ -154,7 +154,7 @@ describe("Demo experience", () => {
   it("swaps hero image when clicking a detail thumbnail", async () => {
     const user = userEvent.setup();
     render(
-      <MemoryRouter initialEntries={["/demo/demo-22"]}>
+      <MemoryRouter initialEntries={["/demo/listings/demo-22"]}>
         <AuthProvider>
           <App />
         </AuthProvider>
@@ -181,7 +181,7 @@ describe("Demo experience", () => {
     delete process.env.VITE_API_BASE_URL;
 
     render(
-      <MemoryRouter initialEntries={["/demo/demo-22"]}>
+      <MemoryRouter initialEntries={["/demo/listings/demo-22"]}>
         <AuthProvider>
           <App />
         </AuthProvider>

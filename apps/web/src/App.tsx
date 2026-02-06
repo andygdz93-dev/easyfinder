@@ -1,19 +1,20 @@
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
-import { AppShell } from "./components/AppShell";
 import { RequireAuth } from "./components/RequireAuth";
-import Demo from "./pages/Demo";
-import DemoListingDetail from "./pages/DemoListingDetail";
-import { DemoWatchlist } from "./pages/DemoWatchlist";
 import { Landing } from "./pages/Landing";
-import { Listings } from "./pages/Listings";
-import { ListingDetail } from "./pages/ListingDetail";
-import { Watchlist } from "./pages/Watchlist";
-import { AdminSources } from "./pages/AdminSources";
-import { ScoringConfigs } from "./pages/ScoringConfigs";
-import { SellerDashboard } from "./pages/SellerDashboard";
-import { Upgrade } from "./pages/Upgrade";
+import { Listings } from "./pages/app/Listings";
+import { ListingDetail } from "./pages/app/ListingDetail";
+import { Watchlist } from "./pages/app/Watchlist";
+import { AdminSources } from "./pages/app/AdminSources";
+import { ScoringConfigs } from "./pages/app/ScoringConfigs";
+import { SellerDashboard } from "./pages/app/SellerDashboard";
+import { Upgrade } from "./pages/app/Upgrade";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
+import DemoListings from "./pages/demo/Listings";
+import DemoListingDetail from "./pages/demo/ListingDetail";
+import { DemoWatchlist } from "./pages/demo/Watchlist";
+import { DemoLayout } from "./layouts/DemoLayout";
+import { LiveLayout } from "./layouts/LiveLayout";
 
 export default function App() {
   return (
@@ -21,14 +22,16 @@ export default function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/app/login" element={<Login />} />
+      <Route path="/app/register" element={<Register />} />
 
       <Route
         path="/app/*"
         element={
           <RequireAuth>
-            <AppShell>
+            <LiveLayout>
               <Outlet />
-            </AppShell>
+            </LiveLayout>
           </RequireAuth>
         }
       >
@@ -42,9 +45,19 @@ export default function App() {
         <Route path="upgrade" element={<Upgrade />} />
       </Route>
 
-      <Route path="/demo" element={<Demo />} />
-      <Route path="/demo/watchlist" element={<DemoWatchlist />} />
-      <Route path="/demo/:id" element={<DemoListingDetail />} />
+      <Route
+        path="/demo/*"
+        element={
+          <DemoLayout>
+            <Outlet />
+          </DemoLayout>
+        }
+      >
+        <Route index element={<Navigate to="listings" replace />} />
+        <Route path="listings" element={<DemoListings />} />
+        <Route path="listings/:id" element={<DemoListingDetail />} />
+        <Route path="watchlist" element={<DemoWatchlist />} />
+      </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
