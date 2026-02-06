@@ -29,9 +29,38 @@ export class ApiError extends Error {
   }
 }
 
-const apiRequest = async <T>(path: string, options: RequestInit = {}): Promise<T> => {
+/**
+ * Normalizes API paths so callers can pass either:
+ * - "/auth/login"
+ * - "/api/auth/login"
+ * without producing ".../api/api/..."
+ */
+function normalizeApiPath(path: string) {
+  let p = path.trim();
+
+  // Ensure leading slash
+  if (!p.startsWith("/")) p = `/${p}`;
+
+  // Strip a leading "/api" ONCE to prevent double-prefixing
+  if (p === "/api") return "/";
+  if (p.startsWith("/api/")) p = p.slice("/api".length);
+
+  return p;
+}
+
+function joinUrl(baseUrl: string, path: string) {
+  const base = baseUrl.replace(/\/+$/, "");
+  const normalizedPath = normalizeApiPath(path).replace(/^\/+/, "");
+  return normalizedPath ? `${base}/${normalizedPath}` : `${base}/`;
+}
+
+const apiRequest = async <T>(
+  path: string,
+  options: RequestInit = {}
+): Promise<T> => {
   const baseUrl = requireApiBaseUrl();
   const token = getStoredAuthToken();
+
   const headers = new Headers(options.headers ?? {});
   if (!headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
@@ -40,7 +69,9 @@ const apiRequest = async <T>(path: string, options: RequestInit = {}): Promise<T
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const res = await fetch(`${baseUrl}${path}`, {
+  const url = joinUrl(baseUrl, path);
+
+  const res = await fetch(url, {
     ...options,
     headers,
   });
@@ -79,10 +110,13 @@ export const getListings = (filters: ListingFilters) => {
   if (filters.maxPrice) params.set("maxPrice", String(filters.maxPrice));
   if (filters.operable) params.set("operable", "true");
   const query = params.toString();
-  return apiRequest<ListingWithScore[]>(`/listings${query ? `?${query}` : ""}`);
+  return apiRequest<ListingWithScore[]>(
+    `/listings${query ? `?${query}` : ""}`
+  );
 };
 
-export const getListing = (id: string) => apiRequest<ListingWithScore>(`/listings/${id}`);
+export const getListing = (id: string) =>
+  apiRequest<ListingWithScore>(`/listings/${id}`);
 
 export const getScoringConfig = () =>
   apiRequest<{ config: ScoringConfig }>("/scoring-configs");
