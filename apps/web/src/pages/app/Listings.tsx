@@ -1,18 +1,19 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Button } from "../components/ui/button";
-import { Card } from "../components/ui/card";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
+import { Button } from "../../components/ui/button";
+import { Card } from "../../components/ui/card";
+import { Input } from "../../components/ui/input";
+import { Badge } from "../../components/ui/badge";
 import {
   ListingWithScore,
+  ApiError,
   addToWatchlist,
   removeFromWatchlist,
   getListings,
   getRequestId,
   getWatchlist,
-} from "../lib/api";
+} from "../../lib/api";
 import { WatchlistItem } from "@easyfinderai/shared";
 
 export const Listings = () => {
@@ -115,12 +116,18 @@ export const Listings = () => {
         </div>
       ) : listingsQuery.isError ? (
         <Card className="border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-100">
-          Failed to load listings.
+          {listingsQuery.error instanceof ApiError
+            ? listingsQuery.error.message
+            : "Failed to load listings."}
           {getRequestId(listingsQuery.error) && (
             <span className="ml-2 text-xs text-rose-200">
               Request ID: {getRequestId(listingsQuery.error)}
             </span>
           )}
+        </Card>
+      ) : listings.length === 0 ? (
+        <Card className="border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-300">
+          No live listings available yet. Once ingestion starts, they will appear here.
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">

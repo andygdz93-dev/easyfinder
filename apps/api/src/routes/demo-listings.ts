@@ -1,26 +1,18 @@
 import type { FastifyInstance } from "fastify";
-import { defaultScoringConfig, scoreListing } from "@easyfinderai/shared";
+import {
+  demoListings,
+  defaultScoringConfig,
+  scoreListing,
+} from "@easyfinderai/shared";
 import { fail, ok } from "../response.js";
-import { listings } from "../store.js";
-import { config } from "../config.js";
 
-export default async function listingsRoutes(app: FastifyInstance) {
+export default async function demoListingsRoutes(app: FastifyInstance) {
   /**
-   * GET /api/listings
-   * Returns ranked live listings
+   * GET /api/demo/listings
+   * Returns ranked demo listings
    */
-  app.get("/", async (request, reply) => {
-    if (config.demoMode) {
-      return fail(
-        request,
-        reply,
-        "DEMO_MODE_ACTIVE",
-        "LIVE listings are disabled while DEMO_MODE is enabled.",
-        503
-      );
-    }
-
-    const scored = listings.map((listing) => {
+  app.get("/", async (request) => {
+    const scored = demoListings.map((listing) => {
       const score = scoreListing(listing, defaultScoringConfig);
       return {
         ...listing,
@@ -40,23 +32,17 @@ export default async function listingsRoutes(app: FastifyInstance) {
   });
 
   /**
-   * GET /api/listings/:id
-   * Live listing detail
+   * GET /api/demo/listings/:id
+   * Demo listing detail
    */
   app.get<{ Params: { id: string } }>("/:id", async (request, reply) => {
     const { id } = request.params;
 
-    if (config.demoMode) {
-      return fail(
-        request,
-        reply,
-        "DEMO_MODE_ACTIVE",
-        "LIVE listings are disabled while DEMO_MODE is enabled.",
-        503
-      );
+    if (!id.startsWith("demo-")) {
+      return fail(request, reply, "NOT_FOUND", "Listing not found", 404);
     }
 
-    const listing = listings.find((l) => l.id === id);
+    const listing = demoListings.find((l) => l.id === id);
 
     if (!listing) {
       return fail(request, reply, "NOT_FOUND", "Listing not found", 404);

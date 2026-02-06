@@ -1,13 +1,11 @@
-// apps/web/src/pages/Demo.tsx
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import type { Listing } from "@easyfinderai/shared";
 import { demoListings, defaultScoringConfig, scoreListing } from "@easyfinderai/shared";
-import { useDemoWatchlist } from "../lib/demoWatchlist";
-import { formatCategory } from "../lib/formatters";
+import { useDemoWatchlist } from "../../lib/demoWatchlist";
+import { formatCategory } from "../../lib/formatters";
 
-export default function Demo() {
+export default function DemoListings() {
   const watchlist = useDemoWatchlist();
   const [showWatchlistOnly, setShowWatchlistOnly] = useState(false);
   const ranked = demoListings
@@ -33,6 +31,12 @@ export default function Demo() {
           <span>
             Saved listings: <strong className="text-slate-100">{watchlist.ids.length}</strong>
           </span>
+          <Link
+            to="/demo/watchlist"
+            className="rounded-full border border-amber-200/40 px-3 py-1 text-xs font-semibold text-amber-100 hover:border-amber-200/70"
+          >
+            View watchlist
+          </Link>
           <button
             type="button"
             onClick={() => setShowWatchlistOnly((prev) => !prev)}
@@ -138,7 +142,7 @@ function ListingCard({
               {isSaved ? "Remove from Watchlist" : "Add to Watchlist"}
             </button>
             <Link
-              to={`/demo/${listing.id}`}
+              to={`/demo/listings/${listing.id}`}
               className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white"
             >
               View Details

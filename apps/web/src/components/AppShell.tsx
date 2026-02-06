@@ -7,15 +7,20 @@ const navItems = [
   { to: "/app/scoring", label: "Scoring" },
   { to: "/app/seller", label: "Seller" },
   { to: "/app/admin/sources", label: "Admin" },
-  { to: "/demo", label: "Demo" },
   { to: "/app/upgrade", label: "Upgrade" },
 ];
 
-export const AppShell = ({ children }: { children: React.ReactNode }) => {
+export const AppShell = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
   const { user, clearSession } = useAuth();
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className={`min-h-screen text-slate-100 ${className ?? ""}`}>
       <div className="flex">
         <aside className="min-h-screen w-64 border-r border-slate-800 bg-slate-900/70 px-6 py-8">
           <Link to="/" className="text-xl font-semibold text-white">

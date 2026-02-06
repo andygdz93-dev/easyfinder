@@ -36,7 +36,7 @@ export default function DemoListingCard({ listing }: Props) {
         <div className="mt-3 flex items-center justify-between gap-2">
           <button
             className="rounded-md bg-black px-3 py-2 text-sm text-white"
-            onClick={() => navigate(`/demo/${listing.id}`)}
+            onClick={() => navigate(`/demo/listings/${listing.id}`)}
           >
             View Details
           </button>
