@@ -15,14 +15,15 @@ const acceptSchema = z.object({
 });
 
 export default async function ndaRoutes(app: FastifyInstance) {
-  const usersCollection = getCollection<UserDocument>("users");
+  const usersCollection = () => getCollection<UserDocument>("users");
 
   app.get("/status", { preHandler: app.authenticate }, async (request, reply) => {
+    const col = usersCollection();
     if (!ObjectId.isValid(request.user.id)) {
       return fail(request, reply, "NOT_FOUND", "User not found.", 404);
     }
 
-    const user = await usersCollection.findOne({ _id: new ObjectId(request.user.id) });
+    const user = await col.findOne({ _id: new ObjectId(request.user.id) });
     if (!user) {
       return fail(request, reply, "NOT_FOUND", "User not found.", 404);
     }
@@ -36,6 +37,7 @@ export default async function ndaRoutes(app: FastifyInstance) {
   });
 
   app.post("/accept", { preHandler: app.authenticate }, async (request, reply) => {
+    const col = usersCollection();
     acceptSchema.parse(request.body);
 
     if (!ObjectId.isValid(request.user.id)) {
@@ -43,7 +45,7 @@ export default async function ndaRoutes(app: FastifyInstance) {
     }
 
     const now = new Date();
-    const updateResult = await usersCollection.updateOne(
+    const updateResult = await col.updateOne(
       { _id: new ObjectId(request.user.id) },
       {
         $set: {
