@@ -4,6 +4,7 @@ import type { Listing } from "@easyfinderai/shared";
 import { demoListings, defaultScoringConfig, scoreListing } from "@easyfinderai/shared";
 import { useDemoWatchlist } from "../../lib/demoWatchlist";
 import { formatCategory } from "../../lib/formatters";
+import ImageGallery from "../../components/ImageGallery";
 
 export default function DemoListings() {
   const watchlist = useDemoWatchlist();
@@ -84,9 +85,11 @@ function ListingCard({
   isSaved: boolean;
   onToggleWatchlist: () => void;
 }) {
-  const images = listing.images ?? [];
-  const hero = images[0] || listing.imageUrl || "/demo-images/other/1.jpg";
-  const thumbs = images.slice(1, 5);
+  const images = listing.images?.length
+    ? listing.images
+    : listing.imageUrl
+    ? [listing.imageUrl]
+    : ["/demo-images/other/1.jpg"];
   const displayPrice = listing.price ? `$${listing.price.toLocaleString()}` : "—";
   const displayHours = listing.hours ? `${listing.hours.toLocaleString()} hrs` : "—";
 
@@ -96,34 +99,19 @@ function ListingCard({
       data-testid="listing-card"
     >
       {/* IMAGE */}
-      <div className="space-y-3 p-4 md:p-5">
-        <div className="h-36 w-full overflow-hidden rounded-xl bg-slate-100 sm:h-40 md:h-44" data-testid="demo-card-hero">
-          <img
-            src={hero}
-            alt={listing.title || "Listing image"}
-            data-testid="listing-hero"
-            className="h-full w-full object-cover"
-            loading="lazy"
-          />
-        </div>
-
-        {/* THUMBNAILS */}
-        <div className="mt-3 grid grid-cols-4 gap-2" data-testid="demo-card-thumbs">
-          {thumbs.map((src, idx) => (
-            <div
-              key={`${listing.id}-thumb-${idx}`}
-              className="h-10 overflow-hidden rounded-lg bg-slate-100 sm:h-12"
-            >
-              <img
-                src={src}
-                alt={`${listing.title || "Listing"} thumbnail ${idx + 1}`}
-                data-testid="listing-thumb"
-                className="h-full w-full object-cover"
-                loading="lazy"
-              />
-            </div>
-          ))}
-        </div>
+      <div className="p-4 md:p-5">
+        <ImageGallery
+          images={images}
+          alt={listing.title || "Listing image"}
+          maxThumbs={4}
+          imagesKey={listing.id ?? listing.title}
+          heroClassName="h-36 sm:h-40 md:h-44"
+          heroTestId="demo-card-hero"
+          heroImageTestId="listing-hero"
+          thumbsClassName="mt-3"
+          thumbsTestId="demo-card-thumbs"
+          thumbImageTestId="listing-thumb"
+        />
       </div>
 
       {/* CONTENT */}
