@@ -1,28 +1,25 @@
 import { FastifyInstance } from "fastify";
 import { ObjectId } from "mongodb";
-import { getCollection } from "../db.js";
-
-type UserDocument = {
-  _id: ObjectId;
-  email: string;
-  name: string;
-  role: "buyer" | "seller" | "admin";
-};
+import { fail, ok } from "../response.js";
+import { getUsersCollection } from "../users.js";
 
 export default async function meRoutes(app: FastifyInstance) {
-  const usersCollection = () => getCollection<UserDocument>("users");
+  const usersCollection = () => getUsersCollection();
 
-  app.get("/me", { preHandler: app.authenticate }, async (request, reply) => {
+  app.get("/", { preHandler: app.authenticate }, async (request, reply) => {
     const col = usersCollection();
     if (!ObjectId.isValid(request.user.id)) {
-      reply.status(404);
-      return { error: { code: "NOT_FOUND", message: "User not found." } };
+      return fail(request, reply, "NOT_FOUND", "User not found.", 404);
     }
     const user = await col.findOne({ _id: new ObjectId(request.user.id) });
     if (!user) {
-      reply.status(404);
-      return { error: { code: "NOT_FOUND", message: "User not found." } };
+      return fail(request, reply, "NOT_FOUND", "User not found.", 404);
     }
-    return { id: user._id.toHexString(), email: user.email, name: user.name, role: user.role };
+    return ok(request, {
+      id: user._id.toHexString(),
+      email: user.email,
+      name: user.name,
+      role: user.role,
+    });
   });
 }

@@ -36,6 +36,25 @@ describe("API", () => {
     expect(loginRes.body.data.user).toBeTruthy();
   });
 
+  it("requires auth for /api/me", async () => {
+    const res = await supertest(app.server).get("/api/me");
+    expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe("UNAUTHORIZED");
+  });
+
+  it("returns the current user for /api/me with auth", async () => {
+    const loginRes = await supertest(app.server)
+      .post("/api/auth/login")
+      .send({ email: "buyer@easyfinder.ai", password: "BuyerPass123!" });
+    const token = loginRes.body.data.token;
+    const res = await supertest(app.server)
+      .get("/api/me")
+      .set("Authorization", `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data.email).toBe("buyer@easyfinder.ai");
+    expect(res.body.data.role).toBe("buyer");
+  });
+
   it("allows CORS preflight from vercel preview origins", async () => {
     const origin = "https://web-abc123-easyfinder.vercel.app";
     const res = await supertest(app.server)
