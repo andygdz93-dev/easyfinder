@@ -57,7 +57,12 @@ export default async function authRoutes(app: FastifyInstance) {
       throw error;
     }
 
-    const token = await reply.jwtSign({ id: userDocument._id.toHexString(), role: "buyer" });
+    const token = await reply.jwtSign({
+      id: userDocument._id.toHexString(),
+      email: userDocument.email,
+      role: "buyer",
+      name: userDocument.name,
+    });
 
     return ok(request, {
       token,
@@ -83,7 +88,12 @@ export default async function authRoutes(app: FastifyInstance) {
       return fail(request, reply, "INVALID_CREDENTIALS", "Invalid credentials.", 401);
     }
 
-    const token = await reply.jwtSign({ id: user._id.toHexString(), role: user.role ?? "buyer" });
+    const token = await reply.jwtSign({
+      id: user._id.toHexString(),
+      email: user.email,
+      role: user.role ?? "buyer",
+      name: user.name,
+    });
 
     return ok(request, {
       token,
