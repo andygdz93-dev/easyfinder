@@ -89,7 +89,7 @@ function ListingCard({
     ? listing.images
     : listing.imageUrl
     ? [listing.imageUrl]
-    : ["/demo-images/other/1.jpg"];
+    : [];
   const displayPrice = listing.price ? `$${listing.price.toLocaleString()}` : "—";
   const displayHours = listing.hours ? `${listing.hours.toLocaleString()} hrs` : "—";
 
@@ -105,12 +105,15 @@ function ListingCard({
           alt={listing.title || "Listing image"}
           maxThumbs={4}
           imagesKey={listing.id ?? listing.title}
+          autoCycle
+          cycleMs={2500}
           heroClassName="h-36 sm:h-40 md:h-44"
           heroTestId="demo-card-hero"
           heroImageTestId="listing-hero"
           thumbsClassName="mt-3"
           thumbsTestId="demo-card-thumbs"
           thumbImageTestId="listing-thumb"
+          fallbackSrc="/demo-images/other/1.jpg"
         />
       </div>
 
