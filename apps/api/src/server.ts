@@ -6,7 +6,7 @@ import rateLimit from "@fastify/rate-limit";
 import multipart from "@fastify/multipart";
 import { nanoid } from "nanoid";
 import { config } from "./config.js";
-import { getRoleFromRequest } from "./auth.js";
+import { AuthUser, getRoleFromRequest } from "./auth.js";
 import listingRoutes from "./routes/listings.js";
 import demoListingRoutes from "./routes/demo-listings.js";
 import scoringRoutes from "./routes/scoring.js";
@@ -80,7 +80,8 @@ export const buildServer = () => {
   // Auth decorator (used by routes as preHandler: app.authenticate)
   app.decorate("authenticate", async (request: FastifyRequest, reply: FastifyReply) => {
     try {
-      await request.jwtVerify();
+      const payload = await request.jwtVerify<AuthUser>();
+      request.user = payload;
     } catch {
       return reply.status(401).send({
         error: {
@@ -119,7 +120,8 @@ export const buildServer = () => {
     const authHeader = request.headers.authorization;
     if (authHeader?.startsWith("Bearer ")) {
       try {
-        await request.jwtVerify();
+        const payload = await request.jwtVerify<AuthUser>();
+        request.user = payload;
       } catch {
         // ignore, optional auth
       }
