@@ -81,7 +81,12 @@ export const buildServer = () => {
   app.decorate("authenticate", async (request: FastifyRequest, reply: FastifyReply) => {
     try {
       const payload = await request.jwtVerify<AuthUser>();
-      request.user = payload;
+      request.user = {
+        id: payload.id,
+        email: payload.email,
+        name: payload.name,
+        role: payload.role,
+      };
     } catch {
       return reply.status(401).send({
         error: {
@@ -121,7 +126,12 @@ export const buildServer = () => {
     if (authHeader?.startsWith("Bearer ")) {
       try {
         const payload = await request.jwtVerify<AuthUser>();
-        request.user = payload;
+        request.user = {
+          id: payload.id,
+          email: payload.email,
+          name: payload.name,
+          role: payload.role,
+        };
       } catch {
         // ignore, optional auth
       }
