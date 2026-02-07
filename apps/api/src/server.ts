@@ -5,10 +5,8 @@ import jwt from "@fastify/jwt";
 import rateLimit from "@fastify/rate-limit";
 import multipart from "@fastify/multipart";
 import { nanoid } from "nanoid";
-
 import { config } from "./config.js";
 import { getRoleFromRequest } from "./auth.js";
-
 import listingRoutes from "./routes/listings.js";
 import demoListingRoutes from "./routes/demo-listings.js";
 import scoringRoutes from "./routes/scoring.js";
@@ -19,8 +17,8 @@ import adminRoutes from "./routes/admin.js";
 import sellerRoutes from "./routes/seller.js";
 import ndaRoutes from "./routes/nda.js";
 import { ZodError } from "zod";
-
 import { env } from "./env.js";
+import meRoutes from "./routes/me.js";
 
 
 
@@ -155,6 +153,7 @@ export const buildServer = () => {
   app.register(authRoutes, { prefix: "/api/auth" });
   app.register(adminRoutes, { prefix: "/api/admin" });
   app.register(sellerRoutes, { prefix: "/api/seller" });
+  app.register(meRoutes, { prefix: "/api/me" });
   app.register(ndaRoutes, { prefix: "/api/nda" });
   
   return app;
