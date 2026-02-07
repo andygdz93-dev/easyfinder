@@ -44,26 +44,22 @@ export default function DemoListingDetail() {
     <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 md:px-6">
       <div className="grid gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3">
-          {initialGallery.length > 0 ? (
-            <ImageGallery
-              images={initialGallery}
-              alt={listing.title ?? "Listing image"}
-              maxThumbs={4}
-              imagesKey={listing.id ?? listing.title}
-              heroClassName="h-[220px] rounded-2xl ring-2 ring-amber-300/70 sm:h-[240px] lg:h-[320px]"
-              heroImageClassName="object-center"
-              heroTestId="demo-detail-hero"
-              heroImageTestId="demo-hero"
-              thumbsClassName="mt-3"
-              thumbClassName="h-12 sm:h-14 transition hover:ring-2 hover:ring-amber-300/70 focus:outline-none focus:ring-2 focus:ring-amber-300"
-              fallbackSrc="/demo-images/other/1.jpg"
-              getThumbTestId={(index) => `demo-thumb-${index}`}
-            />
-          ) : (
-            <div className="h-[220px] w-full rounded-2xl bg-slate-100 p-6 text-slate-500 sm:h-[240px] lg:h-[320px]">
-              No images available.
-            </div>
-          )}
+          <ImageGallery
+            images={initialGallery}
+            alt={listing.title ?? "Listing image"}
+            maxThumbs={4}
+            imagesKey={listing.id ?? listing.title}
+            autoCycle
+            cycleMs={2500}
+            heroClassName="h-[220px] rounded-2xl ring-2 ring-amber-300/70 sm:h-[240px] lg:h-[320px]"
+            heroImageClassName="object-center"
+            heroTestId="demo-detail-hero"
+            heroImageTestId="demo-hero"
+            thumbsClassName="mt-3"
+            thumbClassName="h-12 sm:h-14 transition hover:ring-2 hover:ring-amber-300/70 focus:outline-none focus:ring-2 focus:ring-amber-300"
+            fallbackSrc="/demo-images/other/1.jpg"
+            getThumbTestId={(index) => `demo-thumb-${index}`}
+          />
         </div>
 
         <div className="lg:col-span-2">

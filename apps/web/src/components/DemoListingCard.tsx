@@ -2,6 +2,7 @@ import { Listing } from "@easyfinderai/shared";
 import { useNavigate } from "react-router-dom";
 import { useDemoWatchlist } from "../lib/demoWatchlist";
 import { formatCategory } from "../lib/formatters";
+import ImageGallery from "./ImageGallery";
 
 type Props = {
   listing: Listing;
@@ -11,8 +12,11 @@ export default function DemoListingCard({ listing }: Props) {
   const navigate = useNavigate();
   const watchlist = useDemoWatchlist();
 
-  const image =
-    (listing.images ?? [])[0] || listing.imageUrl || "/demo-images/other/1.jpg";
+  const images = listing.images?.length
+    ? listing.images
+    : listing.imageUrl
+    ? [listing.imageUrl]
+    : [];
   const listingId = listing.id ?? "";
   const isSaved = listingId ? watchlist.isInWatchlist(listingId) : false;
   const displayPrice = listing.price ? `$${listing.price.toLocaleString()}` : "—";
@@ -21,12 +25,20 @@ export default function DemoListingCard({ listing }: Props) {
   return (
     <div className="w-full max-w-[460px] overflow-hidden rounded-2xl border bg-white shadow-sm">
       {/* IMAGE */}
-      <div className="h-36 w-full overflow-hidden rounded-xl bg-slate-100 sm:h-40 md:h-44" data-testid="demo-card-hero">
-        <img
-          src={image}
+      <div className="p-4 md:p-5">
+        <ImageGallery
+          images={images}
           alt={listing.title ?? "Listing image"}
-          className="h-full w-full object-cover"
-          loading="lazy"
+          imagesKey={listing.id ?? listing.title}
+          autoCycle
+          cycleMs={2500}
+          maxThumbs={4}
+          heroClassName="h-36 sm:h-40 md:h-44"
+          heroImageClassName="object-center"
+          thumbsClassName="mt-3"
+          thumbClassName="h-10 sm:h-12"
+          fallbackSrc="/demo-images/other/1.jpg"
+          heroTestId="demo-card-hero"
         />
       </div>
 

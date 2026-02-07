@@ -6,6 +6,8 @@ type ImageGalleryProps = {
   images: string[];
   alt: string;
   maxThumbs?: number;
+  autoCycle?: boolean;
+  cycleMs?: number;
   className?: string;
   imagesKey?: string | number;
   heroClassName?: string;
@@ -32,6 +34,8 @@ export default function ImageGallery({
   images,
   alt,
   maxThumbs = 4,
+  autoCycle = true,
+  cycleMs = 2500,
   className,
   imagesKey,
   heroClassName,
@@ -51,14 +55,28 @@ export default function ImageGallery({
   const resetKey = imagesKey ?? normalizedImages.join("|");
   const [gallery, setGallery] = useState<string[]>(normalizedImages);
   const [hoverHero, setHoverHero] = useState<string | null>(null);
+  const [cycleNonce, setCycleNonce] = useState(0);
 
   useEffect(() => {
     setGallery(normalizedImages);
     setHoverHero(null);
+    setCycleNonce(0);
   }, [resetKey, normalizedImages]);
 
-  const activeHero = hoverHero ?? gallery[0];
+  const activeHero = hoverHero ?? gallery[0] ?? fallbackSrc;
   const thumbnails = gallery.slice(1, maxThumbs + 1);
+  const canCycle = autoCycle && gallery.length > 1 && !hoverHero;
+
+  useEffect(() => {
+    if (!canCycle) return undefined;
+    const interval = window.setInterval(() => {
+      setGallery((current) =>
+        current.length > 1 ? [...current.slice(1), current[0]] : current
+      );
+    }, cycleMs);
+
+    return () => window.clearInterval(interval);
+  }, [canCycle, cycleMs, cycleNonce, gallery.length]);
 
   const handleThumbClick = (index: number) => {
     setGallery((current) => {
@@ -66,6 +84,7 @@ export default function ImageGallery({
       return swap(current, 0, index);
     });
     setHoverHero(null);
+    setCycleNonce((value) => value + 1);
   };
 
   if (!activeHero) {
