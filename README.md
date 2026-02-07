@@ -121,13 +121,55 @@ EasyFinder doesn’t just list equipment — it tells you what’s worth buying 
 
 **└── README.md**
 
-## Windows / PowerShell workflow
+## Local development (Windows / PowerShell)
 
-- Always run installs from the repo root
-- Use pnpm only
-- Clean: `pnpm clean`
-- Install: `pnpm install`
-- Dev: `pnpm -w dev`
+### Prerequisites
+
+- Node.js 20.x (matches the Dockerfile runtime)
+- pnpm 9.6.0 (`corepack enable` if needed)
+
+### Environment setup
+
+Copy the example files and fill in real values locally:
+
+```powershell
+Copy-Item apps/api/.env.example apps/api/.env
+Copy-Item apps/web/.env.example apps/web/.env
+```
+
+Notes:
+- `apps/api/.env` is required (see `JWT_SECRET`, `MONGO_URL`, `DB_NAME`).
+- `apps/web/.env` should set `VITE_API_BASE_URL` (recommended: `http://127.0.0.1:8080`).
+
+### Clean install + build
+
+```powershell
+pnpm clean
+pnpm install
+pnpm -r build
+```
+
+### Run dev (API + Web)
+
+Single command (turbo runs both in parallel):
+
+```powershell
+pnpm dev
+```
+
+Two terminals (if you prefer separate logs):
+
+```powershell
+pnpm --filter @easyfinderai/api dev
+pnpm --filter @easyfinderai/web dev
+```
+
+### Verify locally
+
+- Web: http://127.0.0.1:5173
+- API health: http://127.0.0.1:8080/api/health
+
+Vercel note: set `VITE_API_BASE_URL` as the host-only API origin (e.g. `https://easyfinder.fly.dev`) without `/api`.
 
 
 **⚙️ Tech Stack**
