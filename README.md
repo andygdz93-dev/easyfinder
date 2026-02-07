@@ -139,7 +139,7 @@ Copy-Item apps/web/.env.example apps/web/.env
 
 Notes:
 - `apps/api/.env` is required (see `JWT_SECRET`, `MONGO_URL`, `DB_NAME`).
-- `apps/web/.env` should set `VITE_API_BASE_URL` (recommended: `http://localhost:8080/api`).
+- `apps/web/.env` should set `VITE_API_BASE_URL` (recommended: `http://127.0.0.1:8080/api`).
 
 ### Clean install + build
 
@@ -166,8 +166,8 @@ pnpm --filter @easyfinderai/web dev
 
 ### Verify locally
 
-- Web: http://localhost:5173
-- API health: http://localhost:8080/api/health
+- Web: http://127.0.0.1:5173
+- API health: http://127.0.0.1:8080/api/health
 
 
 **⚙️ Tech Stack**
