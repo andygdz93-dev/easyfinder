@@ -3,7 +3,7 @@ import type { FastifyRequest } from "fastify";
 export type AuthUser = {
   id: string;
   email: string;
-  name: string;
+  name?: string;
   role: "demo" | "buyer" | "seller" | "admin";
 };
 
