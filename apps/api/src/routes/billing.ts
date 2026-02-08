@@ -3,6 +3,7 @@ import { z } from "zod";
 import { ObjectId } from "mongodb";
 import type Stripe from "stripe";
 import { stripe } from "../stripe.js";
+import rawBody from "@fastify/raw-body";
 import { env } from "../env.js";
 import { getUsersCollection } from "../users.js";
 import { fail, ok } from "../response.js";
@@ -96,6 +97,13 @@ const handleSubscriptionUpdate = async (
 };
 
 export default async function billingRoutes(app: FastifyInstance) {
+  app.register(rawBody, {
+    field: "rawBody",
+    global: false,
+    encoding: "utf8",
+    runFirst: true,
+  });
+
   app.post(
     "/create-checkout-session",
     { preHandler: app.authenticate },
@@ -182,7 +190,8 @@ export default async function billingRoutes(app: FastifyInstance) {
       }
 
       if (!request.rawBody) {
-        return reply.status(400).send({ error: "Missing raw body" });
+        request.log.error("Stripe webhook raw body missing");
+        return reply.status(500).send({ error: "Missing raw body" });
       }
 
       let event: Stripe.Event;
