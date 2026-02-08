@@ -1,18 +1,23 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { ApiError, getNdaStatus } from "../lib/api";
+import { ApiError, buildApiUrl, getNdaStatus } from "../lib/api";
+import type { NdaStatus } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useNda } from "../lib/nda";
 import { getApiBaseUrl } from "../env";
 
-export const RequireLiveNda = () => {
+type RequireLiveNdaProps = {
+  fetchNdaStatus?: () => Promise<NdaStatus>;
+};
+
+export const RequireLiveNda = ({ fetchNdaStatus = getNdaStatus }: RequireLiveNdaProps) => {
   const { token, clearSession } = useAuth();
-  const { status, setStatus } = useNda();
+  const { status, checked, setStatus, setChecked } = useNda();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [hasChecked, setHasChecked] = useState(false);
+  const previousToken = useRef<string | null>(null);
 
   const isNdaRoute = useMemo(
     () => location.pathname === "/app/nda",
@@ -46,54 +51,100 @@ export const RequireLiveNda = () => {
   }, [status]);
 
   useEffect(() => {
-    if (!token || isNdaRoute || hasChecked || isLoading) {
+    if (previousToken.current !== token) {
+      previousToken.current = token ?? null;
+      setChecked(false);
+      setStatus(null);
+      setError(null);
+    }
+  }, [token, setChecked, setStatus]);
+
+  useEffect(() => {
+    if (!token || isNdaRoute || checked || isLoading) {
       return;
     }
 
-    let isMounted = true;
-    const timeoutMs = 10000;
+    let isSettled = false;
+    const timeoutMs = 12000;
     const timeoutMessage = "Can't reach API.";
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      timeoutId = setTimeout(() => {
-        reject(new Error(timeoutMessage));
-      }, timeoutMs);
-    });
+    const apiUrl = buildApiUrl("/nda/status", getApiBaseUrl());
 
     const fetchStatus = async () => {
       setIsLoading(true);
       setError(null);
-      setHasChecked(false);
+      if (import.meta.env.DEV) {
+        console.debug("[nda] checking status", {
+          token: Boolean(token),
+          route: location.pathname,
+          checked,
+          url: apiUrl,
+        });
+      }
       try {
-        const data = await Promise.race([getNdaStatus(), timeoutPromise]);
-        if (isMounted) {
+        const data = await fetchNdaStatus();
+        if (!isSettled) {
           setStatus(data);
+          if (import.meta.env.DEV) {
+            console.debug("[nda] status received", {
+              accepted: Boolean(data?.accepted),
+            });
+          }
         }
       } catch (err) {
-        if (isMounted) {
+        if (!isSettled) {
           if (err instanceof ApiError && err.status === 401) {
             clearSession();
             return;
           }
           setError(err instanceof Error ? err.message : timeoutMessage);
+          if (import.meta.env.DEV) {
+            console.debug("[nda] status error", {
+              message: err instanceof Error ? err.message : String(err),
+            });
+          }
         }
       } finally {
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-        }
-        if (isMounted) {
+        if (!isSettled) {
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+          }
           setIsLoading(false);
-          setHasChecked(true);
+          setChecked(true);
         }
       }
     };
 
+    timeoutId = setTimeout(() => {
+      if (isSettled) return;
+      isSettled = true;
+      setIsLoading(false);
+      setChecked(true);
+      setError(timeoutMessage);
+      if (import.meta.env.DEV) {
+        console.debug("[nda] status timeout", { timeoutMs });
+      }
+    }, timeoutMs);
+
     fetchStatus();
 
     return () => {
-      isMounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     };
-  }, [token, isNdaRoute, hasChecked, isLoading, setStatus, retryCount, clearSession]);
+  }, [
+    token,
+    isNdaRoute,
+    checked,
+    isLoading,
+    setStatus,
+    setChecked,
+    retryCount,
+    clearSession,
+    location.pathname,
+    fetchNdaStatus,
+  ]);
 
   if (!token) {
     return (
@@ -116,7 +167,7 @@ export const RequireLiveNda = () => {
     );
   }
 
-  if (!hasChecked) {
+  if (!checked) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center text-sm text-slate-400">
         Checking NDA status...
@@ -137,7 +188,7 @@ export const RequireLiveNda = () => {
           type="button"
           onClick={() => {
             setError(null);
-            setHasChecked(false);
+            setChecked(false);
             setStatus(null);
             setRetryCount((prev) => prev + 1);
           }}
