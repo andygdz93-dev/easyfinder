@@ -11,6 +11,21 @@ const urlOrPath = z.string().refine(
 export const userRoleSchema = z.enum(["demo", "buyer", "seller", "admin"]);
 export type UserRole = z.infer<typeof userRoleSchema>;
 
+export const billingPlanSchema = z.enum(["free", "pro", "enterprise"]);
+export type BillingPlan = z.infer<typeof billingPlanSchema>;
+
+export const billingStatusSchema = z.enum(["active", "past_due", "canceled", "incomplete"]);
+export type BillingStatus = z.infer<typeof billingStatusSchema>;
+
+export const billingSchema = z.object({
+  stripe_customer_id: z.string().optional(),
+  stripe_subscription_id: z.string().optional(),
+  plan: billingPlanSchema,
+  status: billingStatusSchema,
+  current_period_end: z.string(),
+});
+export type Billing = z.infer<typeof billingSchema>;
+
 export const listingSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -82,6 +97,7 @@ export const userSchema = z.object({
   email: z.string().email(),
   name: z.string(),
   role: userRoleSchema,
+  billing: billingSchema.optional(),
 });
 export type User = z.infer<typeof userSchema>;
 

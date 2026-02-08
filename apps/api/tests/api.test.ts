@@ -1,12 +1,21 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import supertest from "supertest";
-import { buildServer } from "../src/server.js";
 
 process.env.VERCEL_PREVIEW_PATTERN = process.env.VERCEL_PREVIEW_PATTERN ?? "1";
+process.env.STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY ?? "sk_test_123";
+process.env.STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET ?? "whsec_test";
+process.env.STRIPE_PRICE_ID_PRO = process.env.STRIPE_PRICE_ID_PRO ?? "price_pro";
+process.env.STRIPE_PRICE_ID_ENTERPRISE =
+  process.env.STRIPE_PRICE_ID_ENTERPRISE ?? "price_enterprise";
 
-const app = buildServer();
+let app: ReturnType<(typeof import("../src/server.js"))["buildServer"]>;
+let getUsersCollection: (typeof import("../src/users.js"))["getUsersCollection"];
 
 beforeAll(async () => {
+  const serverModule = await import("../src/server.js");
+  const usersModule = await import("../src/users.js");
+  app = serverModule.buildServer();
+  getUsersCollection = usersModule.getUsersCollection;
   await app.ready();
 });
 
@@ -146,6 +155,19 @@ describe("API", () => {
       .post("/api/auth/login")
       .send({ email: "buyer@easyfinder.ai", password: "BuyerPass123!" });
     const token = loginRes.body.data.token;
+    const col = getUsersCollection();
+    await col.updateOne(
+      { emailLower: "buyer@easyfinder.ai" },
+      {
+        $set: {
+          billing: {
+            plan: "pro",
+            status: "active",
+            current_period_end: new Date(Date.now() + 86400000),
+          },
+        },
+      }
+    );
     const res = await supertest(app.server)
       .post("/api/scoring-configs")
       .set("Authorization", `Bearer ${token}`)
@@ -174,16 +196,40 @@ describe("API", () => {
 
 
   it("supports watchlist add/remove endpoints", async () => {
-    const addRes = await supertest(app.server).post("/api/watchlist/demo-1");
+    const loginRes = await supertest(app.server)
+      .post("/api/auth/login")
+      .send({ email: "buyer@easyfinder.ai", password: "BuyerPass123!" });
+    const token = loginRes.body.data.token;
+    const col = getUsersCollection();
+    await col.updateOne(
+      { emailLower: "buyer@easyfinder.ai" },
+      {
+        $set: {
+          billing: {
+            plan: "pro",
+            status: "active",
+            current_period_end: new Date(Date.now() + 86400000),
+          },
+        },
+      }
+    );
+
+    const addRes = await supertest(app.server)
+      .post("/api/watchlist/demo-1")
+      .set("Authorization", `Bearer ${token}`);
     expect(addRes.status).toBe(200);
     expect(addRes.body.data.item.listingId).toBe("demo-1");
 
-    const listRes = await supertest(app.server).get("/api/watchlist");
+    const listRes = await supertest(app.server)
+      .get("/api/watchlist")
+      .set("Authorization", `Bearer ${token}`);
     expect(listRes.status).toBe(200);
     expect(Array.isArray(listRes.body.data.items)).toBe(true);
     expect(listRes.body.data.items.some((item: any) => item.listingId === "demo-1")).toBe(true);
 
-    const removeRes = await supertest(app.server).delete("/api/watchlist/demo-1");
+    const removeRes = await supertest(app.server)
+      .delete("/api/watchlist/demo-1")
+      .set("Authorization", `Bearer ${token}`);
     expect(removeRes.status).toBe(200);
     expect(removeRes.body.data.removed).toBe(true);
   });

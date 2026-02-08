@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { ObjectId } from "mongodb";
 import { AuthUser } from "../auth.js";
 import { getCollection } from "../db.js";
+import { defaultBilling, normalizeBilling, serializeBilling } from "../billing.js";
 
 type UserDocument = {
   _id: ObjectId;
@@ -10,6 +11,13 @@ type UserDocument = {
   role: "buyer" | "seller" | "admin";
   ndaAcceptedAt?: Date;
   ndaVersion?: string;
+  billing?: {
+    stripe_customer_id?: string;
+    stripe_subscription_id?: string;
+    plan: "free" | "pro" | "enterprise";
+    status: "active" | "past_due" | "canceled" | "incomplete";
+    current_period_end: Date;
+  };
 };
 
 export default async function meRoutes(app: FastifyInstance) {
@@ -24,6 +32,7 @@ export default async function meRoutes(app: FastifyInstance) {
         email: currentUser.email,
         name: currentUser.name,
         role: (currentUser.role as UserDocument["role"]) ?? "buyer",
+        billing: serializeBilling(defaultBilling()),
       };
     };
 
@@ -49,6 +58,7 @@ export default async function meRoutes(app: FastifyInstance) {
           email: user.email,
           name: user.name,
           role: user.role,
+          billing: serializeBilling(normalizeBilling(user.billing)),
         },
       };
     } catch {

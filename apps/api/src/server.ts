@@ -16,6 +16,7 @@ import authRoutes from "./routes/auth.js";
 import adminRoutes from "./routes/admin.js";
 import sellerRoutes from "./routes/seller.js";
 import ndaRoutes from "./routes/nda.js";
+import billingRoutes from "./routes/billing.js";
 import { ZodError } from "zod";
 import { env } from "./env.js";
 import meRoutes from "./routes/me.js";
@@ -194,6 +195,7 @@ export const buildServer = () => {
   app.register(sellerRoutes, { prefix: "/api/seller" });
   app.register(meRoutes, { prefix: "/api/me" });
   app.register(ndaRoutes, { prefix: "/api/nda" });
+  app.register(billingRoutes, { prefix: "/api/billing" });
   
   return app;
 };
