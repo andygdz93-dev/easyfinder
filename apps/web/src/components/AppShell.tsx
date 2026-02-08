@@ -1,6 +1,9 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useAuth } from "../lib/auth";
+import { getMe } from "../lib/api";
+import { Billing, isBillingActive } from "../lib/billing";
 
 const navSections = [
   {
@@ -36,7 +39,51 @@ export const AppShell = ({
   children: React.ReactNode;
   className?: string;
 }) => {
-  const { user, clearSession } = useAuth();
+  const { user, token, clearSession } = useAuth();
+  const [billing, setBilling] = useState<Billing | null>(null);
+  const [billingError, setBillingError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isActive = true;
+    if (!token) {
+      setBilling(null);
+      setBillingError(null);
+      return;
+    }
+    getMe()
+      .then((data) => {
+        if (!isActive) return;
+        setBilling(data.billing ?? null);
+        setBillingError(null);
+      })
+      .catch((error) => {
+        if (!isActive) return;
+        setBilling(null);
+        setBillingError(error instanceof Error ? error.message : "Unable to load billing.");
+      });
+    return () => {
+      isActive = false;
+    };
+  }, [token]);
+
+  const billingActive = isBillingActive(billing);
+  const plan = billing?.plan ?? "free";
+  const visibleSections = useMemo(
+    () =>
+      navSections.filter((section) => {
+        if (section.title === "Buyer") {
+          return billingActive;
+        }
+        if (section.title === "Seller") {
+          return billingActive && (plan === "pro" || plan === "enterprise");
+        }
+        if (section.title === "Enterprise") {
+          return billingActive && plan === "enterprise";
+        }
+        return true;
+      }),
+    [billingActive, plan]
+  );
 
   return (
     <div className={`min-h-screen text-slate-100 ${className ?? ""}`}>
@@ -46,8 +93,14 @@ export const AppShell = ({
             Easy Finder AI
           </Link>
           <p className="mt-2 text-xs text-slate-400">Role: {user?.role ?? "demo"}</p>
+          <p className="text-xs text-slate-400">
+            Plan: {plan} {billing?.status ? `(${billing.status})` : ""}
+          </p>
+          {billingError ? (
+            <p className="mt-2 text-xs text-rose-400">{billingError}</p>
+          ) : null}
           <nav className="mt-8 space-y-6">
-            {navSections.map((section) => (
+            {visibleSections.map((section) => (
               <div key={section.title} className="space-y-2">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   {section.title}

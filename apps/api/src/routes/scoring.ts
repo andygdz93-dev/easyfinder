@@ -3,6 +3,7 @@ import { z } from "zod";
 import { nanoid } from "nanoid";
 import { getScoringConfig, setScoringConfig } from "../store.js";
 import { ok, fail } from "../response.js";
+import { requirePlan } from "../middleware/requirePlan.js";
 
 const scoringConfigInput = z.object({
   name: z.string(),
@@ -28,7 +29,10 @@ const scoringConfigInput = z.object({
 export default async function scoringRoutes(app: FastifyInstance) {
   app.get("/", async (request) => ok(request, { config: getScoringConfig() }));
 
-  app.post("/", { preHandler: app.authenticate }, async (request, reply) => {
+  app.post(
+    "/",
+    { preHandler: [app.authenticate, requirePlan(["pro", "enterprise"])] },
+    async (request, reply) => {
     const role = request.user?.role ?? "demo";
     if (role !== "buyer" && role !== "admin") {
       return fail(request, reply, "FORBIDDEN", "Buyer access only.", 403);
@@ -42,5 +46,6 @@ export default async function scoringRoutes(app: FastifyInstance) {
     };
     setScoringConfig(next);
     return ok(request, { config: next });
-  });
+    }
+  );
 }
