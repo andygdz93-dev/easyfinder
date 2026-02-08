@@ -1,17 +1,122 @@
+import { useEffect, useState } from "react";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
+import { createCheckoutSession, getMe } from "../../lib/api";
+import { Billing, isBillingActive } from "../../lib/billing";
 
-export const Upgrade = () => (
-  <div className="space-y-6">
-    <Card>
-      <h2 className="text-xl font-semibold">Upgrade your access</h2>
-      <p className="mt-2 text-sm text-slate-400">
-        Payments are stubbed in v1. Contact sales to activate buyer or seller tiers.
-      </p>
-      <div className="mt-4 flex gap-3">
-        <Button>Contact sales</Button>
-        <Button variant="outline">Request demo</Button>
-      </div>
-    </Card>
-  </div>
-);
+type UpgradeState = "idle" | "loading" | "error";
+
+export const Upgrade = () => {
+  const [billing, setBilling] = useState<Billing | null>(null);
+  const [state, setState] = useState<UpgradeState>("idle");
+  const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isActive = true;
+    getMe()
+      .then((data) => {
+        if (!isActive) return;
+        setBilling(data.billing ?? null);
+      })
+      .catch((error) => {
+        if (!isActive) return;
+        setMessage(error instanceof Error ? error.message : "Unable to load billing.");
+      });
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  const handleCheckout = async (plan: "pro" | "enterprise") => {
+    setState("loading");
+    setMessage(null);
+    try {
+      const { url } = await createCheckoutSession(plan);
+      if (url) {
+        window.location.assign(url);
+        return;
+      }
+      setState("error");
+      setMessage("No checkout URL returned.");
+    } catch (error) {
+      setState("error");
+      setMessage(error instanceof Error ? error.message : "Unable to start checkout.");
+    } finally {
+      setState("idle");
+    }
+  };
+
+  const active = isBillingActive(billing);
+  const plan = billing?.plan ?? "free";
+  const periodEnd = billing?.current_period_end
+    ? new Date(billing.current_period_end).toLocaleDateString()
+    : "n/a";
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <h2 className="text-xl font-semibold">Upgrade your access</h2>
+        <p className="mt-2 text-sm text-slate-400">
+          Manage your subscription and unlock production listings.
+        </p>
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-4 text-sm">
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+              Current plan
+            </p>
+            <p className="mt-2 text-lg font-semibold capitalize">{plan}</p>
+            <p className="mt-1 text-xs text-slate-400">
+              Status: {billing?.status ?? "inactive"}
+            </p>
+            <p className="mt-1 text-xs text-slate-400">
+              Period end: {periodEnd}
+            </p>
+            <p className="mt-3 text-xs text-slate-500">
+              {active
+                ? "Your subscription is active."
+                : "Upgrade to access live listings."}
+            </p>
+          </div>
+          <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-4 text-sm">
+            <p className="text-xs uppercase tracking-[0.2em] text-amber-400">
+              Pro
+            </p>
+            <h3 className="mt-2 text-lg font-semibold">Buyer + seller tools</h3>
+            <ul className="mt-3 list-disc space-y-1 pl-4 text-xs text-slate-400">
+              <li>Up to 50 watchlist items</li>
+              <li>Live listings access</li>
+              <li>Seller insights</li>
+            </ul>
+            <Button
+              className="mt-4 w-full"
+              disabled={state === "loading"}
+              onClick={() => handleCheckout("pro")}
+            >
+              Upgrade to Pro
+            </Button>
+          </div>
+          <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-4 text-sm">
+            <p className="text-xs uppercase tracking-[0.2em] text-emerald-400">
+              Enterprise
+            </p>
+            <h3 className="mt-2 text-lg font-semibold">Full access + sources</h3>
+            <ul className="mt-3 list-disc space-y-1 pl-4 text-xs text-slate-400">
+              <li>Unlimited watchlist items</li>
+              <li>Source management access</li>
+              <li>Enterprise settings</li>
+            </ul>
+            <Button
+              className="mt-4 w-full"
+              variant="outline"
+              disabled={state === "loading"}
+              onClick={() => handleCheckout("enterprise")}
+            >
+              Upgrade to Enterprise
+            </Button>
+          </div>
+        </div>
+        {message ? <p className="mt-4 text-sm text-rose-400">{message}</p> : null}
+      </Card>
+    </div>
+  );
+};

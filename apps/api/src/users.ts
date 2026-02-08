@@ -1,4 +1,5 @@
 import { ObjectId } from "mongodb";
+import { BillingInfo, defaultBilling, normalizeBilling } from "./billing.js";
 import { env } from "./env.js";
 import { getCollection } from "./db.js";
 import { users as demoUsers } from "./store.js";
@@ -14,11 +15,22 @@ export type UserDocument = {
   ndaVersion?: string;
   createdAt?: Date;
   updatedAt?: Date;
+  billing?: BillingInfo;
+};
+
+type UserQuery = {
+  emailLower?: string;
+  _id?: ObjectId;
+  "billing.stripe_customer_id"?: string;
 };
 
 type UsersCollection = {
-  findOne: (query: { emailLower?: string; _id?: ObjectId }) => Promise<UserDocument | null>;
+  findOne: (query: UserQuery) => Promise<UserDocument | null>;
   insertOne: (doc: UserDocument) => Promise<void>;
+  updateOne: (
+    query: UserQuery,
+    update: { $set: Partial<UserDocument> }
+  ) => Promise<void>;
 };
 
 const testUsers = new Map<string, UserDocument>();
@@ -36,6 +48,16 @@ const seedTestUsers = () => {
       name: user.name ?? "Demo User",
       role: user.role === "demo" ? "buyer" : user.role ?? "buyer",
       passwordHash: user.passwordHash ?? "",
+      billing: normalizeBilling(
+        user.billing
+          ? {
+              ...user.billing,
+              current_period_end: user.billing.current_period_end
+                ? new Date(user.billing.current_period_end)
+                : defaultBilling().current_period_end,
+            }
+          : defaultBilling()
+      ),
       createdAt: now,
       updatedAt: now,
     };
@@ -50,6 +72,9 @@ export const getUsersCollection = (): UsersCollection => {
       findOne: (query) => collection.findOne(query),
       insertOne: async (doc) => {
         await collection.insertOne(doc);
+      },
+      updateOne: async (query, update) => {
+        await collection.updateOne(query, update);
       },
     };
   } catch (error) {
@@ -70,10 +95,51 @@ export const getUsersCollection = (): UsersCollection => {
             }
           }
         }
+        if (query["billing.stripe_customer_id"]) {
+          for (const user of testUsers.values()) {
+            if (
+              user.billing?.stripe_customer_id ===
+              query["billing.stripe_customer_id"]
+            ) {
+              return user;
+            }
+          }
+        }
         return null;
       },
       insertOne: async (doc) => {
         testUsers.set(doc.emailLower, doc);
+      },
+      updateOne: async (query, update) => {
+        const existing = await (async () => {
+          if (query._id) {
+            for (const user of testUsers.values()) {
+              if (user._id.equals(query._id)) return user;
+            }
+          }
+          if (query.emailLower) {
+            return testUsers.get(query.emailLower) ?? null;
+          }
+          if (query["billing.stripe_customer_id"]) {
+            for (const user of testUsers.values()) {
+              if (
+                user.billing?.stripe_customer_id ===
+                query["billing.stripe_customer_id"]
+              ) {
+                return user;
+              }
+            }
+          }
+          return null;
+        })();
+
+        if (!existing) return;
+        const next: UserDocument = {
+          ...existing,
+          ...update.$set,
+          updatedAt: new Date(),
+        };
+        testUsers.set(next.emailLower, next);
       },
     };
   }
