@@ -58,6 +58,12 @@ function normalizeApiPath(path: string, baseUrl: string) {
     baseHasApiPrefix = false;
   }
 
+  if (import.meta.env.DEV && baseHasApiPrefix && p.startsWith("/api/")) {
+    console.warn(
+      "[api] base URL already includes /api; stripping duplicate /api from path."
+    );
+  }
+
   // Strip a leading "/api" only if baseUrl already includes "/api"
   if (baseHasApiPrefix) {
     if (p === "/api") return "/";

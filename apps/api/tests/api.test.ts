@@ -67,6 +67,31 @@ describe("API", () => {
     expect(res.headers["access-control-allow-origin"]).toBe(origin);
   });
 
+  it("handles CORS preflight for auth login", async () => {
+    const origin = "https://easyfinder.vercel.app";
+    const res = await supertest(app.server)
+      .options("/api/auth/login")
+      .set("Origin", origin)
+      .set("Access-Control-Request-Method", "POST")
+      .set("Access-Control-Request-Headers", "Authorization, Content-Type");
+    expect([200, 204]).toContain(res.status);
+    expect(res.headers["access-control-allow-origin"]).toBe(origin);
+    expect(res.headers["access-control-allow-methods"]).toContain("POST");
+    expect(res.headers["access-control-allow-headers"]).toContain("Authorization");
+    expect(res.headers["access-control-allow-headers"]).toContain("Content-Type");
+  });
+
+  it("returns CORS headers for auth login POST", async () => {
+    const origin = "https://easyfinder.vercel.app";
+    const res = await supertest(app.server)
+      .post("/api/auth/login")
+      .set("Origin", origin)
+      .send({ email: "buyer@easyfinder.ai", password: "BuyerPass123!" });
+    expect(res.status).toBe(200);
+    expect(res.headers["access-control-allow-origin"]).toBe(origin);
+    expect(res.body.data.token).toBeTruthy();
+  });
+
   it("demo cannot POST scoring configs", async () => {
     const res = await supertest(app.server)
       .post("/api/scoring-configs")
