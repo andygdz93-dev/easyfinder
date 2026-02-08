@@ -6,6 +6,7 @@ import {
 } from "@easyfinderai/shared";
 import { requireApiBaseUrl } from "../env";
 import { clearStoredSession, getStoredAuthToken } from "./auth";
+import { Billing } from "./billing";
 
 type ApiEnvelope<T> = {
   data?: T;
@@ -22,6 +23,14 @@ export type NdaStatus = {
   accepted: boolean;
   acceptedAt?: string;
   ndaVersion?: string;
+};
+
+export type MeResponse = {
+  id: string;
+  email: string;
+  name: string;
+  role: "demo" | "buyer" | "seller" | "admin";
+  billing?: Billing;
 };
 
 export class ApiError extends Error {
@@ -235,6 +244,14 @@ export const acceptNda = () =>
     method: "POST",
     body: JSON.stringify({ accepted: true }),
     timeoutMs: 10000,
+  });
+
+export const getMe = () => apiRequest<MeResponse>("/me");
+
+export const createCheckoutSession = (plan: "pro" | "enterprise") =>
+  apiRequest<{ url: string }>("/billing/create-checkout-session", {
+    method: "POST",
+    body: JSON.stringify({ plan }),
   });
 
 // Legacy helper for internal usage
