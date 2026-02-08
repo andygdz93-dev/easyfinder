@@ -1,5 +1,6 @@
 import { Navigate, Outlet, Route, Routes, useParams } from "react-router-dom";
 import { RequireAuth } from "./components/RequireAuth";
+import { RequireEnterprise } from "./components/RequireEnterprise";
 import { RequireLiveNda } from "./components/RequireLiveNda";
 import { Landing } from "./pages/Landing";
 import { Listings } from "./pages/app/Listings";
@@ -7,7 +8,11 @@ import { ListingDetail } from "./pages/app/ListingDetail";
 import { Watchlist } from "./pages/app/Watchlist";
 import { AdminSources } from "./pages/app/AdminSources";
 import { ScoringConfigs } from "./pages/app/ScoringConfigs";
-import { SellerDashboard } from "./pages/app/SellerDashboard";
+import { Offers } from "./pages/app/Offers";
+import { SellerListings } from "./pages/app/SellerListings";
+import { SellerAdd } from "./pages/app/SellerAdd";
+import { SellerUpload } from "./pages/app/SellerUpload";
+import { Settings } from "./pages/app/Settings";
 import { Upgrade } from "./pages/app/Upgrade";
 import { Nda } from "./pages/app/Nda";
 import { Login } from "./pages/Login";
@@ -37,7 +42,7 @@ export default function App() {
       <Route path="/watchlist" element={<Navigate to="/app/watchlist" replace />} />
       <Route path="/admin/sources" element={<Navigate to="/app/admin/sources" replace />} />
       <Route path="/scoring" element={<Navigate to="/app/scoring" replace />} />
-      <Route path="/seller" element={<Navigate to="/app/seller" replace />} />
+      <Route path="/seller" element={<Navigate to="/app/seller/listings" replace />} />
       <Route path="/upgrade" element={<Navigate to="/app/upgrade" replace />} />
       <Route path="/nda" element={<Navigate to="/app/nda" replace />} />
 
@@ -59,7 +64,19 @@ export default function App() {
         <Route path="watchlist" element={<Watchlist />} />
         <Route path="admin/sources" element={<AdminSources />} />
         <Route path="scoring" element={<ScoringConfigs />} />
-        <Route path="seller" element={<SellerDashboard />} />
+        <Route path="offers" element={<Offers />} />
+        <Route path="seller" element={<Navigate to="seller/listings" replace />} />
+        <Route path="seller/listings" element={<SellerListings />} />
+        <Route path="seller/add" element={<SellerAdd />} />
+        <Route path="seller/upload" element={<SellerUpload />} />
+        <Route
+          path="settings"
+          element={
+            <RequireEnterprise>
+              <Settings />
+            </RequireEnterprise>
+          }
+        />
         <Route path="upgrade" element={<Upgrade />} />
         <Route path="nda" element={<Nda />} />
       </Route>

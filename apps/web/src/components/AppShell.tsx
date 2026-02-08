@@ -2,12 +2,31 @@ import { Link, NavLink } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useAuth } from "../lib/auth";
 
-const navItems = [
-  { to: "/app/listings", label: "Listings" },
-  { to: "/app/scoring", label: "Scoring" },
-  { to: "/app/seller", label: "Seller" },
-  { to: "/app/admin/sources", label: "Admin" },
-  { to: "/app/upgrade", label: "Upgrade" },
+const navSections = [
+  {
+    title: "Buyer",
+    items: [
+      { to: "/app/listings", label: "Listings" },
+      { to: "/app/scoring", label: "Scoring" },
+      { to: "/app/offers", label: "Offers" },
+    ],
+  },
+  {
+    title: "Seller",
+    items: [
+      { to: "/app/seller/listings", label: "Listings" },
+      { to: "/app/seller/add", label: "Add listing" },
+      { to: "/app/seller/upload", label: "Upload" },
+    ],
+  },
+  {
+    title: "Enterprise",
+    items: [{ to: "/app/settings", label: "Settings" }],
+  },
+  {
+    title: "Upgrade",
+    items: [{ to: "/app/upgrade", label: "Upgrade" }],
+  },
 ];
 
 export const AppShell = ({
@@ -27,19 +46,28 @@ export const AppShell = ({
             Easy Finder AI
           </Link>
           <p className="mt-2 text-xs text-slate-400">Role: {user?.role ?? "demo"}</p>
-          <nav className="mt-8 space-y-2">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  `block rounded-xl px-3 py-2 text-sm ${
-                    isActive ? "bg-slate-800 text-white" : "text-slate-400 hover:text-white"
-                  }`
-                }
-              >
-                {item.label}
-              </NavLink>
+          <nav className="mt-8 space-y-6">
+            {navSections.map((section) => (
+              <div key={section.title} className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  {section.title}
+                </p>
+                <div className="space-y-2">
+                  {section.items.map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      className={({ isActive }) =>
+                        `block rounded-xl px-3 py-2 text-sm ${
+                          isActive ? "bg-slate-800 text-white" : "text-slate-400 hover:text-white"
+                        }`
+                      }
+                    >
+                      {item.label}
+                    </NavLink>
+                  ))}
+                </div>
+              </div>
             ))}
           </nav>
           {user ? (
