@@ -171,10 +171,10 @@ export const removeFromWatchlist = (listingId: string) =>
     method: "DELETE",
   });
 
-export const getNdaStatus = () => apiRequest<NdaStatus>("/nda/status");
+export const getNdaStatus = () => apiFetch<NdaStatus>("/api/nda/status");
 
 export const acceptNda = () =>
-  apiRequest<NdaStatus>("/nda/accept", {
+  apiFetch<NdaStatus>("/api/nda/accept", {
     method: "POST",
     body: JSON.stringify({ accepted: true }),
   });
