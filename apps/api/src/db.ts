@@ -19,6 +19,7 @@ export const connectToDatabase = async () => {
       .then(async (connected: MongoClient) => {
         db = connected.db(env.DB_NAME);
         await db.collection("users").createIndex({ emailLower: 1 }, { unique: true });
+        await db.collection("users").createIndex({ "billing.stripe_customer_id": 1 });
         return db;
       })
       .catch((error: unknown) => {

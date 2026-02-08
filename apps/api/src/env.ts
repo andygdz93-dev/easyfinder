@@ -38,6 +38,12 @@ const EnvSchema = z.object({
   // Mongo (required)
   MONGO_URL: z.string().min(1, "MONGO_URL is required"),
   DB_NAME: z.string().min(1, "DB_NAME is required"),
+
+  // Stripe (required)
+  STRIPE_SECRET_KEY: z.string().min(1, "STRIPE_SECRET_KEY is required"),
+  STRIPE_WEBHOOK_SECRET: z.string().min(1, "STRIPE_WEBHOOK_SECRET is required"),
+  STRIPE_PRICE_ID_PRO: z.string().min(1, "STRIPE_PRICE_ID_PRO is required"),
+  STRIPE_PRICE_ID_ENTERPRISE: z.string().min(1, "STRIPE_PRICE_ID_ENTERPRISE is required"),
 });
 
 const testDefaults =
