@@ -9,24 +9,44 @@ export const demoUsers: User[] = [
     email: "demo@easyfinder.ai",
     name: "Demo User",
     role: "demo",
+    billing: {
+      plan: "free",
+      status: "canceled",
+      current_period_end: new Date(0).toISOString(),
+    },
   },
   {
     id: "buyer-user",
     email: "buyer@easyfinder.ai",
     name: "Buyer User",
     role: "buyer",
+    billing: {
+      plan: "free",
+      status: "canceled",
+      current_period_end: new Date(0).toISOString(),
+    },
   },
   {
     id: "seller-user",
     email: "seller@easyfinder.ai",
     name: "Seller User",
     role: "seller",
+    billing: {
+      plan: "free",
+      status: "canceled",
+      current_period_end: new Date(0).toISOString(),
+    },
   },
   {
     id: "admin-user",
     email: "admin@easyfinder.ai",
     name: "Admin User",
     role: "admin",
+    billing: {
+      plan: "free",
+      status: "canceled",
+      current_period_end: new Date(0).toISOString(),
+    },
   },
 ];
 

@@ -4,6 +4,7 @@ import helmet from "@fastify/helmet";
 import jwt from "@fastify/jwt";
 import rateLimit from "@fastify/rate-limit";
 import multipart from "@fastify/multipart";
+import rawBody from "fastify-raw-body";
 import { nanoid } from "nanoid";
 import { config } from "./config.js";
 import { AuthUser, getRoleFromRequest } from "./auth.js";
@@ -16,6 +17,7 @@ import authRoutes from "./routes/auth.js";
 import adminRoutes from "./routes/admin.js";
 import sellerRoutes from "./routes/seller.js";
 import ndaRoutes from "./routes/nda.js";
+import billingRoutes from "./routes/billing.js";
 import { ZodError } from "zod";
 import { env } from "./env.js";
 import meRoutes from "./routes/me.js";
@@ -134,6 +136,13 @@ export const buildServer = () => {
     },
   });
 
+  app.register(rawBody, {
+    field: "rawBody",
+    global: false,
+    encoding: "utf8",
+    runFirst: true,
+  });
+
   // Request ID + optional auth
   app.addHook("onRequest", async (request, reply) => {
     const requestId = nanoid();
@@ -194,6 +203,7 @@ export const buildServer = () => {
   app.register(sellerRoutes, { prefix: "/api/seller" });
   app.register(meRoutes, { prefix: "/api/me" });
   app.register(ndaRoutes, { prefix: "/api/nda" });
+  app.register(billingRoutes, { prefix: "/api/billing" });
   
   return app;
 };
