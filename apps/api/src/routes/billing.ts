@@ -3,7 +3,7 @@ import { z } from "zod";
 import { ObjectId } from "mongodb";
 import type Stripe from "stripe";
 import { stripe } from "../stripe.js";
-import rawBody from "@fastify/raw-body";
+import rawBody from "fastify-raw-body";
 import { env } from "../env.js";
 import { getUsersCollection } from "../users.js";
 import { fail, ok } from "../response.js";
