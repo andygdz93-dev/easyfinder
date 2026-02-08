@@ -9,8 +9,17 @@ const readEnv = (key: string) => {
   return trimmed.length ? trimmed : null;
 };
 
+let didLogApiBase = false;
+
 export const getApiBaseUrl = (): string => {
-  return readEnv("VITE_API_URL") ?? readEnv("VITE_API_BASE_URL") ?? "http://127.0.0.1:8080";
+  const configured = readEnv("VITE_API_BASE_URL") ?? readEnv("VITE_API_URL");
+  const isProd = (import.meta as any).env?.PROD ?? (import.meta as any).env?.MODE === "production";
+  const resolved = configured ?? (isProd ? "https://easyfinder.fly.dev" : "http://127.0.0.1:8080");
+  if (!isProd && !didLogApiBase) {
+    console.debug(`[api] base url: ${resolved}`);
+    didLogApiBase = true;
+  }
+  return resolved;
 };
 
 export const requireApiBaseUrl = (): string => {
