@@ -2,6 +2,8 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import supertest from "supertest";
 import { buildServer } from "../src/server.js";
 
+process.env.VERCEL_PREVIEW_PATTERN = process.env.VERCEL_PREVIEW_PATTERN ?? "1";
+
 const app = buildServer();
 
 beforeAll(async () => {

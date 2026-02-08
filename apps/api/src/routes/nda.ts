@@ -28,11 +28,8 @@ export default async function ndaRoutes(app: FastifyInstance) {
       return fail(request, reply, "NOT_FOUND", "User not found.", 404);
     }
 
-    const acceptedAt = user.ndaAcceptedAt ? user.ndaAcceptedAt.toISOString() : undefined;
     return ok(request, {
       accepted: Boolean(user.ndaAcceptedAt),
-      acceptedAt,
-      ndaVersion: user.ndaVersion,
     });
   });
 
@@ -59,10 +56,6 @@ export default async function ndaRoutes(app: FastifyInstance) {
       return fail(request, reply, "NOT_FOUND", "User not found.", 404);
     }
 
-    return ok(request, {
-      accepted: true,
-      acceptedAt: now.toISOString(),
-      ndaVersion: "v1",
-    });
+    return ok(request, { accepted: true });
   });
 }
