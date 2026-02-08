@@ -26,6 +26,7 @@
     "bcryptjs": "^2.4.3",
     "csv-parse": "^5.5.6",
     "dotenv": "^16.4.5",
+    "fastify-raw-body": "^4.2.0",
     "fastify": "^4.28.1",
     "mongodb": "^6.13.1",
     "nanoid": "^5.0.7",
