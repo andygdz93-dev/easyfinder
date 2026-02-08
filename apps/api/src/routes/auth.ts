@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { ObjectId } from "mongodb";
 import { fail, ok } from "../response.js";
 import { getUsersCollection, UserDocument } from "../users.js";
+import { defaultBilling } from "../billing.js";
 
 const toUserDto = (user: UserDocument) => ({
   id: user._id.toHexString(),
@@ -44,6 +45,7 @@ export default async function authRoutes(app: FastifyInstance) {
       name: payload.name ?? "New User",
       role: "buyer",
       passwordHash,
+      billing: defaultBilling(),
       createdAt: now,
       updatedAt: now,
     };

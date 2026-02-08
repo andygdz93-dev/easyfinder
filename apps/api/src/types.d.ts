@@ -1,6 +1,7 @@
 import "fastify";
 import "@fastify/jwt";
 import type { FastifyReply } from "fastify";
+import type { BillingInfo } from "./billing.js";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -11,6 +12,8 @@ declare module "fastify" {
       name?: string;
       role: "demo" | "buyer" | "seller" | "admin";
     };
+    billing?: BillingInfo;
+    rawBody?: string;
   }
 
   interface FastifyInstance {

@@ -4,17 +4,21 @@ import { env } from "../env.js";
 import { demoListings } from "@easyfinderai/shared";
 import { ok, fail } from "../response.js";
 import { WatchlistItem } from "@easyfinderai/shared";
+import { requirePlan } from "../middleware/requirePlan.js";
 
 const resolveUserId = (request: FastifyRequest) => request.user?.id ?? demoUserId;
 
 export default async function watchlistRoutes(app: FastifyInstance) {
-  app.get("/", async (request) => {
+  app.get("/", { preHandler: [app.authenticate, requirePlan(["pro", "enterprise"])] }, async (request) => {
     const userId = resolveUserId(request);
     const watchlist = watchlists.get(userId) ?? new Map<string, WatchlistItem>();
     return ok(request, { items: Array.from(watchlist.values()) });
   });
 
-  app.post<{ Params: { listingId: string } }>("/:listingId", async (request, reply) => {
+  app.post<{ Params: { listingId: string } }>(
+    "/:listingId",
+    { preHandler: [app.authenticate, requirePlan(["pro", "enterprise"])] },
+    async (request, reply) => {
     const userId = resolveUserId(request);
     const { listingId } = request.params;
 
@@ -32,6 +36,16 @@ export default async function watchlistRoutes(app: FastifyInstance) {
       return ok(request, { item: existing });
     }
 
+    if (request.billing?.plan === "pro" && watchlist.size >= 50) {
+      return fail(
+        request,
+        reply,
+        "PLAN_LIMIT",
+        "Pro plan watchlist limit reached.",
+        402
+      );
+    }
+
     const item: WatchlistItem = {
       id: `${userId}:${listingId}`,
       userId,
@@ -41,9 +55,13 @@ export default async function watchlistRoutes(app: FastifyInstance) {
     watchlist.set(listingId, item);
     watchlists.set(userId, watchlist);
     return ok(request, { item });
-  });
+    }
+  );
 
-  app.delete<{ Params: { listingId: string } }>("/:listingId", async (request, reply) => {
+  app.delete<{ Params: { listingId: string } }>(
+    "/:listingId",
+    { preHandler: [app.authenticate, requirePlan(["pro", "enterprise"])] },
+    async (request, reply) => {
     const userId = resolveUserId(request);
     const { listingId } = request.params;
 
@@ -55,5 +73,6 @@ export default async function watchlistRoutes(app: FastifyInstance) {
     watchlist.delete(listingId);
     watchlists.set(userId, watchlist);
     return ok(request, { removed: true });
-  });
+    }
+  );
 }

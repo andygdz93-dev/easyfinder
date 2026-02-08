@@ -4,6 +4,7 @@ import { parse } from "csv-parse/sync";
 import { listings, sourceHealth } from "../store.js";
 import { Listing } from "@easyfinderai/shared";
 import { fail, ok } from "../response.js";
+import { requirePlan } from "../middleware/requirePlan.js";
 
 const adminOnly = new Set(["admin"]);
 const fallbackImages = [
@@ -26,7 +27,10 @@ const csvSchema = z.object({
 });
 
 export default async function adminRoutes(app: FastifyInstance) {
-  app.post("/ingest/csv", { preHandler: app.authenticate }, async (request, reply) => {
+  app.post(
+    "/ingest/csv",
+    { preHandler: [app.authenticate, requirePlan(["enterprise"])] },
+    async (request, reply) => {
     if (!adminOnly.has(request.user.role)) {
       return fail(request, reply, "FORBIDDEN", "Admin access only.", 403);
     }
@@ -62,9 +66,13 @@ export default async function adminRoutes(app: FastifyInstance) {
     listings.push(...normalized);
 
     return ok(request, { ingested: normalized.length });
-  });
+    }
+  );
 
-  app.post("/sources/sync", { preHandler: app.authenticate }, async (request, reply) => {
+  app.post(
+    "/sources/sync",
+    { preHandler: [app.authenticate, requirePlan(["enterprise"])] },
+    async (request, reply) => {
     if (!adminOnly.has(request.user.role)) {
       return fail(request, reply, "FORBIDDEN", "Admin access only.", 403);
     }
@@ -90,9 +98,13 @@ export default async function adminRoutes(app: FastifyInstance) {
     });
 
     return ok(request, { status: "sync_started", syncedAt: now });
-  });
+    }
+  );
 
-  app.get("/sources", { preHandler: app.authenticate }, async (request, reply) => {
+  app.get(
+    "/sources",
+    { preHandler: [app.authenticate, requirePlan(["enterprise"])] },
+    async (request, reply) => {
     if (!adminOnly.has(request.user.role)) {
       return fail(request, reply, "FORBIDDEN", "Admin access only.", 403);
     }
@@ -103,5 +115,6 @@ export default async function adminRoutes(app: FastifyInstance) {
     }));
 
     return ok(request, { sources });
-  });
+    }
+  );
 }
