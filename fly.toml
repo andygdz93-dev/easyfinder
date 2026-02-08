@@ -14,3 +14,11 @@ primary_region = "lax"
   auto_start_machines = true
   min_machines_running = 1
   processes = ["app"]
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "10s"
+    method = "GET"
+    path = "/health"
+    protocol = "http"
