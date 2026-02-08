@@ -26,7 +26,7 @@ describe("api env handling", () => {
 
     const apiModule = await import("../src/lib/api");
 
-    await apiModule.apiFetch("/api/auth/login", { method: "POST" });
+    await apiModule.apiFetch("/auth/login", { method: "POST" });
 
     expect(fetchMock).toHaveBeenCalledWith(
       "https://example.com/api/auth/login",

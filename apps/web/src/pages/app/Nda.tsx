@@ -19,7 +19,7 @@ using the platform.`;
 export const Nda = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setStatus } = useNda();
+  const { setStatus, setChecked } = useNda();
   const [isChecked, setIsChecked] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +35,7 @@ export const Nda = () => {
     try {
       const data = await acceptNda();
       setStatus(data);
+      setChecked(true);
       navigate(nextPath, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to accept NDA.");
