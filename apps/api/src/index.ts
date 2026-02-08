@@ -11,7 +11,7 @@ await connectToDatabase();
 
 const app = await buildServer();
 const host = "0.0.0.0";
-const port = Number(config.port ?? 8080);
+const port = Number(process.env.PORT ?? config.port ?? 8080);
 
 app.log.info({ host, port }, "Starting EasyFinder API");
 
