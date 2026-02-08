@@ -1,104 +1,167 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { demoListings, defaultScoringConfig, scoreListing } from "@easyfinderai/shared";
+import type { ScoringConfig } from "@easyfinderai/shared";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
-import { Input } from "../../components/ui/input";
-import { apiFetch } from "../../lib/api";
+import { apiFetch, getScoringConfig } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
+
+const weightLabels: Record<keyof ScoringConfig["weights"], string> = {
+  price: "Price (lower is better)",
+  hours: "Hours (lower is better)",
+  year: "Year (newer is better)",
+  location: "Preferred state bonus",
+  condition: "Condition rating",
+  completeness: "Data completeness",
+};
+
+const isEnterpriseUser = (role?: string) => role === "admin";
 
 export const ScoringConfigs = () => {
   const { token, user } = useAuth();
   const queryClient = useQueryClient();
-  const [name, setName] = useState("");
-  const [maxHours, setMaxHours] = useState(8000);
-  const [maxPrice, setMaxPrice] = useState(200000);
+  const [draftConfig, setDraftConfig] = useState<ScoringConfig | null>(null);
 
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["scoring"],
-    queryFn: () =>
-      apiFetch<{ configs: any[] }>("/api/scoring-configs", token ? {
-        headers: { Authorization: `Bearer ${token}` },
-      } : undefined),
+    queryFn: () => getScoringConfig(),
   });
 
-  const createConfig = useMutation({
-    mutationFn: () =>
-      apiFetch<{ config: any }>("/api/scoring-configs", {
+  useEffect(() => {
+    if (data?.config) {
+      setDraftConfig(data.config);
+    }
+  }, [data]);
+
+  const updateConfig = useMutation({
+    mutationFn: (payload: ScoringConfig) =>
+      apiFetch<{ config: ScoringConfig }>("/api/scoring-configs", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          name,
-          weights: { hours: 0.35, price: 0.35, state: 0.3 },
-          preferredStates: ["CA", "AZ", "TX", "IA"],
-          maxHours,
-          maxPrice,
-        }),
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        body: JSON.stringify(payload),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["scoring"] });
-      setName("");
     },
   });
 
-  const activateConfig = useMutation({
-    mutationFn: (id: string) =>
-      apiFetch(`/api/scoring-configs/${id}/activate`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["scoring"] }),
-  });
+  const config = draftConfig ?? defaultScoringConfig;
+  const enterprise = isEnterpriseUser(user?.role);
 
-  if (!token || !user || user.role === "demo") {
-    return (
-      <Card>
-        <h2 className="text-xl font-semibold">Scoring configs</h2>
-        <p className="mt-2 text-sm text-slate-400">
-          Upgrade to buyer tier to create and activate scoring configurations.
-        </p>
-      </Card>
+  const sampleListing = demoListings[0];
+  const sampleScore = useMemo(
+    () => scoreListing(sampleListing, config),
+    [config, sampleListing]
+  );
+
+  const totalWeight = Object.values(config.weights).reduce(
+    (sum, value) => sum + value,
+    0
+  );
+
+  const handleWeightChange = (key: keyof ScoringConfig["weights"], value: number) => {
+    setDraftConfig((prev) =>
+      prev
+        ? {
+            ...prev,
+            weights: {
+              ...prev.weights,
+              [key]: value / 100,
+            },
+          }
+        : prev
     );
+  };
+
+  if (isLoading && !draftConfig) {
+    return <Card className="p-6 text-sm text-slate-400">Loading scoring config...</Card>;
   }
 
   return (
     <div className="space-y-6">
-      <Card className="space-y-4">
-        <h2 className="text-xl font-semibold">Create scoring config</h2>
-        <div className="grid gap-4 md:grid-cols-2">
-          <Input placeholder="Config name" value={name} onChange={(e) => setName(e.target.value)} />
-          <Input
-            type="number"
-            placeholder="Max hours"
-            value={maxHours}
-            onChange={(e) => setMaxHours(Number(e.target.value))}
-          />
-          <Input
-            type="number"
-            placeholder="Max price"
-            value={maxPrice}
-            onChange={(e) => setMaxPrice(Number(e.target.value))}
-          />
+      <Card className="space-y-3">
+        <div>
+          <h2 className="text-xl font-semibold">Scoring overview</h2>
+          <p className="text-sm text-slate-400">
+            Configure weights and see how the scoring engine evaluates a sample listing.
+          </p>
         </div>
-        <Button onClick={() => createConfig.mutate()} disabled={!name}>
-          Save config
-        </Button>
+        <div className="grid gap-4 md:grid-cols-2">
+          {Object.entries(weightLabels).map(([key, label]) => {
+            const weightKey = key as keyof ScoringConfig["weights"];
+            const value = config.weights[weightKey] ?? 0;
+            return (
+              <div key={key} className="space-y-2">
+                <div className="flex items-center justify-between text-sm text-slate-300">
+                  <span>{label}</span>
+                  <span>{(value * 100).toFixed(0)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={5}
+                  value={Math.round(value * 100)}
+                  onChange={(event) => handleWeightChange(weightKey, Number(event.target.value))}
+                  disabled={!enterprise}
+                  className="w-full accent-amber-400"
+                />
+              </div>
+            );
+          })}
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+          <span>Total weight: {(totalWeight * 100).toFixed(0)}%</span>
+          {!enterprise && (
+            <span className="text-amber-200">
+              Upgrade to enterprise to adjust scoring weights.
+            </span>
+          )}
+        </div>
+        {enterprise && (
+          <Button
+            onClick={() => updateConfig.mutate(config)}
+            disabled={updateConfig.isPending}
+          >
+            {updateConfig.isPending ? "Saving..." : "Save weights"}
+          </Button>
+        )}
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {data?.configs.map((config) => (
-          <Card key={config.id} className="space-y-3">
-            <h3 className="text-lg font-semibold">{config.name}</h3>
-            <p className="text-xs text-slate-400">Preferred states: {config.preferredStates.join(", ")}</p>
-            <p className="text-xs text-slate-400">Max hours: {config.maxHours}</p>
-            <p className="text-xs text-slate-400">Max price: ${config.maxPrice}</p>
-            <Button
-              variant={config.active ? "secondary" : "outline"}
-              onClick={() => activateConfig.mutate(config.id)}
-            >
-              {config.active ? "Active" : "Activate"}
-            </Button>
-          </Card>
-        ))}
+        <Card className="space-y-3">
+          <h3 className="text-lg font-semibold">Sample listing breakdown</h3>
+          <div className="flex items-center justify-between text-sm text-slate-300">
+            <span>Total score</span>
+            <span className="rounded-full bg-amber-400 px-3 py-1 text-xs font-semibold text-black">
+              {sampleScore.total}
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-sm text-slate-300">
+            <span>Confidence</span>
+            <span title="Confidence reflects data completeness.">
+              {(sampleScore.confidence * 100).toFixed(0)}%
+            </span>
+          </div>
+          <ul className="space-y-2 text-sm text-slate-300">
+            {Object.entries(sampleScore.breakdown).map(([key, value]) => (
+              <li key={key} className="flex items-center justify-between">
+                <span className="capitalize">{key}</span>
+                <span>{value}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+
+        <Card className="space-y-3">
+          <h3 className="text-lg font-semibold">Why this score</h3>
+          <ul className="list-disc space-y-2 pl-5 text-sm text-slate-300">
+            {sampleScore.reasons.map((reason) => (
+              <li key={reason}>{reason}</li>
+            ))}
+          </ul>
+        </Card>
       </div>
     </div>
   );

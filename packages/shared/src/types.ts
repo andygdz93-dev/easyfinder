@@ -19,6 +19,9 @@ export const listingSchema = z.object({
   price: z.number(),
   hours: z.number(),
   operable: z.boolean(),
+  is_operable: z.boolean().optional(),
+  year: z.number().optional(),
+  condition: z.number().optional(),
   category: z.string(),
   imageUrl: urlOrPath.optional(),
   images: z
@@ -38,26 +41,39 @@ export const scoringConfigSchema = z.object({
   id: z.string(),
   name: z.string(),
   weights: z.object({
-    hours: z.number(),
     price: z.number(),
-    state: z.number(),
+    hours: z.number(),
+    year: z.number(),
+    location: z.number(),
+    condition: z.number(),
+    completeness: z.number(),
   }),
   preferredStates: z.array(z.string()),
+  minHours: z.number(),
   maxHours: z.number(),
+  minPrice: z.number(),
   maxPrice: z.number(),
+  minYear: z.number(),
+  maxYear: z.number(),
+  minCondition: z.number(),
+  maxCondition: z.number(),
   active: z.boolean().default(false),
 });
 export type ScoringConfig = z.infer<typeof scoringConfigSchema>;
 
 export const scoreBreakdownSchema = z.object({
   total: z.number(),
-  components: z.object({
-    operable: z.number(),
-    hours: z.number(),
+  breakdown: z.object({
     price: z.number(),
-    state: z.number(),
+    hours: z.number(),
+    year: z.number(),
+    location: z.number(),
+    condition: z.number(),
+    completeness: z.number(),
   }),
-  rationale: z.array(z.string()),
+  reasons: z.array(z.string()),
+  confidence: z.number(),
+  disqualified: z.boolean(),
 });
 export type ScoreBreakdown = z.infer<typeof scoreBreakdownSchema>;
 
