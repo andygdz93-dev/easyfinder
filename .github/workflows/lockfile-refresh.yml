@@ -3,49 +3,53 @@ name: Refresh pnpm lockfile
 on:
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   refresh-lockfile:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: write
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           persist-credentials: true
           fetch-depth: 0
 
-      - name: Setup Node + pnpm
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Use pnpm 9.6.0
         run: |
-          corepack enable
           corepack prepare pnpm@9.6.0 --activate
           pnpm -v
 
       - name: Log branch
-        run: echo "Branch: ${{ github.ref_name }}"
+        run: echo "Branch: ${GITHUB_REF_NAME}"
 
       - name: Install (update lockfile)
         run: pnpm install --no-frozen-lockfile
 
-      - name: Verify frozen install
+      - name: Install (verify frozen lockfile)
         run: pnpm install --frozen-lockfile
 
-      - name: Check for lockfile changes
-        id: changes
+      - name: Configure git
         run: |
-          if git diff --quiet pnpm-lock.yaml; then
-            echo "changed=false" >> $GITHUB_OUTPUT
-          else
-            echo "changed=true" >> $GITHUB_OUTPUT
-          fi
+          git config user.name "easyfinder-bot"
+          git config user.email "easyfinder-bot@users.noreply.github.com"
 
       - name: Commit lockfile
-        if: steps.changes.outputs.changed == 'true'
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
           git add pnpm-lock.yaml
+          if git diff --cached --quiet; then
+            echo "pnpm-lock.yaml changed: false"
+            exit 0
+          fi
+          echo "pnpm-lock.yaml changed: true"
           git commit -m "chore: refresh pnpm lockfile"
           git push
