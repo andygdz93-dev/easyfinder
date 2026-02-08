@@ -7,13 +7,22 @@ import { ok, fail } from "../response.js";
 const scoringConfigInput = z.object({
   name: z.string(),
   weights: z.object({
-    hours: z.number(),
     price: z.number(),
-    state: z.number(),
+    hours: z.number(),
+    year: z.number(),
+    location: z.number(),
+    condition: z.number(),
+    completeness: z.number(),
   }),
   preferredStates: z.array(z.string()),
+  minHours: z.number(),
   maxHours: z.number(),
+  minPrice: z.number(),
   maxPrice: z.number(),
+  minYear: z.number(),
+  maxYear: z.number(),
+  minCondition: z.number(),
+  maxCondition: z.number(),
 });
 
 export default async function scoringRoutes(app: FastifyInstance) {

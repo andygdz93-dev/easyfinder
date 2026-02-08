@@ -47,8 +47,20 @@ describe("ListingDetail", () => {
       source: "API",
       createdAt: "2024-01-01T00:00:00.000Z",
       totalScore: 88,
-      scores: { operable: 25, hours: 21, price: 18, state: 24 },
-      rationale: ["Strong regional demand", "Competitive pricing"],
+      score: {
+        total: 88,
+        breakdown: {
+          price: 82,
+          hours: 78,
+          year: 80,
+          location: 100,
+          condition: 76,
+          completeness: 90,
+        },
+        reasons: ["Strong regional demand", "Competitive pricing"],
+        confidence: 0.9,
+        disqualified: false,
+      },
     });
     getWatchlistMock.mockResolvedValue({ items: [] });
     addToWatchlistMock.mockResolvedValue({ item: { id: "1", listingId: "listing-42" } });
@@ -72,7 +84,7 @@ describe("ListingDetail", () => {
 
     expect(await screen.findByText("API Detail Listing")).toBeInTheDocument();
     expect(screen.getByText(/Score 88/i)).toBeInTheDocument();
-    expect(screen.getByText("operable", { exact: false })).toBeInTheDocument();
+    expect(screen.getByText("price", { exact: false })).toBeInTheDocument();
     expect(screen.getByText(/Strong regional demand/i)).toBeInTheDocument();
     expect(screen.getByAltText("API Detail Listing")).toBeInTheDocument();
   });

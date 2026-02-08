@@ -376,10 +376,30 @@ const demoListingsBase: Omit<Listing, "images" | "imageUrl">[] = [
   },
 ];
 
+const inferYearFromTitle = (title: string) => {
+  const match = title.match(/\b(19|20)\d{2}\b/);
+  return match ? Number(match[0]) : undefined;
+};
+
+const inferConditionFromHours = (hours: number) => {
+  if (!Number.isFinite(hours)) return undefined;
+  if (hours <= 1000) return 4.7;
+  if (hours <= 2000) return 4.3;
+  if (hours <= 4000) return 3.8;
+  if (hours <= 6000) return 3.3;
+  if (hours <= 8000) return 2.8;
+  return 2.3;
+};
+
 export const demoListings: Listing[] = demoListingsBase.map((listing) => {
   const images = getCategoryImages(listing.category);
+  const inferredYear = listing.year ?? inferYearFromTitle(listing.title);
+  const inferredCondition =
+    listing.condition ?? inferConditionFromHours(listing.hours);
   return {
     ...listing,
+    year: inferredYear,
+    condition: inferredCondition,
     images,
     imageUrl: images[0],
   };

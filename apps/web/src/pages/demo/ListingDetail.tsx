@@ -33,8 +33,9 @@ export default function DemoListingDetail() {
   }, [listing.id, listing.imageUrl, listing.images]);
 
   const breakdown = scoreListing(listing, defaultScoringConfig);
-  const components = breakdown?.components ?? {};
-  const rationale = breakdown?.rationale ?? [];
+  const components = breakdown?.breakdown ?? {};
+  const rationale = breakdown?.reasons ?? [];
+  const confidence = breakdown?.confidence ?? 0;
   const listingId = listing.id ?? "";
   const isSaved = listingId ? watchlist.isInWatchlist(listingId) : false;
   const displayPrice = listing.price ? `$${listing.price.toLocaleString()}` : "—";
@@ -80,6 +81,15 @@ export default function DemoListingDetail() {
                 </span>
               </div>
               <div className="flex items-center justify-between">
+                <span className="text-slate-600">Confidence</span>
+                <span
+                  className="text-xs font-semibold text-slate-800"
+                  title="Confidence reflects data completeness."
+                >
+                  {(confidence * 100).toFixed(0)}%
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
                 <span className="text-slate-600">Price</span>
                 <span>{displayPrice}</span>
               </div>
@@ -90,6 +100,14 @@ export default function DemoListingDetail() {
               <div className="flex items-center justify-between">
                 <span className="text-slate-600">State</span>
                 <span>{listing.state ?? "—"}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600">Year</span>
+                <span>{listing.year ?? "—"}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600">Condition</span>
+                <span>{listing.condition ?? "—"}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-600">Source</span>
@@ -120,26 +138,34 @@ export default function DemoListingDetail() {
           <div>
             <h2 className="text-lg font-semibold text-slate-900">Score Breakdown</h2>
             <p className="text-sm text-slate-700">
-              Weighted scoring across operability, hours, price, and location.
+              Weighted scoring across price, hours, year, location, condition, and data completeness.
             </p>
           </div>
 
           <ul className="mt-3 text-sm text-slate-700">
             <li className="flex items-center justify-between border-b py-2 text-sm last:border-b-0">
-              <span>Operable</span>
-              <span className="font-semibold">{components.operable ?? "—"}</span>
+              <span>Price</span>
+              <span className="font-semibold">{components.price ?? "—"}</span>
             </li>
             <li className="flex items-center justify-between border-b py-2 text-sm last:border-b-0">
               <span>Hours</span>
               <span className="font-semibold">{components.hours ?? "—"}</span>
             </li>
             <li className="flex items-center justify-between border-b py-2 text-sm last:border-b-0">
-              <span>Price</span>
-              <span className="font-semibold">{components.price ?? "—"}</span>
+              <span>Year</span>
+              <span className="font-semibold">{components.year ?? "—"}</span>
             </li>
             <li className="flex items-center justify-between border-b py-2 text-sm last:border-b-0">
-              <span>State</span>
-              <span className="font-semibold">{components.state ?? "—"}</span>
+              <span>Location</span>
+              <span className="font-semibold">{components.location ?? "—"}</span>
+            </li>
+            <li className="flex items-center justify-between border-b py-2 text-sm last:border-b-0">
+              <span>Condition</span>
+              <span className="font-semibold">{components.condition ?? "—"}</span>
+            </li>
+            <li className="flex items-center justify-between border-b py-2 text-sm last:border-b-0">
+              <span>Completeness</span>
+              <span className="font-semibold">{components.completeness ?? "—"}</span>
             </li>
           </ul>
         </div>

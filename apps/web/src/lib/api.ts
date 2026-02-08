@@ -15,8 +15,7 @@ type ApiEnvelope<T> = {
 
 export type ListingWithScore = Listing & {
   totalScore: number;
-  scores: ScoreBreakdown["components"];
-  rationale: string[];
+  score: ScoreBreakdown;
 };
 
 export type NdaStatus = {

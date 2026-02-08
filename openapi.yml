@@ -226,7 +226,7 @@ components:
 
     Listing:
       type: object
-      required: [id, title, category, state, source, is_operable, totalScore, scores, confidenceScore]
+      required: [id, title, category, state, source, operable, totalScore, score]
       properties:
         id: { type: string, example: "listing_123" }
         title: { type: string, example: "2018 CAT 320 Excavator" }
@@ -234,10 +234,12 @@ components:
         price: { type: number, nullable: true, example: 125000 }
         hours: { type: number, nullable: true, example: 4200 }
         year: { type: integer, nullable: true, example: 2018 }
+        condition: { type: number, nullable: true, example: 4.2 }
         make: { type: string, nullable: true, example: "Caterpillar" }
         model: { type: string, nullable: true, example: "320" }
         state: { type: string, example: "CA" }
-        is_operable: { type: boolean, example: true }
+        operable: { type: boolean, example: true }
+        is_operable: { type: boolean, nullable: true, example: true }
         source: { type: string, example: "partner_dealer" }
         url: { type: string, nullable: true, example: "https://example.com/listing/123" }
         images:
@@ -246,28 +248,36 @@ components:
           example: ["https://example.com/img1.jpg"]
 
         totalScore: { type: number, example: 84 }
-        scores:
+        score:
           $ref: "#/components/schemas/ScoreBreakdown"
-        confidenceScore: { type: number, example: 82 }
         flags:
           type: array
           items: { type: string }
           example: []
-        rationale:
-          type: array
-          items: { type: string }
-          example:
-            - "Price is below category benchmark (strong value)."
-            - "Mild location preference applied (CA)."
 
     ScoreBreakdown:
       type: object
-      required: [priceScore, hoursScore, locationScore, riskScore]
+      required: [total, breakdown, reasons, confidence, disqualified]
       properties:
-        priceScore: { type: number, example: 88 }
-        hoursScore: { type: number, example: 74 }
-        locationScore: { type: number, example: 65 }
-        riskScore: { type: number, example: 60 }
+        total: { type: number, example: 84 }
+        breakdown:
+          type: object
+          required: [price, hours, year, location, condition, completeness]
+          properties:
+            price: { type: number, example: 88 }
+            hours: { type: number, example: 74 }
+            year: { type: number, example: 82 }
+            location: { type: number, example: 65 }
+            condition: { type: number, example: 76 }
+            completeness: { type: number, example: 90 }
+        reasons:
+          type: array
+          items: { type: string }
+          example:
+            - "Price score 88 based on $125000."
+            - "Preferred state bonus for CA."
+        confidence: { type: number, example: 0.9 }
+        disqualified: { type: boolean, example: false }
 
     WatchlistResponse:
       type: object
@@ -286,23 +296,30 @@ components:
 
     ScoringConfig:
       type: object
-      required: [weights, preferredStates]
+      required: [weights, preferredStates, minHours, maxHours, minPrice, maxPrice, minYear, maxYear, minCondition, maxCondition]
       properties:
         weights:
           type: object
-          required: [price, hours, location, risk]
+          required: [price, hours, year, location, condition, completeness]
           properties:
-            price: { type: number, example: 0.35 }
-            hours: { type: number, example: 0.35 }
-            location: { type: number, example: 0.20 }
-            risk: { type: number, example: 0.10 }
+            price: { type: number, example: 0.25 }
+            hours: { type: number, example: 0.2 }
+            year: { type: number, example: 0.2 }
+            location: { type: number, example: 0.15 }
+            condition: { type: number, example: 0.1 }
+            completeness: { type: number, example: 0.1 }
         preferredStates:
           type: array
           items: { type: string }
           example: ["CA", "AZ", "TX", "IA"]
+        minPrice: { type: number, nullable: true, example: 0 }
         maxPrice: { type: number, nullable: true, example: 250000 }
+        minHours: { type: number, nullable: true, example: 0 }
         maxHours: { type: number, nullable: true, example: 8000 }
-        operabilityPenalty: { type: number, nullable: true, example: -60 }
+        minYear: { type: number, nullable: true, example: 2000 }
+        maxYear: { type: number, nullable: true, example: 2025 }
+        minCondition: { type: number, nullable: true, example: 1 }
+        maxCondition: { type: number, nullable: true, example: 5 }
 
     ScoringConfigUpdate:
       type: object
@@ -312,14 +329,21 @@ components:
           properties:
             price: { type: number }
             hours: { type: number }
+            year: { type: number }
             location: { type: number }
-            risk: { type: number }
+            condition: { type: number }
+            completeness: { type: number }
         preferredStates:
           type: array
           items: { type: string }
+        minPrice: { type: number }
         maxPrice: { type: number }
+        minHours: { type: number }
         maxHours: { type: number }
-        operabilityPenalty: { type: number }
+        minYear: { type: number }
+        maxYear: { type: number }
+        minCondition: { type: number }
+        maxCondition: { type: number }
 
     LoginRequest:
       type: object

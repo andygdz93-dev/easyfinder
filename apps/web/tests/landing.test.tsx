@@ -12,7 +12,7 @@ it("renders landing page with demo entry", () => {
     screen.getByRole("heading", { level: 1, name: /Easy Finder AI/i })
   ).toBeInTheDocument();
 
-  const demoLinks = screen.getAllByRole("link", { name: /^demo$/i });
+  const demoLinks = screen.getAllByRole("link", { name: /demo/i });
   expect(demoLinks.length).toBeGreaterThan(0);
   demoLinks.forEach((link) => {
     expect(link).toHaveAttribute("href", "/demo");

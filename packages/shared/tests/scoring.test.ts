@@ -4,12 +4,14 @@ import { Listing } from "../src/types.js";
 
 const baseListing: Listing = {
   id: "listing-1",
-  title: "CA Excavator 1",
+  title: "2020 CA Excavator 1",
   description: "Well-maintained excavator ready for work.",
   state: "CA",
   price: 90000,
   hours: 1800,
   operable: true,
+  year: 2020,
+  condition: 4.5,
   category: "Excavator",
   imageUrl: "https://example.com/image.jpg",
   source: "auctionplanet",
@@ -24,38 +26,59 @@ describe("scoreListing", () => {
     );
 
     expect(result.total).toBe(0);
-    expect(result.components.operable).toBe(0);
-    expect(result.rationale[0]).toMatch(/not operable/i);
+    expect(result.disqualified).toBe(true);
+    expect(result.breakdown.price).toBe(0);
+    expect(result.reasons[0]).toMatch(/not operable/i);
   });
 
-  it("prefers listings in preferred states", () => {
-    const preferred = scoreListing(
-      { ...baseListing, state: "CA" },
-      defaultScoringConfig
-    );
-    const nonPreferred = scoreListing(
-      { ...baseListing, state: "NV" },
+  it("flags missing data and reduces confidence", () => {
+    const result = scoreListing(
+      {
+        ...baseListing,
+        price: Number.NaN,
+        hours: Number.NaN,
+        year: undefined,
+        condition: undefined,
+      },
       defaultScoringConfig
     );
 
-    expect(preferred.total).toBeGreaterThan(nonPreferred.total);
-    expect(preferred.components.state).toBeGreaterThan(
-      nonPreferred.components.state
-    );
+    expect(result.confidence).toBeLessThan(1);
+    expect(result.breakdown.completeness).toBeLessThan(100);
+    expect(result.reasons.join(" ")).toMatch(/missing/i);
   });
 
-  it("rewards lower hours and lower price", () => {
-    const lower = scoreListing(
-      { ...baseListing, hours: 1000, price: 65000 },
-      defaultScoringConfig
-    );
-    const higher = scoreListing(
-      { ...baseListing, hours: 6000, price: 190000 },
+  it("handles extreme values", () => {
+    const result = scoreListing(
+      {
+        ...baseListing,
+        price: 9999999,
+        hours: 50000,
+        year: 1990,
+        condition: 1,
+      },
       defaultScoringConfig
     );
 
-    expect(lower.total).toBeGreaterThan(higher.total);
-    expect(lower.components.hours).toBeGreaterThan(higher.components.hours);
-    expect(lower.components.price).toBeGreaterThan(higher.components.price);
+    expect(result.breakdown.price).toBe(0);
+    expect(result.breakdown.hours).toBe(0);
+    expect(result.breakdown.year).toBe(0);
+  });
+
+  it("scores a perfect listing highly", () => {
+    const result = scoreListing(
+      {
+        ...baseListing,
+        price: 50000,
+        hours: 500,
+        year: defaultScoringConfig.maxYear,
+        condition: defaultScoringConfig.maxCondition,
+        state: "CA",
+      },
+      defaultScoringConfig
+    );
+
+    expect(result.total).toBeGreaterThanOrEqual(90);
+    expect(result.confidence).toBe(1);
   });
 });
