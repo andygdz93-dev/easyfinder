@@ -46,7 +46,7 @@ export const RequireLiveNda = () => {
   }, [status]);
 
   useEffect(() => {
-    if (!token || isNdaRoute || status || isLoading) {
+    if (!token || isNdaRoute || hasChecked || isLoading) {
       return;
     }
 
@@ -93,15 +93,7 @@ export const RequireLiveNda = () => {
     return () => {
       isMounted = false;
     };
-  }, [
-    token,
-    isNdaRoute,
-    status,
-    isLoading,
-    setStatus,
-    retryCount,
-    clearSession,
-  ]);
+  }, [token, isNdaRoute, hasChecked, isLoading, setStatus, retryCount, clearSession]);
 
   if (!token) {
     return (
@@ -146,6 +138,7 @@ export const RequireLiveNda = () => {
           onClick={() => {
             setError(null);
             setHasChecked(false);
+            setStatus(null);
             setRetryCount((prev) => prev + 1);
           }}
           className="inline-flex items-center justify-center rounded-lg border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-100 transition hover:border-slate-500 hover:text-white"
