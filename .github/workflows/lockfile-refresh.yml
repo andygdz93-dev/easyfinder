@@ -1,0 +1,55 @@
+name: Refresh pnpm lockfile
+
+on:
+  workflow_dispatch:
+
+jobs:
+  refresh-lockfile:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Use pnpm 9.6.0
+        run: |
+          corepack prepare pnpm@9.6.0 --activate
+          pnpm -v
+
+      - name: Log branch
+        run: echo "Branch: ${GITHUB_REF_NAME}"
+
+      - name: Install (update lockfile)
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Install (verify frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure git
+        run: |
+          git config user.name "easyfinder-bot"
+          git config user.email "easyfinder-bot@users.noreply.github.com"
+
+      - name: Commit lockfile
+        run: |
+          git add pnpm-lock.yaml
+          if git diff --cached --quiet; then
+            echo "pnpm-lock.yaml changed: false"
+            exit 0
+          fi
+          echo "pnpm-lock.yaml changed: true"
+          git commit -m "chore: refresh pnpm lockfile"
+          git push
