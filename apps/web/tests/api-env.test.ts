@@ -87,4 +87,59 @@ describe("api env handling", () => {
       expect.objectContaining({ method: "POST" })
     );
   });
+
+  it("keeps /api prefix when base URL is host-only", async () => {
+    vi.resetModules();
+
+    vi.doMock("../src/env", () => ({
+      getApiBaseUrl: () => "http://127.0.0.1:8080",
+      requireApiBaseUrl: () => "http://127.0.0.1:8080",
+      getApiUrl: () => "http://127.0.0.1:8080",
+      requireApiUrl: () => "http://127.0.0.1:8080",
+    }));
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: {} }),
+    });
+
+    global.fetch = fetchMock as any;
+
+    const apiModule = await import("../src/lib/api");
+
+    await apiModule.apiFetch("/api/auth/register", { method: "POST" });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://127.0.0.1:8080/api/auth/register",
+      expect.objectContaining({ method: "POST" })
+    );
+  });
+
+  it("prefixes /auth when base URL already includes /api", async () => {
+    vi.resetModules();
+
+    vi.doMock("../src/env", () => ({
+      getApiBaseUrl: () => "https://example.com/api",
+      requireApiBaseUrl: () => "https://example.com/api",
+      getApiUrl: () => "https://example.com/api",
+      requireApiUrl: () => "https://example.com/api",
+    }));
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: {} }),
+    });
+
+    global.fetch = fetchMock as any;
+
+    const apiModule = await import("../src/lib/api");
+
+    // Legacy callers without /api should still route into /api when base URL includes it.
+    await apiModule.apiFetch("/auth/login", { method: "POST" });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://example.com/api/auth/login",
+      expect.objectContaining({ method: "POST" })
+    );
+  });
 });
