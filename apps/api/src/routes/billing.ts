@@ -3,7 +3,7 @@ import { z } from "zod";
 import { ObjectId } from "mongodb";
 import type Stripe from "stripe";
 import { stripe } from "../stripe.js";
-import rawBody from "@fastify/raw-body";
+import rawBody from "fastify-raw-body";
 import { env } from "../env.js";
 import { getUsersCollection } from "../users.js";
 import { fail, ok } from "../response.js";
@@ -56,8 +56,7 @@ const updateUserBilling = async ({
     }
   );
 
-  await writeAuditLog({
-    action_type: "billing_status_changed",
+  await writeAuditLog("billing_status_changed", {
     user_id: userId.toHexString(),
     old_values: serializeBilling(previous),
     new_values: serializeBilling(nextBilling),
@@ -163,8 +162,7 @@ export default async function billingRoutes(app: FastifyInstance) {
         },
       });
 
-      await writeAuditLog({
-        action_type: "billing_checkout_created",
+      await writeAuditLog("billing_checkout_created", {
         user_id: user._id.toHexString(),
         new_values: {
           plan: payload.plan,
