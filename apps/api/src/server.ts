@@ -39,6 +39,16 @@ declare module "fastify" {
 
 export const buildServer = () => {
   const app = Fastify({ logger: true });
+  const frontendOrigins = new Set(
+    [
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+      "https://web-easyfinder.vercel.app",
+      ...config.corsOrigins,
+    ].map((origin) => origin.toLowerCase())
+  );
+  frontendOrigins.delete("*");
+  const allowVercelPreview = Boolean(process.env.VERCEL_PREVIEW_PATTERN);
 
   if (env.DEMO_MODE) {
     app.log.warn("DEMO_MODE ENABLED - serving demo inventory");
@@ -54,23 +64,29 @@ export const buildServer = () => {
       if (!origin) return cb(null, true);
 
       const normalizedOrigin = origin.toLowerCase();
-      const isVercelOrigin = /^https?:\/\/.+\.vercel\.app$/i.test(normalizedOrigin);
-      const isLocalOrigin =
-        normalizedOrigin === "http://localhost:5173" ||
-        normalizedOrigin === "http://127.0.0.1:5173";
+      const isVercelOrigin =
+        allowVercelPreview && /^https:\/\/.+\.vercel\.app$/i.test(normalizedOrigin);
 
-      if (config.corsOrigins.includes(origin) || isVercelOrigin || isLocalOrigin) {
+      if (frontendOrigins.has(normalizedOrigin) || isVercelOrigin) {
         return cb(null, true);
       }
 
       return cb(null, false);
     },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["*"],
     optionsSuccessStatus: 204,
   });
 
   // Security headers
   app.register(helmet);
+  app.addHook("onSend", async (_request, reply, payload) => {
+    reply.header("X-Content-Type-Options", "nosniff");
+    reply.header("X-Frame-Options", "DENY");
+    reply.header("Referrer-Policy", "strict-origin-when-cross-origin");
+    return payload;
+  });
 
   // JWT
   app.register(jwt, {
@@ -157,6 +173,12 @@ export const buildServer = () => {
   });
 
   // Routes
+  app.get("/health", async (_request, reply) => {
+    return reply.send({ ok: true });
+  });
+  app.get("/ready", async (_request, reply) => {
+    return reply.send({ ready: true });
+  });
   app.register(healthRoutes, { prefix: "/api" });
   app.register(demoListingRoutes, { prefix: "/api/demo/listings" });
   app.register(listingRoutes, { prefix: "/api/listings" });
