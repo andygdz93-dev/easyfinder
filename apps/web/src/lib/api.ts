@@ -5,7 +5,7 @@ import {
   WatchlistItem,
 } from "@easyfinderai/shared";
 import { requireApiBaseUrl } from "../env";
-import { getStoredAuthToken } from "./auth";
+import { clearStoredSession, getStoredAuthToken } from "./auth";
 
 type ApiEnvelope<T> = {
   data?: T;
@@ -41,22 +41,33 @@ export class ApiError extends Error {
  * - "/api/auth/login"
  * without producing ".../api/api/..."
  */
-function normalizeApiPath(path: string) {
+function normalizeApiPath(path: string, baseUrl: string) {
   let p = path.trim();
 
   // Ensure leading slash
   if (!p.startsWith("/")) p = `/${p}`;
 
-  // Strip a leading "/api" ONCE to prevent double-prefixing
-  if (p === "/api") return "/";
-  if (p.startsWith("/api/")) p = p.slice("/api".length);
+  let baseHasApiPrefix = false;
+  try {
+    const parsed = new URL(baseUrl);
+    const normalizedPathname = parsed.pathname.replace(/\/+$/, "");
+    baseHasApiPrefix = normalizedPathname === "/api";
+  } catch {
+    baseHasApiPrefix = false;
+  }
+
+  // Strip a leading "/api" only if baseUrl already includes "/api"
+  if (baseHasApiPrefix) {
+    if (p === "/api") return "/";
+    if (p.startsWith("/api/")) p = p.slice("/api".length);
+  }
 
   return p;
 }
 
 function joinUrl(baseUrl: string, path: string) {
   const base = baseUrl.replace(/\/+$/, "");
-  const normalizedPath = normalizeApiPath(path).replace(/^\/+/, "");
+  const normalizedPath = normalizeApiPath(path, baseUrl).replace(/^\/+/, "");
   return normalizedPath ? `${base}/${normalizedPath}` : `${base}/`;
 }
 
@@ -82,15 +93,35 @@ const apiRequest = async <T>(
     headers,
   });
 
-  const payload = (await res.json()) as ApiEnvelope<T>;
-
-  if (!res.ok) {
-    const message = payload.error?.message ?? "Request failed";
-    throw new ApiError(message, payload.requestId);
+  let payload: ApiEnvelope<T> | null = null;
+  try {
+    payload = (await res.json()) as ApiEnvelope<T>;
+  } catch {
+    payload = null;
   }
 
-  if (payload.data === undefined) {
-    throw new ApiError("Malformed response from server.", payload.requestId);
+  if (res.status === 401) {
+    clearStoredSession();
+    if (typeof window !== "undefined") {
+      const path = window.location.pathname;
+      const isAuthRoute =
+        path.startsWith("/login") ||
+        path.startsWith("/register") ||
+        path.startsWith("/app/login") ||
+        path.startsWith("/app/register");
+      if (!isAuthRoute) {
+        window.location.assign("/login");
+      }
+    }
+  }
+
+  if (!res.ok) {
+    const message = payload?.error?.message ?? "Request failed";
+    throw new ApiError(message, payload?.requestId);
+  }
+
+  if (!payload || payload.data === undefined) {
+    throw new ApiError("Malformed response from server.", payload?.requestId);
   }
 
   return payload.data;
