@@ -16,9 +16,11 @@ export type AuditLog = Document & {
 const inMemoryAuditLogs: AuditLog[] = [];
 
 export const writeAuditLog = async (
-  entry: Omit<AuditLog, "created_at"> & { created_at?: Date }
+  action_type: AuditLog["action_type"],
+  entry: Omit<AuditLog, "action_type" | "created_at"> & { created_at?: Date } = {}
 ) => {
   const record: AuditLog = {
+    action_type,
     ...entry,
     created_at: entry.created_at ?? new Date(),
   };
