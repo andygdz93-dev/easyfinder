@@ -5,11 +5,11 @@ import { apiFetch } from "./api";
 
 export type DemoListing = Listing & {
   totalScore?: number;
-  scoreBreakdown?: ScoreBreakdown["components"];
-  rationale?: string[];
+  score?: ScoreBreakdown;
+  scoreBreakdown?: ScoreBreakdown["breakdown"];
+  reasons?: string[];
   confidenceScore?: number;
   flags?: string[];
-  score?: ScoreBreakdown;
 };
 
 export type DemoListingsResponse = {

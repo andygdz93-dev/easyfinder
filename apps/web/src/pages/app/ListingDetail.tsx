@@ -88,8 +88,9 @@ export const ListingDetail = () => {
     : [];
   const displayPrice = data.price ? `$${data.price.toLocaleString()}` : "—";
   const displayHours = data.hours ? `${data.hours.toLocaleString()} hrs` : "—";
-  const scores = data.scores ?? {};
-  const rationale = data.rationale ?? [];
+  const score = data.score;
+  const scores = score?.breakdown ?? {};
+  const rationale = score?.reasons ?? [];
   const listingId = data.id ?? "";
 
   return (
@@ -97,7 +98,12 @@ export const ListingDetail = () => {
       <Card className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-semibold">{data.title}</h2>
-          <Badge className="bg-accent text-slate-900">Score {data.totalScore}</Badge>
+          <Badge
+            className="bg-accent text-slate-900"
+            title={`Confidence ${((score?.confidence ?? 0) * 100).toFixed(0)}%`}
+          >
+            Score {score?.total ?? data.totalScore ?? 0}
+          </Badge>
         </div>
 
         {images.length > 0 && (
@@ -138,6 +144,10 @@ export const ListingDetail = () => {
               <span>{value}</span>
             </div>
           ))}
+          <div className="flex items-center justify-between">
+            <span className="capitalize">Confidence</span>
+            <span>{((score?.confidence ?? 0) * 100).toFixed(0)}%</span>
+          </div>
         </div>
       </Card>
       <Card className="space-y-3">

@@ -52,8 +52,20 @@ describe("Listings", () => {
         source: "API",
         createdAt: "2024-01-01T00:00:00.000Z",
         totalScore: 91,
-        scores: { operable: 25, hours: 22, price: 20, state: 24 },
-        rationale: ["Strong fit"],
+        score: {
+          total: 91,
+          breakdown: {
+            price: 90,
+            hours: 80,
+            year: 75,
+            location: 100,
+            condition: 85,
+            completeness: 95,
+          },
+          reasons: ["Strong fit", "Preferred location"],
+          confidence: 0.95,
+          disqualified: false,
+        },
       },
     ]);
     getWatchlistMock.mockResolvedValue({ items: [] });
@@ -66,6 +78,6 @@ describe("Listings", () => {
 
     expect(await screen.findByText("API Listing")).toBeInTheDocument();
     expect(screen.getByText("Fetched from API")).toBeInTheDocument();
-    expect(screen.getByText("91")).toBeInTheDocument();
+    expect(screen.getByText(/Score 91/i)).toBeInTheDocument();
   });
 });

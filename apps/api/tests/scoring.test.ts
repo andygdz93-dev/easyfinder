@@ -26,21 +26,32 @@ describe("scoring engine", () => {
   it("requires operable", () => {
     const score = scoreListing({ ...baseListing, operable: false }, defaultScoringConfig);
     expect(score.total).toBe(0);
+    expect(score.disqualified).toBe(true);
   });
 
-  it("hours and price influence score", () => {
-    const lowHours = scoreListing({ ...baseListing, hours: 1000 }, defaultScoringConfig);
-    const highHours = scoreListing({ ...baseListing, hours: 9000 }, defaultScoringConfig);
-    expect(lowHours.total ?? 0).toBeGreaterThan(highHours.total ?? 0);
+  it("rewards price, hours, year, and preferred location", () => {
+    const better = scoreListing(
+      { ...baseListing, hours: 1000, price: 30000, year: 2023, state: "CA", condition: 4.5 },
+      defaultScoringConfig
+    );
+    const worse = scoreListing(
+      { ...baseListing, hours: 9000, price: 220000, year: 2000, state: "NY", condition: 2 },
+      defaultScoringConfig
+    );
 
-    const lowPrice = scoreListing({ ...baseListing, price: 30000 }, defaultScoringConfig);
-    const highPrice = scoreListing({ ...baseListing, price: 220000 }, defaultScoringConfig);
-    expect(lowPrice.total ?? 0).toBeGreaterThan(highPrice.total ?? 0);
+    expect(better.total ?? 0).toBeGreaterThan(worse.total ?? 0);
+    expect(better.breakdown.price).toBeGreaterThan(worse.breakdown.price);
+    expect(better.breakdown.hours).toBeGreaterThan(worse.breakdown.hours);
+    expect(better.breakdown.year).toBeGreaterThan(worse.breakdown.year);
+    expect(better.breakdown.location).toBeGreaterThan(worse.breakdown.location);
   });
 
-  it("preferred states boost", () => {
-    const preferred = scoreListing({ ...baseListing, state: "CA" }, defaultScoringConfig);
-    const nonPreferred = scoreListing({ ...baseListing, state: "NY" }, defaultScoringConfig);
-    expect(preferred.total ?? 0).toBeGreaterThan(nonPreferred.total ?? 0);
+  it("reduces confidence with missing data", () => {
+    const score = scoreListing(
+      { ...baseListing, price: Number.NaN, hours: Number.NaN, year: undefined, condition: undefined },
+      defaultScoringConfig
+    );
+    expect(score.confidence).toBeLessThan(1);
+    expect(score.breakdown.completeness).toBeLessThan(100);
   });
 });

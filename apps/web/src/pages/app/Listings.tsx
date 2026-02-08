@@ -127,6 +127,7 @@ export const Listings = () => {
         <div className="grid gap-4 md:grid-cols-2">
           {listings.map((listing) => {
             const listingId = listing.id ?? "";
+            const score = listing.score;
             return (
             <Card key={listingId || listing.title || "listing"} className="space-y-4">
               <div className="flex items-start justify-between gap-3">
@@ -134,7 +135,17 @@ export const Listings = () => {
                   <h3 className="text-lg font-semibold">{listing.title}</h3>
                   <p className="text-xs text-slate-400">{listing.source}</p>
                 </div>
-                <Badge className="bg-accent text-slate-900">{listing.totalScore}</Badge>
+                <div className="flex flex-col items-end gap-2">
+                  <Badge className="bg-accent text-slate-900">
+                    Score {score?.total ?? listing.totalScore ?? 0}
+                  </Badge>
+                  <span
+                    className="text-[11px] font-semibold text-slate-300"
+                    title="Confidence reflects data completeness."
+                  >
+                    {((score?.confidence ?? 0) * 100).toFixed(0)}% confidence
+                  </span>
+                </div>
               </div>
               <img
                 src={(listing.images ?? [])[0] || listing.imageUrl || "/demo-images/other/1.jpg"}
@@ -158,6 +169,11 @@ export const Listings = () => {
                     : "Not operable"}
                 </span>
               </div>
+              <ul className="list-disc space-y-1 pl-4 text-xs text-slate-400">
+                {(score?.reasons ?? []).slice(0, 3).map((reason) => (
+                  <li key={reason}>{reason}</li>
+                ))}
+              </ul>
               <div className="flex flex-wrap gap-3">
                 <Link to={`/app/listings/${listingId}`}>
                   <Button variant="secondary">View details</Button>

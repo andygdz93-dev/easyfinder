@@ -59,6 +59,8 @@ export default function DemoListings() {
             key={listingId || listing.title || "listing"}
             listing={listing}
             score={score.total ?? 0}
+            reasons={score.reasons ?? []}
+            confidence={score.confidence ?? 0}
             isSaved={listingId ? watchlist.isInWatchlist(listingId) : false}
             onToggleWatchlist={() => {
               if (!listingId) return;
@@ -77,11 +79,15 @@ export default function DemoListings() {
 function ListingCard({
   listing,
   score,
+  reasons,
+  confidence,
   isSaved,
   onToggleWatchlist,
 }: {
   listing: Listing;
   score: number;
+  reasons: string[];
+  confidence: number;
   isSaved: boolean;
   onToggleWatchlist: () => void;
 }) {
@@ -129,12 +135,21 @@ function ListingCard({
           {displayPrice} • {displayHours} • {listing.state ?? "—"}
         </div>
 
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <span className="rounded-full bg-amber-400 px-3 py-1 text-xs font-semibold text-black">
-            Score {Math.round(score ?? 0)}
-          </span>
+        <div className="mt-3 space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-amber-400 px-3 py-1 text-xs font-semibold text-black">
+              Score {Math.round(score ?? 0)}
+            </span>
+            <span
+              className="rounded-full border border-slate-200 px-3 py-1 text-[11px] font-semibold text-slate-600"
+              title={`Confidence ${(confidence * 100).toFixed(0)}% based on data completeness.`}
+            >
+              Confidence {(confidence * 100).toFixed(0)}%
+            </span>
+          </div>
 
-          <div className="flex flex-wrap items-center justify-end gap-2">
+            <div className="flex flex-wrap items-center justify-end gap-2">
             <button
               type="button"
               onClick={onToggleWatchlist}
@@ -149,6 +164,12 @@ function ListingCard({
               View Details
             </Link>
           </div>
+          </div>
+          <ul className="list-disc space-y-1 pl-4 text-xs text-slate-500">
+            {reasons.slice(0, 3).map((reason) => (
+              <li key={reason}>{reason}</li>
+            ))}
+          </ul>
         </div>
       </div>
     </div>

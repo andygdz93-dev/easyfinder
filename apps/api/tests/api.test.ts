@@ -120,10 +120,23 @@ describe("API", () => {
       .post("/api/scoring-configs")
       .send({
         name: "Demo",
-        weights: { hours: 0.3, price: 0.3, state: 0.4 },
+        weights: {
+          price: 0.25,
+          hours: 0.2,
+          year: 0.2,
+          location: 0.15,
+          condition: 0.1,
+          completeness: 0.1,
+        },
         preferredStates: ["CA"],
+        minHours: 0,
         maxHours: 8000,
+        minPrice: 0,
         maxPrice: 200000,
+        minYear: 2000,
+        maxYear: 2025,
+        minCondition: 1,
+        maxCondition: 5,
       });
     expect(res.status).toBe(401);
   });
@@ -138,10 +151,23 @@ describe("API", () => {
       .set("Authorization", `Bearer ${token}`)
       .send({
         name: "Buyer Config",
-        weights: { hours: 0.4, price: 0.4, state: 0.2 },
+        weights: {
+          price: 0.3,
+          hours: 0.25,
+          year: 0.15,
+          location: 0.15,
+          condition: 0.1,
+          completeness: 0.05,
+        },
         preferredStates: ["TX"],
+        minHours: 0,
         maxHours: 9000,
+        minPrice: 0,
         maxPrice: 220000,
+        minYear: 2000,
+        maxYear: 2025,
+        minCondition: 1,
+        maxCondition: 5,
       });
     expect(res.status).toBe(200);
   });
