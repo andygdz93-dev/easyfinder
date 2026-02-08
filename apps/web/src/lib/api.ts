@@ -71,14 +71,19 @@ function joinUrl(baseUrl: string, path: string) {
   return normalizedPath ? `${base}/${normalizedPath}` : `${base}/`;
 }
 
+type ApiRequestOptions = RequestInit & {
+  timeoutMs?: number;
+};
+
 const apiRequest = async <T>(
   path: string,
-  options: RequestInit = {}
+  options: ApiRequestOptions = {}
 ): Promise<T> => {
   const baseUrl = requireApiBaseUrl();
   const token = getStoredAuthToken();
+  const { timeoutMs, signal, ...fetchOptions } = options;
 
-  const headers = new Headers(options.headers ?? {});
+  const headers = new Headers(fetchOptions.headers ?? {});
   if (!headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
@@ -87,11 +92,35 @@ const apiRequest = async <T>(
   }
 
   const url = joinUrl(baseUrl, path);
+  const controller = new AbortController();
+  if (signal) {
+    signal.addEventListener("abort", () => controller.abort(), { once: true });
+  }
+  const timeoutId =
+    typeof timeoutMs === "number" && timeoutMs > 0
+      ? setTimeout(() => controller.abort(), timeoutMs)
+      : null;
 
-  const res = await fetch(url, {
-    ...options,
-    headers,
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...fetchOptions,
+      headers,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new ApiError("Request timed out. Please try again.");
+    }
+    throw error;
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
 
   let payload: ApiEnvelope<T> | null = null;
   try {
@@ -171,14 +200,16 @@ export const removeFromWatchlist = (listingId: string) =>
     method: "DELETE",
   });
 
-export const getNdaStatus = () => apiRequest<NdaStatus>("/nda/status");
+export const getNdaStatus = () =>
+  apiFetch<NdaStatus>("/api/nda/status", { timeoutMs: 10000 });
 
 export const acceptNda = () =>
-  apiRequest<NdaStatus>("/nda/accept", {
+  apiFetch<NdaStatus>("/api/nda/accept", {
     method: "POST",
     body: JSON.stringify({ accepted: true }),
+    timeoutMs: 10000,
   });
 
 // Legacy helper for internal usage
-export const apiFetch = <T>(path: string, options: RequestInit = {}) =>
+export const apiFetch = <T>(path: string, options: ApiRequestOptions = {}) =>
   apiRequest<T>(path, options);
