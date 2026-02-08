@@ -44,12 +44,13 @@ export const buildServer = () => {
     [
       "http://localhost:5173",
       "http://127.0.0.1:5173",
+      "https://easyfinder.vercel.app",
       "https://web-easyfinder.vercel.app",
       ...config.corsOrigins,
     ].map((origin) => origin.toLowerCase())
   );
   frontendOrigins.delete("*");
-  const allowVercelPreview = Boolean(process.env.VERCEL_PREVIEW_PATTERN);
+  const vercelPreviewRegex = /^https:\/\/.+\.vercel\.app$/i;
 
   if (env.DEMO_MODE) {
     app.log.warn("DEMO_MODE ENABLED - serving demo inventory");
@@ -65,8 +66,7 @@ export const buildServer = () => {
       if (!origin) return cb(null, true);
 
       const normalizedOrigin = origin.toLowerCase();
-      const isVercelOrigin =
-        allowVercelPreview && /^https:\/\/.+\.vercel\.app$/i.test(normalizedOrigin);
+      const isVercelOrigin = vercelPreviewRegex.test(normalizedOrigin);
 
       if (frontendOrigins.has(normalizedOrigin) || isVercelOrigin) {
         return cb(null, true);
@@ -74,10 +74,11 @@ export const buildServer = () => {
 
       return cb(null, false);
     },
-    credentials: true,
+    credentials: false,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["*"],
+    allowedHeaders: ["Authorization", "Content-Type"],
     optionsSuccessStatus: 204,
+    preflightContinue: false,
   });
 
   // Security headers
@@ -174,6 +175,9 @@ export const buildServer = () => {
   });
 
   // Routes
+  app.get("/api/cors-test", async (_request, reply) => {
+    return reply.send({ ok: true });
+  });
   app.get("/health", async (_request, reply) => {
     return reply.send({ ok: true });
   });
