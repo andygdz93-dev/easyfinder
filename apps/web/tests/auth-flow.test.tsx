@@ -29,7 +29,7 @@ describe("auth flow", () => {
     const user = userEvent.setup();
     global.fetch = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
-      if (url.endsWith("/auth/login")) {
+      if (url.endsWith("/api/auth/login")) {
         return {
           ok: true,
           json: async () => ({
@@ -66,7 +66,7 @@ describe("auth flow", () => {
       } as Response;
     }) as unknown as typeof fetch;
 
-    process.env.VITE_API_BASE_URL = "https://example.com/api";
+    process.env.VITE_API_BASE_URL = "https://example.com";
 
     renderApp(["/login"]);
 
@@ -106,7 +106,7 @@ describe("auth flow", () => {
       return { ok: true, json: async () => ({ data: {} }) } as Response;
     }) as unknown as typeof fetch;
 
-    process.env.VITE_API_BASE_URL = "https://example.com/api";
+    process.env.VITE_API_BASE_URL = "https://example.com";
 
     renderApp(["/app/listings"]);
 
