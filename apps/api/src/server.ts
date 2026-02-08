@@ -4,7 +4,6 @@ import helmet from "@fastify/helmet";
 import jwt from "@fastify/jwt";
 import rateLimit from "@fastify/rate-limit";
 import multipart from "@fastify/multipart";
-import rawBody from "fastify-raw-body";
 import { nanoid } from "nanoid";
 import { config } from "./config.js";
 import { AuthUser, getRoleFromRequest } from "./auth.js";
@@ -134,13 +133,6 @@ export const buildServer = () => {
     limits: {
       fileSize: 5 * 1024 * 1024, // 5MB
     },
-  });
-
-  app.register(rawBody, {
-    field: "rawBody",
-    global: false,
-    encoding: "utf8",
-    runFirst: true,
   });
 
   // Request ID + optional auth
