@@ -18,19 +18,23 @@ export default async function ndaRoutes(app: FastifyInstance) {
   const usersCollection = () => getCollection<UserDocument>("users");
 
   app.get("/status", { preHandler: app.authenticate }, async (request, reply) => {
-    const col = usersCollection();
-    if (!ObjectId.isValid(request.user.id)) {
-      return fail(request, reply, "NOT_FOUND", "User not found.", 404);
-    }
+    try {
+      const col = usersCollection();
+      if (!ObjectId.isValid(request.user.id)) {
+        return ok(request, { accepted: false });
+      }
 
-    const user = await col.findOne({ _id: new ObjectId(request.user.id) });
-    if (!user) {
-      return fail(request, reply, "NOT_FOUND", "User not found.", 404);
-    }
+      const user = await col.findOne({ _id: new ObjectId(request.user.id) });
+      if (!user) {
+        return ok(request, { accepted: false });
+      }
 
-    return ok(request, {
-      accepted: Boolean(user.ndaAcceptedAt),
-    });
+      return ok(request, {
+        accepted: Boolean(user.ndaAcceptedAt),
+      });
+    } catch {
+      return ok(request, { accepted: false });
+    }
   });
 
   app.post("/accept", { preHandler: app.authenticate }, async (request, reply) => {
