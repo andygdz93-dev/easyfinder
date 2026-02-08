@@ -17,8 +17,7 @@ export default async function demoListingsRoutes(app: FastifyInstance) {
       return {
         ...listing,
         totalScore: score.total,
-        scores: score.components,
-        rationale: score.rationale,
+        score,
       };
     });
 
@@ -53,8 +52,7 @@ export default async function demoListingsRoutes(app: FastifyInstance) {
     return ok(request, {
       ...listing,
       totalScore: score.total,
-      scores: score.components,
-      rationale: score.rationale,
+      score,
     });
   });
 }

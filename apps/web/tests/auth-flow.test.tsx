@@ -60,6 +60,13 @@ describe("auth flow", () => {
         } as Response;
       }
 
+      if (url.includes("/nda/status")) {
+        return {
+          ok: true,
+          json: async () => ({ data: { accepted: true } }),
+        } as Response;
+      }
+
       return {
         ok: true,
         json: async () => ({ data: {} }),
@@ -99,6 +106,9 @@ describe("auth flow", () => {
       const url = String(input);
       if (url.includes("/watchlist")) {
         return { ok: true, json: async () => ({ data: { items: [] } }) } as Response;
+      }
+      if (url.includes("/nda/status")) {
+        return { ok: true, json: async () => ({ data: { accepted: true } }) } as Response;
       }
       if (url.includes("/listings")) {
         return { ok: true, json: async () => ({ data: [] }) } as Response;
