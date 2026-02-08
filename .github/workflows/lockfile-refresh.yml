@@ -3,53 +3,50 @@ name: Refresh pnpm lockfile
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   refresh-lockfile:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          persist-credentials: true
           fetch-depth: 0
+          persist-credentials: true
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "pnpm"
-
-      - name: Enable corepack
-        run: corepack enable
-
-      - name: Use pnpm 9.6.0
+      - name: Enable corepack + pnpm
         run: |
+          corepack enable
           corepack prepare pnpm@9.6.0 --activate
           pnpm -v
 
       - name: Log branch
-        run: echo "Branch: ${GITHUB_REF_NAME}"
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: echo "Branch: $BRANCH"
 
       - name: Install (update lockfile)
         run: pnpm install --no-frozen-lockfile
 
-      - name: Install (verify frozen lockfile)
+      - name: Verify frozen install
         run: pnpm install --frozen-lockfile
 
-      - name: Configure git
+      - name: Detect lockfile change
+        id: lock
         run: |
-          git config user.name "easyfinder-bot"
-          git config user.email "easyfinder-bot@users.noreply.github.com"
-
-      - name: Commit lockfile
-        run: |
-          git add pnpm-lock.yaml
-          if git diff --cached --quiet; then
-            echo "pnpm-lock.yaml changed: false"
-            exit 0
+          if git diff --quiet pnpm-lock.yaml; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
-          echo "pnpm-lock.yaml changed: true"
+
+      - name: Commit and push lockfile
+        if: steps.lock.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add pnpm-lock.yaml
           git commit -m "chore: refresh pnpm lockfile"
           git push
