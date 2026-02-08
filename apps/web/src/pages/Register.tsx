@@ -18,7 +18,7 @@ export const Register = () => {
     event.preventDefault();
     setError(null);
     try {
-      const data = await apiFetch<{ token: string; user: any }>("/auth/register", {
+      const data = await apiFetch<{ token: string; user: any }>("/api/auth/register", {
         method: "POST",
         body: JSON.stringify({ email, password, name }),
       });

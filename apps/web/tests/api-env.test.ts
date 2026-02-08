@@ -11,10 +11,10 @@ describe("api env handling", () => {
     vi.resetModules();
 
     vi.doMock("../src/env", () => ({
-      getApiBaseUrl: () => "https://example.com/api",
-      requireApiBaseUrl: () => "https://example.com/api",
-      getApiUrl: () => "https://example.com/api",
-      requireApiUrl: () => "https://example.com/api",
+      getApiBaseUrl: () => "https://example.com",
+      requireApiBaseUrl: () => "https://example.com",
+      getApiUrl: () => "https://example.com",
+      requireApiUrl: () => "https://example.com",
     }));
 
     const fetchMock = vi.fn().mockResolvedValue({
@@ -26,7 +26,7 @@ describe("api env handling", () => {
 
     const apiModule = await import("../src/lib/api");
 
-    await apiModule.apiFetch("/auth/login", { method: "POST" });
+    await apiModule.apiFetch("/api/auth/login", { method: "POST" });
 
     expect(fetchMock).toHaveBeenCalledWith(
       "https://example.com/api/auth/login",
@@ -38,10 +38,10 @@ describe("api env handling", () => {
     vi.resetModules();
 
     vi.doMock("../src/env", () => ({
-      getApiBaseUrl: () => "https://example.com/api",
-      requireApiBaseUrl: () => "https://example.com/api",
-      getApiUrl: () => "https://example.com/api",
-      requireApiUrl: () => "https://example.com/api",
+      getApiBaseUrl: () => "https://example.com",
+      requireApiBaseUrl: () => "https://example.com",
+      getApiUrl: () => "https://example.com",
+      requireApiUrl: () => "https://example.com",
     }));
 
     const fetchMock = vi.fn().mockResolvedValue({
@@ -65,10 +65,10 @@ describe("api env handling", () => {
     vi.resetModules();
 
     vi.doMock("../src/env", () => ({
-      getApiBaseUrl: () => "http://localhost:8080",
-      requireApiBaseUrl: () => "http://localhost:8080",
-      getApiUrl: () => "http://localhost:8080",
-      requireApiUrl: () => "http://localhost:8080",
+      getApiBaseUrl: () => "http://127.0.0.1:8080",
+      requireApiBaseUrl: () => "http://127.0.0.1:8080",
+      getApiUrl: () => "http://127.0.0.1:8080",
+      requireApiUrl: () => "http://127.0.0.1:8080",
     }));
 
     const fetchMock = vi.fn().mockResolvedValue({
@@ -80,10 +80,10 @@ describe("api env handling", () => {
 
     const apiModule = await import("../src/lib/api");
 
-    await apiModule.apiFetch("/auth/login", { method: "POST" });
+    await apiModule.apiFetch("/api/auth/login", { method: "POST" });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "http://localhost:8080/auth/login",
+      "http://127.0.0.1:8080/api/auth/login",
       expect.objectContaining({ method: "POST" })
     );
   });

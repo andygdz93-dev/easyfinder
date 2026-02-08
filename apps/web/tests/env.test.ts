@@ -23,6 +23,6 @@ describe("env helpers", () => {
     delete process.env.VITE_API_BASE_URL;
 
     const module = await import("../src/env");
-    expect(module.getApiBaseUrl()).toBe("http://localhost:8080");
+    expect(module.getApiBaseUrl()).toBe("http://127.0.0.1:8080");
   });
 });
