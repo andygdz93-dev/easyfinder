@@ -27,11 +27,13 @@ export type NdaStatus = {
 
 export class ApiError extends Error {
   requestId?: string;
+  status?: number;
 
-  constructor(message: string, requestId?: string) {
+  constructor(message: string, requestId?: string, status?: number) {
     super(message);
     this.name = "ApiError";
     this.requestId = requestId;
+    this.status = status;
   }
 }
 
@@ -146,11 +148,15 @@ const apiRequest = async <T>(
 
   if (!res.ok) {
     const message = payload?.error?.message ?? "Request failed";
-    throw new ApiError(message, payload?.requestId);
+    throw new ApiError(message, payload?.requestId, res.status);
   }
 
   if (!payload || payload.data === undefined) {
-    throw new ApiError("Malformed response from server.", payload?.requestId);
+    throw new ApiError(
+      "Malformed response from server.",
+      payload?.requestId,
+      res.status
+    );
   }
 
   return payload.data;
