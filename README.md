@@ -339,11 +339,11 @@ Root directory: apps/web
 
 Build output: dist
 
-Variable: VITE_API_BASE_URL	
+Variable: VITE_API_BASE_URL
 
-Description: API base URL	
+Description: API base URL (host-only, no `/api`)
 
-Example: https://easyfinder.fly.dev/api
+Example: https://easyfinder.fly.dev
 		
 
 
