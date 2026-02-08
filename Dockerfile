@@ -20,6 +20,7 @@ RUN pnpm --filter @easyfinderai/api deploy --prod /out
 FROM node:20-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
+ENV PORT=8080
 
 # prod deps from pnpm deploy output
 COPY --from=build /out/package.json ./package.json

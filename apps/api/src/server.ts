@@ -174,13 +174,12 @@ export const buildServer = () => {
   });
 
   // Routes
-  app.get("/health", async (request) =>
-    ok(request, {
-      status: "ok",
-      ok: true,
-      mongoConfigured: Boolean(config.mongoUrl && config.dbName),
-    })
-  );
+  app.get("/health", async (_request, reply) => {
+    return reply.send({ ok: true });
+  });
+  app.get("/ready", async (_request, reply) => {
+    return reply.send({ ready: true });
+  });
   app.register(healthRoutes, { prefix: "/api" });
   app.register(demoListingRoutes, { prefix: "/api/demo/listings" });
   app.register(listingRoutes, { prefix: "/api/listings" });
