@@ -57,6 +57,18 @@ describe("API", () => {
     expect(res.body.data.role).toBe("buyer");
   });
 
+  it("returns nda status with accepted boolean", async () => {
+    const loginRes = await supertest(app.server)
+      .post("/api/auth/login")
+      .send({ email: "buyer@easyfinder.ai", password: "BuyerPass123!" });
+    const token = loginRes.body.data.token;
+    const res = await supertest(app.server)
+      .get("/api/nda/status")
+      .set("Authorization", `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(typeof res.body.data.accepted).toBe("boolean");
+  });
+
   it("allows CORS preflight from vercel preview origins", async () => {
     const origin = "https://web-abc123-easyfinder.vercel.app";
     const res = await supertest(app.server)
@@ -79,6 +91,17 @@ describe("API", () => {
     expect(res.headers["access-control-allow-methods"]).toContain("POST");
     expect(res.headers["access-control-allow-headers"]).toContain("Authorization");
     expect(res.headers["access-control-allow-headers"]).toContain("Content-Type");
+  });
+
+  it("handles CORS preflight for nda status", async () => {
+    const origin = "https://easyfinder.vercel.app";
+    const res = await supertest(app.server)
+      .options("/api/nda/status")
+      .set("Origin", origin)
+      .set("Access-Control-Request-Method", "GET")
+      .set("Access-Control-Request-Headers", "Authorization, Content-Type");
+    expect([200, 204]).toContain(res.status);
+    expect(res.headers["access-control-allow-origin"]).toBe(origin);
   });
 
   it("returns CORS headers for auth login POST", async () => {

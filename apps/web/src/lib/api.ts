@@ -43,40 +43,56 @@ export class ApiError extends Error {
  * - "/api/auth/login"
  * without producing ".../api/api/..."
  */
-function normalizeApiPath(path: string, baseUrl: string) {
+function normalizeApiPath(path: string) {
   let p = path.trim();
 
   // Ensure leading slash
   if (!p.startsWith("/")) p = `/${p}`;
+  if (p === "/") return "";
 
-  let baseHasApiPrefix = false;
+  return p;
+}
+
+function baseHasApiPrefix(baseUrl: string) {
+  let hasApiPrefix = false;
   try {
     const parsed = new URL(baseUrl);
     const normalizedPathname = parsed.pathname.replace(/\/+$/, "");
-    baseHasApiPrefix = normalizedPathname === "/api";
+    hasApiPrefix = normalizedPathname === "/api";
   } catch {
-    baseHasApiPrefix = false;
+    hasApiPrefix = false;
   }
+  return hasApiPrefix;
+}
 
-  if (import.meta.env.DEV && baseHasApiPrefix && p.startsWith("/api/")) {
+export function buildApiUrl(path: string, baseUrl = requireApiBaseUrl()) {
+  const base = baseUrl.replace(/\/+$/, "");
+  const hasApiPrefix = baseHasApiPrefix(baseUrl);
+  let normalizedPath = normalizeApiPath(path);
+
+  if (import.meta.env.DEV && hasApiPrefix && normalizedPath.startsWith("/api/")) {
     console.warn(
       "[api] base URL already includes /api; stripping duplicate /api from path."
     );
   }
 
-  // Strip a leading "/api" only if baseUrl already includes "/api"
-  if (baseHasApiPrefix) {
-    if (p === "/api") return "/";
-    if (p.startsWith("/api/")) p = p.slice("/api".length);
+  if (hasApiPrefix) {
+    if (normalizedPath === "/api") {
+      normalizedPath = "";
+    } else if (normalizedPath.startsWith("/api/")) {
+      normalizedPath = normalizedPath.slice("/api".length);
+    }
+    return normalizedPath ? `${base}${normalizedPath}` : base;
   }
 
-  return p;
-}
+  if (normalizedPath === "") {
+    return `${base}/api`;
+  }
+  if (!normalizedPath.startsWith("/api/")) {
+    normalizedPath = `/api${normalizedPath}`;
+  }
 
-function joinUrl(baseUrl: string, path: string) {
-  const base = baseUrl.replace(/\/+$/, "");
-  const normalizedPath = normalizeApiPath(path, baseUrl).replace(/^\/+/, "");
-  return normalizedPath ? `${base}/${normalizedPath}` : `${base}/`;
+  return `${base}${normalizedPath}`;
 }
 
 type ApiRequestOptions = RequestInit & {
@@ -99,7 +115,7 @@ const apiRequest = async <T>(
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const url = joinUrl(baseUrl, path);
+  const url = buildApiUrl(path, baseUrl);
   const controller = new AbortController();
   if (signal) {
     signal.addEventListener("abort", () => controller.abort(), { once: true });
@@ -213,10 +229,10 @@ export const removeFromWatchlist = (listingId: string) =>
   });
 
 export const getNdaStatus = () =>
-  apiFetch<NdaStatus>("/api/nda/status", { timeoutMs: 10000 });
+  apiFetch<NdaStatus>("/nda/status", { timeoutMs: 10000 });
 
 export const acceptNda = () =>
-  apiFetch<NdaStatus>("/api/nda/accept", {
+  apiFetch<NdaStatus>("/nda/accept", {
     method: "POST",
     body: JSON.stringify({ accepted: true }),
     timeoutMs: 10000,
