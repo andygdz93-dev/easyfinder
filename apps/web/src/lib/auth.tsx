@@ -53,6 +53,10 @@ export const getStoredAuthToken = (): string | null => {
   return session?.token ?? null;
 };
 
+export const clearStoredSession = () => {
+  writeStoredSession(null);
+};
+
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {

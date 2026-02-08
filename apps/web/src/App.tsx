@@ -1,4 +1,4 @@
-import { Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes, useParams } from "react-router-dom";
 import { RequireAuth } from "./components/RequireAuth";
 import { RequireLiveNda } from "./components/RequireLiveNda";
 import { Landing } from "./pages/Landing";
@@ -19,6 +19,11 @@ import { DemoLayout } from "./layouts/DemoLayout";
 import { LiveLayout } from "./layouts/LiveLayout";
 import { NdaProvider } from "./lib/nda";
 
+const LegacyListingRedirect = () => {
+  const { id } = useParams();
+  return <Navigate to={`/app/listings/${id ?? ""}`} replace />;
+};
+
 export default function App() {
   return (
     <Routes>
@@ -27,6 +32,14 @@ export default function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/app/login" element={<Login />} />
       <Route path="/app/register" element={<Register />} />
+      <Route path="/listings" element={<Navigate to="/app/listings" replace />} />
+      <Route path="/listings/:id" element={<LegacyListingRedirect />} />
+      <Route path="/watchlist" element={<Navigate to="/app/watchlist" replace />} />
+      <Route path="/admin/sources" element={<Navigate to="/app/admin/sources" replace />} />
+      <Route path="/scoring" element={<Navigate to="/app/scoring" replace />} />
+      <Route path="/seller" element={<Navigate to="/app/seller" replace />} />
+      <Route path="/upgrade" element={<Navigate to="/app/upgrade" replace />} />
+      <Route path="/nda" element={<Navigate to="/app/nda" replace />} />
 
       <Route
         path="/app/*"
