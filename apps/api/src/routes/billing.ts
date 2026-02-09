@@ -2,9 +2,8 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { ObjectId } from "mongodb";
 import type Stripe from "stripe";
-import { stripe } from "../stripe.js";
+import { getStripe, requireStripeWebhookSecret } from "../stripe.js";
 import rawBody from "fastify-raw-body";
-import { env } from "../env.js";
 import { getUsersCollection } from "../users.js";
 import { fail, ok } from "../response.js";
 import {
@@ -126,6 +125,7 @@ export default async function billingRoutes(app: FastifyInstance) {
 
       const billing = normalizeBilling(user.billing ?? defaultBilling());
 
+      const stripe = getStripe();
       let stripeCustomerId = billing.stripe_customer_id;
       if (!stripeCustomerId) {
         const customer = await stripe.customers.create({
@@ -187,27 +187,27 @@ export default async function billingRoutes(app: FastifyInstance) {
     "/webhook",
     { config: { rawBody: true } },
     async (request, reply) => {
-      const signature = request.headers["stripe-signature"];
-      if (!signature || typeof signature !== "string") {
-        return reply.status(400).send({ error: "Missing signature" });
+      const sig = Array.isArray(request.headers["stripe-signature"])
+        ? request.headers["stripe-signature"][0]
+        : request.headers["stripe-signature"];
+      if (!sig) {
+        return reply.status(400).send({ error: "Missing Stripe-Signature header" });
       }
 
       if (!request.rawBody) {
-        request.log.error("Stripe webhook raw body missing");
-        return reply.status(500).send({ error: "Missing raw body" });
+        return reply.status(400).send({ error: "Missing raw body" });
       }
 
       let event: Stripe.Event;
       try {
-        event = stripe.webhooks.constructEvent(
-          request.rawBody,
-          signature,
-          env.STRIPE_WEBHOOK_SECRET
-        );
+        const webhookSecret = requireStripeWebhookSecret();
+        const stripe = getStripe();
+        event = stripe.webhooks.constructEvent(request.rawBody, sig, webhookSecret);
       } catch (error: any) {
         return reply.status(400).send({ error: `Webhook Error: ${error.message}` });
       }
 
+      const stripe = getStripe();
       switch (event.type) {
         case "checkout.session.completed": {
           const session = event.data.object as Stripe.Checkout.Session;

@@ -1,6 +1,24 @@
 import Stripe from "stripe";
 import { env } from "./env.js";
 
-export const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: "2024-06-20",
-});
+let stripeClient: Stripe | null = null;
+
+export function getStripe(): Stripe {
+  if (stripeClient) return stripeClient;
+  const key = env.STRIPE_SECRET_KEY;
+  if (!key) {
+    throw new Error("STRIPE_SECRET_KEY is missing. Stripe features are disabled.");
+  }
+  stripeClient = new Stripe(key, { apiVersion: "2024-06-20" });
+  return stripeClient;
+}
+
+export function requireStripeWebhookSecret(): string {
+  const secret = env.STRIPE_WEBHOOK_SECRET;
+  if (!secret) {
+    throw new Error(
+      "STRIPE_WEBHOOK_SECRET is missing. Webhook verification cannot run."
+    );
+  }
+  return secret;
+}
