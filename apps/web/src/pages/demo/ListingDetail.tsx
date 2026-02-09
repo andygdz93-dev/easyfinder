@@ -7,9 +7,14 @@ import ImageGallery from "../../components/ImageGallery";
 import { useDemoWatchlist } from "../../lib/demoWatchlist";
 import { formatCategory } from "../../lib/formatters";
 
-export default function DemoListingDetail() {
-  const { id } = useParams();
-  const listing = demoListings.find((l) => l.id === id);
+type Props = {
+  listingId?: string;
+};
+
+export default function DemoListingDetail({ listingId }: Props) {
+  const params = useParams();
+  const resolvedId = listingId ?? params.id;
+  const listing = demoListings.find((l) => l.id === resolvedId);
   const watchlist = useDemoWatchlist();
 
   if (!listing) {
