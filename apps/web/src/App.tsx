@@ -90,7 +90,7 @@ export default function App() {
           </DemoLayout>
         }
       >
-        <Route index element={<Navigate to="listings" replace />} />
+        <Route index element={<Navigate to="tour" replace />} />
         <Route path="listings" element={<DemoListings />} />
         <Route path="listings/:id" element={<DemoListingDetail />} />
         <Route path="watchlist" element={<DemoWatchlist />} />

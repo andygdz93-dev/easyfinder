@@ -6,7 +6,7 @@ export const Landing = () => (
   <div className="min-h-screen bg-slate-950 text-slate-100">
     <header className="flex items-center justify-between px-10 py-6">
       <h1 className="text-xl font-semibold">Easy Finder AI</h1>
-      <Link to="/demo" className="text-xs uppercase tracking-[0.3em] text-slate-400">
+      <Link to="/demo/tour" className="text-xs uppercase tracking-[0.3em] text-slate-400">
         Demo & Live
       </Link>
     </header>
@@ -25,12 +25,12 @@ export const Landing = () => (
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="space-y-4 border border-amber-200/20 bg-amber-50/5 p-6">
-          <h3 className="text-lg font-semibold">Try Demo</h3>
+          <h3 className="text-lg font-semibold">Demo Tour</h3>
           <p className="text-sm text-slate-300">
             Explore demo inventory, scoring, and watchlists using sample data.
           </p>
-          <Link to="/demo" className="inline-flex">
-            <Button>Try Demo</Button>
+          <Link to="/demo/tour" className="inline-flex">
+            <Button>Start Demo Tour</Button>
           </Link>
         </Card>
 
