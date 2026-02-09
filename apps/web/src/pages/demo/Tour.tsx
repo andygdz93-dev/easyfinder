@@ -528,7 +528,7 @@ const TourListingDetail = () => {
     );
   }
 
-  return <DemoListingDetail />;
+  return <DemoListingDetail listingId={listing.id} />;
 };
 
 const TourSellerDashboard = () => {
