@@ -1,5 +1,4 @@
 import { createContext, useContext, useMemo, useState } from "react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { demoListings } from "@easyfinderai/shared";
 import DemoListings from "./Listings";
 import DemoListingDetail from "./ListingDetail";
@@ -529,13 +528,7 @@ const TourListingDetail = () => {
     );
   }
 
-  return (
-    <MemoryRouter initialEntries={[`/demo/listings/${listing.id}`]}>
-      <Routes>
-        <Route path="/demo/listings/:id" element={<DemoListingDetail />} />
-      </Routes>
-    </MemoryRouter>
-  );
+  return <DemoListingDetail />;
 };
 
 const TourSellerDashboard = () => {
