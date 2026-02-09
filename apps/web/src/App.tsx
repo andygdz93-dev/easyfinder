@@ -20,6 +20,7 @@ import { Register } from "./pages/Register";
 import DemoListings from "./pages/demo/Listings";
 import DemoListingDetail from "./pages/demo/ListingDetail";
 import { DemoWatchlist } from "./pages/demo/Watchlist";
+import { DemoTour } from "./pages/demo/Tour";
 import { DemoLayout } from "./layouts/DemoLayout";
 import { LiveLayout } from "./layouts/LiveLayout";
 import { NdaProvider } from "./lib/nda";
@@ -93,6 +94,7 @@ export default function App() {
         <Route path="listings" element={<DemoListings />} />
         <Route path="listings/:id" element={<DemoListingDetail />} />
         <Route path="watchlist" element={<DemoWatchlist />} />
+        <Route path="tour" element={<DemoTour />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
