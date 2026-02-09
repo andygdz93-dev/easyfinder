@@ -1,4 +1,4 @@
-import { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { ObjectId } from "mongodb";
 import type Stripe from "stripe";
@@ -22,10 +22,15 @@ const createCheckoutSchema = z.object({
   plan: z.enum(["pro", "enterprise"]),
 });
 
-const resolveOrigin = (request: { headers: Record<string, string | undefined>; protocol?: string }) => {
-  if (request.headers.origin) return request.headers.origin;
-  if (request.headers.host && request.protocol) {
-    return `${request.protocol}://${request.headers.host}`;
+const normalizeHeader = (value: string | string[] | undefined) =>
+  Array.isArray(value) ? value[0] : value;
+
+const resolveOrigin = (request: FastifyRequest) => {
+  const origin = normalizeHeader(request.headers.origin);
+  if (origin) return origin;
+  const host = normalizeHeader(request.headers.host);
+  if (host && request.protocol) {
+    return `${request.protocol}://${host}`;
   }
   return undefined;
 };

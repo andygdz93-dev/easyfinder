@@ -6,8 +6,9 @@ import { z } from "zod";
  * - No "dev-secret in prod" footguns
  */
 
-const EnvSchema = z.object({
-  NODE_ENV: z.enum(["development", "test", "production"]).optional(),
+const EnvSchema = z
+  .object({
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 
   // Backend runtime
   PORT: z
@@ -39,12 +40,33 @@ const EnvSchema = z.object({
   MONGO_URL: z.string().min(1, "MONGO_URL is required"),
   DB_NAME: z.string().min(1, "DB_NAME is required"),
 
-  // Stripe (required)
-  STRIPE_SECRET_KEY: z.string().min(1, "STRIPE_SECRET_KEY is required"),
-  STRIPE_WEBHOOK_SECRET: z.string().min(1, "STRIPE_WEBHOOK_SECRET is required"),
-  STRIPE_PRICE_ID_PRO: z.string().min(1, "STRIPE_PRICE_ID_PRO is required"),
-  STRIPE_PRICE_ID_ENTERPRISE: z.string().min(1, "STRIPE_PRICE_ID_ENTERPRISE is required"),
-});
+  // Stripe
+  STRIPE_SECRET_KEY: z.string().min(1, "STRIPE_SECRET_KEY is required").optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().min(1, "STRIPE_WEBHOOK_SECRET is required").optional(),
+  STRIPE_PRICE_ID_PRO: z.string().min(1, "STRIPE_PRICE_ID_PRO is required").optional(),
+  STRIPE_PRICE_ID_ENTERPRISE: z
+    .string()
+    .min(1, "STRIPE_PRICE_ID_ENTERPRISE is required")
+    .optional(),
+})
+  .superRefine((values, ctx) => {
+    if (values.NODE_ENV !== "production") return;
+    const requiredKeys = [
+      "STRIPE_SECRET_KEY",
+      "STRIPE_WEBHOOK_SECRET",
+      "STRIPE_PRICE_ID_PRO",
+      "STRIPE_PRICE_ID_ENTERPRISE",
+    ] as const;
+    for (const key of requiredKeys) {
+      if (!values[key]) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: [key],
+          message: `${key} is required in production`,
+        });
+      }
+    }
+  });
 
 const testDefaults =
   process.env.NODE_ENV === "test"
