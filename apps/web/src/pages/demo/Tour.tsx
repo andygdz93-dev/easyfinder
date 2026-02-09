@@ -326,69 +326,76 @@ const TourIntro = ({
   role: TourRole;
   onRoleChange: (role: TourRole) => void;
   onStart: () => void;
-}) => (
-  <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-10 md:px-6">
-    <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-      <p className="text-xs uppercase tracking-[0.3em] text-amber-200">
-        Demo tour
-      </p>
-      <h1 className="mt-3 text-3xl font-semibold">Buyer Experience Walkthrough</h1>
-      <p className="mt-3 max-w-2xl text-base text-slate-200">
-        This guided tour walks through the buyer workflow using demo-only data. No logins,
-        payments, or backend calls are required. Choose a role to begin.
-      </p>
-      <div className="mt-6 flex flex-col gap-4">
-        <div className="flex items-center gap-3 rounded-2xl border border-amber-200/30 bg-slate-900/60 p-4">
-          <input
-            id="role-buyer"
-            type="radio"
-            checked={role === "buyer"}
-            onChange={() => onRoleChange("buyer")}
-            className="h-4 w-4 accent-amber-300"
-          />
-          <label htmlFor="role-buyer" className="text-sm font-semibold">
-            Buyer
-          </label>
-          <span className="text-xs text-slate-300">Ranked listings to outreach.</span>
+}) => {
+  const roleLabel = role === "buyer" ? "Buyer" : role === "seller" ? "Seller" : "Enterprise";
+
+  return (
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-10 md:px-6">
+      <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
+        <p className="text-xs uppercase tracking-[0.3em] text-amber-200">
+          Demo tour
+        </p>
+        <h1 className="mt-3 text-3xl font-semibold">
+          {roleLabel} Experience Walkthrough
+        </h1>
+        <p className="mt-3 max-w-2xl text-base text-slate-200">
+          This guided tour walks through the buyer workflow using demo-only data. No logins,
+          payments, or backend calls are required. Choose a role to begin.
+        </p>
+        <div className="mt-6 flex flex-col gap-4">
+          <div className="flex items-center gap-3 rounded-2xl border border-amber-200/30 bg-slate-900/60 p-4">
+            <input
+              id="role-buyer"
+              type="radio"
+              checked={role === "buyer"}
+              onChange={() => onRoleChange("buyer")}
+              className="h-4 w-4 accent-amber-300"
+            />
+            <label htmlFor="role-buyer" className="text-sm font-semibold">
+              Buyer
+            </label>
+            <span className="text-xs text-slate-300">Ranked listings to outreach.</span>
+          </div>
+          <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-900/40 p-4">
+            <input
+              id="role-seller"
+              type="radio"
+              checked={role === "seller"}
+              onChange={() => onRoleChange("seller")}
+              className="h-4 w-4 accent-amber-300"
+            />
+            <label htmlFor="role-seller" className="text-sm font-semibold">
+              Seller
+            </label>
+            <span className="text-xs text-slate-300">List inventory and manage offers.</span>
+          </div>
+          <div className="flex items-center gap-3 rounded-2xl border border-emerald-200/20 bg-slate-900/40 p-4">
+            <input
+              id="role-enterprise"
+              type="radio"
+              checked={role === "enterprise"}
+              onChange={() => onRoleChange("enterprise")}
+              className="h-4 w-4 accent-amber-300"
+            />
+            <label htmlFor="role-enterprise" className="text-sm font-semibold">
+              Enterprise
+            </label>
+            <span className="text-xs text-slate-300">
+              Compliance, governance, and admin controls.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={onStart}
+            className="w-full rounded-full bg-amber-300 px-5 py-3 text-sm font-semibold text-slate-950 md:w-auto"
+          >
+            Start {roleLabel} Tour
+          </button>
         </div>
-        <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-900/40 p-4">
-          <input
-            id="role-seller"
-            type="radio"
-            checked={role === "seller"}
-            onChange={() => onRoleChange("seller")}
-            className="h-4 w-4 accent-amber-300"
-          />
-          <label htmlFor="role-seller" className="text-sm font-semibold">
-            Seller
-          </label>
-          <span className="text-xs text-slate-300">List inventory and manage offers.</span>
-        </div>
-        <div className="flex items-center gap-3 rounded-2xl border border-emerald-200/20 bg-slate-900/40 p-4">
-          <input
-            id="role-enterprise"
-            type="radio"
-            checked={role === "enterprise"}
-            onChange={() => onRoleChange("enterprise")}
-            className="h-4 w-4 accent-amber-300"
-          />
-          <label htmlFor="role-enterprise" className="text-sm font-semibold">
-            Enterprise
-          </label>
-          <span className="text-xs text-slate-300">Compliance, governance, and admin controls.</span>
-        </div>
-        <button
-          type="button"
-          onClick={onStart}
-          className="w-full rounded-full bg-amber-300 px-5 py-3 text-sm font-semibold text-slate-950 md:w-auto"
-        >
-          Start{" "}
-          {role === "buyer" ? "Buyer" : role === "seller" ? "Seller" : "Enterprise"} Tour
-        </button>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const TourOverlay = ({
   step,
