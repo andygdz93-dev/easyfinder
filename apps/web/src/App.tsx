@@ -17,9 +17,6 @@ import { Upgrade } from "./pages/app/Upgrade";
 import { Nda } from "./pages/app/Nda";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
-import DemoListings from "./pages/demo/Listings";
-import DemoListingDetail from "./pages/demo/ListingDetail";
-import { DemoWatchlist } from "./pages/demo/Watchlist";
 import { DemoTour } from "./pages/demo/Tour";
 import { DemoLayout } from "./layouts/DemoLayout";
 import { LiveLayout } from "./layouts/LiveLayout";
@@ -91,9 +88,9 @@ export default function App() {
         }
       >
         <Route index element={<Navigate to="tour" replace />} />
-        <Route path="listings" element={<DemoListings />} />
-        <Route path="listings/:id" element={<DemoListingDetail />} />
-        <Route path="watchlist" element={<DemoWatchlist />} />
+        <Route path="listings" element={<Navigate to="/demo/tour" replace />} />
+        <Route path="listings/:id" element={<Navigate to="/demo/tour" replace />} />
+        <Route path="watchlist" element={<Navigate to="/demo/tour" replace />} />
         <Route path="tour" element={<DemoTour />} />
       </Route>
 
