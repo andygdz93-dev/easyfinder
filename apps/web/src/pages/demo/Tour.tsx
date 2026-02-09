@@ -1,12 +1,24 @@
 import { createContext, useContext, useMemo, useState } from "react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { demoListings } from "@easyfinderai/shared";
 import DemoListings from "./Listings";
 import DemoListingDetail from "./ListingDetail";
 import { DemoWatchlist } from "./Watchlist";
 import { useDemoWatchlist } from "../../lib/demoWatchlist";
 
-type TourRole = "buyer" | "seller";
+type TourRole = "buyer" | "seller" | "enterprise";
+
+type EnterpriseWeights = {
+  price: number;
+  hours: number;
+  location: number;
+};
+
+type EnterpriseUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+};
 
 type SellerListing = {
   id: string;
@@ -24,11 +36,19 @@ type DemoTourState = {
   contactEmailDraft: { subject: string; body: string };
   lastActionMessage: string;
   sellerListings: SellerListing[];
+  enterpriseSources: Record<string, boolean>;
+  enterpriseWeights: EnterpriseWeights;
+  enterprisePreferredState: string;
+  enterpriseUsers: EnterpriseUser[];
   setNdaAccepted: (value: boolean) => void;
   setContactEmailDraft: (value: { subject: string; body: string }) => void;
   setLastActionMessage: (value: string) => void;
   addSellerListing: (listing: SellerListing) => void;
   addSellerListings: (listings: SellerListing[]) => void;
+  setEnterpriseSources: (sources: Record<string, boolean>) => void;
+  setEnterpriseWeights: (weights: EnterpriseWeights) => void;
+  setEnterprisePreferredState: (state: string) => void;
+  addEnterpriseUser: (user: EnterpriseUser) => void;
 };
 
 const DemoTourContext = createContext<DemoTourState | null>(null);
@@ -50,6 +70,24 @@ const DemoTourProvider = ({ children }: { children: React.ReactNode }) => {
   });
   const [lastActionMessage, setLastActionMessage] = useState("");
   const [sellerListings, setSellerListings] = useState<SellerListing[]>([]);
+  const [enterpriseSources, setEnterpriseSources] = useState<Record<string, boolean>>({
+    AuctionPlanet: true,
+    GovPlanet: true,
+    IronPlanet: true,
+    RitchieBros: true,
+    MachineryTrader: false,
+    AuctionTime: false,
+  });
+  const [enterpriseWeights, setEnterpriseWeights] = useState<EnterpriseWeights>({
+    price: 40,
+    hours: 35,
+    location: 25,
+  });
+  const [enterprisePreferredState, setEnterprisePreferredState] = useState("TX");
+  const [enterpriseUsers, setEnterpriseUsers] = useState<EnterpriseUser[]>([
+    { id: "user-1", name: "Avery Chen", email: "avery@northwind.com", role: "Admin" },
+    { id: "user-2", name: "Jordan Lee", email: "jordan@northwind.com", role: "Analyst" },
+  ]);
 
   const addSellerListing = (listing: SellerListing) => {
     setSellerListings((prev) => [...prev, listing]);
@@ -60,17 +98,29 @@ const DemoTourProvider = ({ children }: { children: React.ReactNode }) => {
     setSellerListings((prev) => [...prev, ...listings]);
   };
 
+  const addEnterpriseUser = (user: EnterpriseUser) => {
+    setEnterpriseUsers((prev) => [...prev, user]);
+  };
+
   const value = useMemo(
     () => ({
       ndaAccepted,
       contactEmailDraft,
       lastActionMessage,
       sellerListings,
+      enterpriseSources,
+      enterpriseWeights,
+      enterprisePreferredState,
+      enterpriseUsers,
       setNdaAccepted,
       setContactEmailDraft,
       setLastActionMessage,
       addSellerListing,
       addSellerListings,
+      setEnterpriseSources,
+      setEnterpriseWeights,
+      setEnterprisePreferredState,
+      addEnterpriseUser,
     }),
     [
       addSellerListings,
@@ -78,6 +128,10 @@ const DemoTourProvider = ({ children }: { children: React.ReactNode }) => {
       lastActionMessage,
       ndaAccepted,
       sellerListings,
+      enterpriseSources,
+      enterprisePreferredState,
+      enterpriseUsers,
+      enterpriseWeights,
     ]
   );
 
@@ -162,7 +216,50 @@ const sellerSteps = [
   },
 ];
 
-const createListingId = () => Math.random().toString(36).slice(2, 9);
+const enterpriseSteps = [
+  {
+    id: 1,
+    title: "Enterprise Overview",
+    description:
+      "Enterprise access layers compliance, governance, and centralized controls on top of the EasyFinder marketplace. Teams gain secure visibility, policy enforcement, and auditable workflows across business units.",
+  },
+  {
+    id: 2,
+    title: "Data Sources Management",
+    description:
+      "Enterprise admins curate external sources to align with procurement policy. This demo shows mock source toggles to illustrate the experience without any real integrations.",
+  },
+  {
+    id: 3,
+    title: "Scoring Configuration",
+    description:
+      "Weight price, hours, and location to reflect enterprise sourcing policy. Adjusting sliders re-ranks demo listings locally so teams can visualize the scoring impact in real time.",
+  },
+  {
+    id: 4,
+    title: "Audit Log Visibility",
+    description:
+      "Enterprise audit logs keep every action transparent and traceable. Teams can review who changed what, when, and the outcome to satisfy compliance requirements.",
+  },
+  {
+    id: 5,
+    title: "Role & Seat Management",
+    description:
+      "Seat management ensures only approved roles can access sensitive workflows. Admins can add users, assign roles, and review seat allocation centrally.",
+  },
+  {
+    id: 6,
+    title: "Enterprise Upgrade / Contact Sales",
+    description:
+      "Enterprise support includes onboarding, contracts, and SLAs. This CTA guides teams to connect with sales and unlock enterprise-grade tooling.",
+  },
+];
+
+let listingIdCounter = 0;
+const createListingId = () => {
+  listingIdCounter += 1;
+  return `listing-${listingIdCounter}`;
+};
 
 const parseCsvRows = (text: string) => {
   const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
@@ -183,7 +280,8 @@ export const DemoTour = () => {
   const [step, setStep] = useState(1);
   const [role, setRole] = useState<TourRole>("buyer");
 
-  const steps = role === "buyer" ? buyerSteps : sellerSteps;
+  const steps =
+    role === "buyer" ? buyerSteps : role === "seller" ? sellerSteps : enterpriseSteps;
   const currentStep = steps.find((item) => item.id === step) ?? steps[0];
 
   return (
@@ -266,12 +364,26 @@ const TourIntro = ({
           </label>
           <span className="text-xs text-slate-300">List inventory and manage offers.</span>
         </div>
+        <div className="flex items-center gap-3 rounded-2xl border border-emerald-200/20 bg-slate-900/40 p-4">
+          <input
+            id="role-enterprise"
+            type="radio"
+            checked={role === "enterprise"}
+            onChange={() => onRoleChange("enterprise")}
+            className="h-4 w-4 accent-amber-300"
+          />
+          <label htmlFor="role-enterprise" className="text-sm font-semibold">
+            Enterprise
+          </label>
+          <span className="text-xs text-slate-300">Compliance, governance, and admin controls.</span>
+        </div>
         <button
           type="button"
           onClick={onStart}
           className="w-full rounded-full bg-amber-300 px-5 py-3 text-sm font-semibold text-slate-950 md:w-auto"
         >
-          Start {role === "buyer" ? "Buyer" : "Seller"} Tour
+          Start{" "}
+          {role === "buyer" ? "Buyer" : role === "seller" ? "Seller" : "Enterprise"} Tour
         </button>
       </div>
     </div>
@@ -366,6 +478,25 @@ const TourStepContent = ({ step, role }: { step: number; role: TourRole }) => {
     }
   }
 
+  if (role === "enterprise") {
+    switch (step) {
+      case 1:
+        return <TourEnterpriseOverview />;
+      case 2:
+        return <TourEnterpriseSources />;
+      case 3:
+        return <TourEnterpriseScoring />;
+      case 4:
+        return <TourEnterpriseAuditLog />;
+      case 5:
+        return <TourEnterpriseSeats />;
+      case 6:
+        return <TourEnterpriseUpgradeCta />;
+      default:
+        return null;
+    }
+  }
+
   switch (step) {
     case 1:
       return <DemoListings />;
@@ -397,13 +528,7 @@ const TourListingDetail = () => {
     );
   }
 
-  return (
-    <MemoryRouter initialEntries={[`/demo/listings/${listing.id}`]}>
-      <Routes>
-        <Route path="/demo/listings/:id" element={<DemoListingDetail />} />
-      </Routes>
-    </MemoryRouter>
-  );
+  return <DemoListingDetail listingId={listing.id} />;
 };
 
 const TourSellerDashboard = () => {
@@ -753,6 +878,399 @@ const TourSellerUpgradeCta = () => (
           className="rounded-full border border-white/20 px-5 py-2 text-xs font-semibold text-white"
         >
           Compare seller plans
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+const normalizeValue = (value: number, min: number, max: number) => {
+  if (max === min) return 1;
+  return (value - min) / (max - min);
+};
+
+const TourEnterpriseOverview = () => (
+  <div className="mx-auto w-full max-w-5xl px-4 py-6 md:px-6">
+    <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+      <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">Enterprise</p>
+      <h2 className="mt-3 text-2xl font-semibold">Enterprise access + compliance controls</h2>
+      <p className="mt-3 text-sm text-slate-200">
+        Enterprise plans add governance, centralized visibility, and compliance guardrails to
+        the EasyFinder marketplace. Admins can enforce policies, monitor sourcing, and keep
+        approvals auditable across regions and business units.
+      </p>
+      <div className="mt-6 grid gap-4 md:grid-cols-3">
+        {[
+          {
+            title: "Access control",
+            description: "Role-based access keeps sensitive sourcing data protected.",
+          },
+          {
+            title: "Compliance",
+            description: "Standardized workflows ensure purchases align to policy.",
+          },
+          {
+            title: "Audit readiness",
+            description: "Every action is tracked with immutable audit trails.",
+          },
+        ].map((item) => (
+          <div key={item.title} className="rounded-2xl border border-white/10 bg-slate-900/60 p-4">
+            <h3 className="text-sm font-semibold">{item.title}</h3>
+            <p className="mt-2 text-xs text-slate-300">{item.description}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+const TourEnterpriseSources = () => {
+  const { enterpriseSources, setEnterpriseSources } = useDemoTour();
+
+  return (
+    <div className="mx-auto w-full max-w-5xl px-4 py-6 md:px-6">
+      <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <h2 className="text-xl font-semibold">Data Sources Management</h2>
+        <p className="mt-2 text-sm text-slate-200">
+          Enterprise admins can enable or disable approved marketplaces. These demo toggles are
+          static and only persist within this tour session.
+        </p>
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          {Object.entries(enterpriseSources).map(([source, enabled]) => (
+            <button
+              key={source}
+              type="button"
+              onClick={() =>
+                setEnterpriseSources({
+                  ...enterpriseSources,
+                  [source]: !enabled,
+                })
+              }
+              className="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-900/60 px-4 py-3 text-left"
+            >
+              <div>
+                <p className="text-sm font-semibold">{source}</p>
+                <p className="text-xs text-slate-300">Demo-only source toggle</p>
+              </div>
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                  enabled ? "bg-emerald-400/20 text-emerald-200" : "bg-slate-800 text-slate-400"
+                }`}
+              >
+                {enabled ? "Enabled" : "Disabled"}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const TourEnterpriseScoring = () => {
+  const {
+    enterpriseWeights,
+    setEnterpriseWeights,
+    enterprisePreferredState,
+    setEnterprisePreferredState,
+  } = useDemoTour();
+  const states = useMemo(
+    () => Array.from(new Set(demoListings.map((listing) => listing.state))).sort(),
+    []
+  );
+
+  const ranked = useMemo(() => {
+    const prices = demoListings.map((listing) => listing.price);
+    const hours = demoListings.map((listing) => listing.hours);
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const minHours = Math.min(...hours);
+    const maxHours = Math.max(...hours);
+    const totalWeight = Math.max(
+      enterpriseWeights.price + enterpriseWeights.hours + enterpriseWeights.location,
+      1
+    );
+
+    return demoListings
+      .map((listing) => {
+        const priceScore = 1 - normalizeValue(listing.price, minPrice, maxPrice);
+        const hoursScore = 1 - normalizeValue(listing.hours, minHours, maxHours);
+        const locationScore =
+          enterprisePreferredState === "Any"
+            ? 0.5
+            : listing.state === enterprisePreferredState
+            ? 1
+            : 0.1;
+        const score =
+          (priceScore * enterpriseWeights.price +
+            hoursScore * enterpriseWeights.hours +
+            locationScore * enterpriseWeights.location) /
+          totalWeight;
+        return { listing, score };
+      })
+      .sort(
+        (a, b) =>
+          b.score - a.score || a.listing.id.localeCompare(b.listing.id)
+      );
+  }, [enterprisePreferredState, enterpriseWeights]);
+
+  const updateWeight = (key: keyof EnterpriseWeights, value: number) => {
+    setEnterpriseWeights({ ...enterpriseWeights, [key]: value });
+  };
+
+  return (
+    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 md:px-6">
+      <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <h2 className="text-xl font-semibold">Scoring Configuration</h2>
+        <p className="mt-2 text-sm text-slate-200">
+          Adjust weights to match enterprise policy. Rankings below update deterministically from
+          demo data using price, hours, and location preference.
+        </p>
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
+          {([
+            { key: "price", label: "Price weight" },
+            { key: "hours", label: "Hours weight" },
+            { key: "location", label: "Location weight" },
+          ] as const).map((item) => (
+            <label key={item.key} className="rounded-2xl border border-white/10 bg-slate-900/60 p-4">
+              <div className="flex items-center justify-between text-xs text-slate-300">
+                <span>{item.label}</span>
+                <span className="text-sm font-semibold text-slate-100">
+                  {enterpriseWeights[item.key]}
+                </span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={enterpriseWeights[item.key]}
+                onChange={(event) => updateWeight(item.key, Number(event.target.value))}
+                className="mt-4 w-full accent-amber-300"
+              />
+            </label>
+          ))}
+        </div>
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <label className="text-sm text-slate-200">
+            Preferred state
+            <select
+              value={enterprisePreferredState}
+              onChange={(event) => setEnterprisePreferredState(event.target.value)}
+              className="ml-3 rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm"
+            >
+              <option value="Any">Any</option>
+              {states.map((state) => (
+                <option key={state} value={state}>
+                  {state}
+                </option>
+              ))}
+            </select>
+          </label>
+          <span className="text-xs text-slate-400">
+            Location weight influences rankings when the preferred state matches.
+          </span>
+        </div>
+      </div>
+      <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <h3 className="text-lg font-semibold">Ranked demo listings</h3>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          {ranked.map(({ listing, score }, index) => (
+            <div
+              key={listing.id}
+              className="rounded-2xl border border-white/10 bg-slate-900/60 p-4"
+            >
+              <p className="text-xs uppercase tracking-wide text-slate-400">
+                Rank {index + 1}
+              </p>
+              <h4 className="mt-2 text-sm font-semibold">{listing.title}</h4>
+              <p className="text-xs text-slate-300">{listing.state} • {listing.category}</p>
+              <div className="mt-3 text-xs text-slate-300">
+                <span>Price: ${listing.price.toLocaleString()}</span>
+                <span className="mx-2">•</span>
+                <span>Hours: {listing.hours.toLocaleString()}</span>
+              </div>
+              <p className="mt-3 text-xs text-emerald-200">
+                Composite score: {(score * 100).toFixed(1)}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const TourEnterpriseAuditLog = () => (
+  <div className="mx-auto w-full max-w-5xl px-4 py-6 md:px-6">
+    <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+      <h2 className="text-xl font-semibold">Audit Log Visibility</h2>
+      <p className="mt-2 text-sm text-slate-200">
+        Audit events record every governance action with timestamps, roles, and outcomes for
+        complete traceability.
+      </p>
+      <div className="mt-6 overflow-x-auto rounded-2xl border border-white/10">
+        <table className="w-full text-left text-xs text-slate-200">
+          <thead className="bg-slate-900/70 text-[10px] uppercase tracking-wide text-slate-400">
+            <tr>
+              <th className="px-3 py-2">Timestamp</th>
+              <th className="px-3 py-2">Actor role</th>
+              <th className="px-3 py-2">Action type</th>
+              <th className="px-3 py-2">Outcome</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              {
+                timestamp: "2025-12-12 09:14:22",
+                role: "Admin",
+                action: "Source policy updated",
+                outcome: "Approved",
+              },
+              {
+                timestamp: "2025-12-12 09:08:05",
+                role: "Analyst",
+                action: "Scoring weights revised",
+                outcome: "Logged",
+              },
+              {
+                timestamp: "2025-12-11 18:42:11",
+                role: "Compliance",
+                action: "Seat audit exported",
+                outcome: "Completed",
+              },
+            ].map((entry) => (
+              <tr key={`${entry.timestamp}-${entry.action}`} className="border-t border-white/10">
+                <td className="px-3 py-2">{entry.timestamp}</td>
+                <td className="px-3 py-2">{entry.role}</td>
+                <td className="px-3 py-2">{entry.action}</td>
+                <td className="px-3 py-2">{entry.outcome}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+);
+
+const TourEnterpriseSeats = () => {
+  const { enterpriseUsers, addEnterpriseUser } = useDemoTour();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("Viewer");
+
+  const handleAdd = (event: React.FormEvent) => {
+    event.preventDefault();
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+    if (!trimmedName || !trimmedEmail) return;
+    addEnterpriseUser({
+      id: `${trimmedEmail}-${enterpriseUsers.length + 1}`,
+      name: trimmedName,
+      email: trimmedEmail,
+      role,
+    });
+    setName("");
+    setEmail("");
+    setRole("Viewer");
+  };
+
+  return (
+    <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 md:px-6">
+      <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <h2 className="text-xl font-semibold">Role &amp; Seat Management</h2>
+        <p className="mt-2 text-sm text-slate-200">
+          Add team members, assign roles, and keep seat usage aligned with governance policies.
+        </p>
+        <form className="mt-6 grid gap-4 md:grid-cols-3" onSubmit={handleAdd}>
+          <label className="text-sm">
+            Name
+            <input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm"
+            />
+          </label>
+          <label className="text-sm">
+            Email
+            <input
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm"
+            />
+          </label>
+          <label className="text-sm">
+            Role
+            <select
+              value={role}
+              onChange={(event) => setRole(event.target.value)}
+              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm"
+            >
+              {["Admin", "Compliance", "Analyst", "Viewer"].map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="md:col-span-3">
+            <button
+              type="submit"
+              className="rounded-full bg-amber-300 px-5 py-2 text-xs font-semibold text-slate-950"
+            >
+              Add seat
+            </button>
+          </div>
+        </form>
+      </div>
+      <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <h3 className="text-lg font-semibold">Active seats</h3>
+        <div className="mt-4 overflow-x-auto rounded-2xl border border-white/10">
+          <table className="w-full text-left text-xs text-slate-200">
+            <thead className="bg-slate-900/70 text-[10px] uppercase tracking-wide text-slate-400">
+              <tr>
+                <th className="px-3 py-2">Name</th>
+                <th className="px-3 py-2">Email</th>
+                <th className="px-3 py-2">Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              {enterpriseUsers.map((user) => (
+                <tr key={user.id} className="border-t border-white/10">
+                  <td className="px-3 py-2">{user.name}</td>
+                  <td className="px-3 py-2">{user.email}</td>
+                  <td className="px-3 py-2">{user.role}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const TourEnterpriseUpgradeCta = () => (
+  <div className="mx-auto w-full max-w-4xl px-4 py-10 md:px-6">
+    <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900/80 to-slate-950/80 p-8">
+      <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">Enterprise</p>
+      <h2 className="mt-3 text-2xl font-semibold">Contact sales for enterprise rollout</h2>
+      <p className="mt-3 text-sm text-slate-200">
+        Enterprise support covers onboarding, contracts, security reviews, and SLAs. Connect
+        with sales to tailor an agreement that matches your procurement and compliance needs.
+      </p>
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          className="rounded-full bg-amber-300 px-5 py-2 text-xs font-semibold text-slate-950"
+        >
+          Contact enterprise sales
+        </button>
+        <button
+          type="button"
+          className="rounded-full border border-white/20 px-5 py-2 text-xs font-semibold text-white"
+        >
+          Review enterprise support
         </button>
       </div>
     </div>
