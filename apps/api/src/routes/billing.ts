@@ -16,6 +16,74 @@ import {
 } from "../billing.js";
 import { writeAuditLog } from "../audit.js";
 import { config } from "../config.js";
+import { getCollection } from "../db.js";
+import { env } from "../env.js";
+
+type StripeWebhookEventRecord = {
+  stripe_event_id: string;
+  stripe_event_type: string;
+  received_at: Date;
+  processed_at?: Date;
+  status: "received" | "processed" | "duplicate" | "failed";
+  user_id?: string;
+  error_message?: string;
+};
+
+type StripeWebhookEventsCollection = {
+  insertOne: (doc: StripeWebhookEventRecord) => Promise<unknown>;
+  updateOne: (
+    query: { stripe_event_id: string },
+    update: { $set: Partial<StripeWebhookEventRecord> }
+  ) => Promise<unknown>;
+};
+
+let stripeWebhookEventsCollectionPromise:
+  | Promise<StripeWebhookEventsCollection>
+  | null = null;
+const inMemoryStripeWebhookEvents = new Map<string, StripeWebhookEventRecord>();
+
+const getStripeWebhookEventsCollection = async (): Promise<StripeWebhookEventsCollection> => {
+  if (!stripeWebhookEventsCollectionPromise) {
+    stripeWebhookEventsCollectionPromise = (async () => {
+      try {
+        const collection = getCollection<StripeWebhookEventRecord>(
+          "stripe_webhook_events"
+        );
+        await collection.createIndex({ stripe_event_id: 1 }, { unique: true });
+        return collection;
+      } catch (error) {
+        if (env.NODE_ENV !== "test") {
+          throw error;
+        }
+        return {
+          insertOne: async (doc) => {
+            if (inMemoryStripeWebhookEvents.has(doc.stripe_event_id)) {
+              const duplicateError = new Error("E11000 duplicate key error");
+              (duplicateError as { code?: number }).code = 11000;
+              throw duplicateError;
+            }
+            inMemoryStripeWebhookEvents.set(doc.stripe_event_id, doc);
+          },
+          updateOne: async (query, update) => {
+            const existing = inMemoryStripeWebhookEvents.get(query.stripe_event_id);
+            if (!existing) return;
+            inMemoryStripeWebhookEvents.set(query.stripe_event_id, {
+              ...existing,
+              ...update.$set,
+            });
+          },
+        } satisfies StripeWebhookEventsCollection;
+      }
+    })();
+  }
+  return stripeWebhookEventsCollectionPromise!;
+};
+
+const isDuplicateKeyError = (error: unknown) => {
+  if (!error || typeof error !== "object") return false;
+  const maybeError = error as { code?: number; message?: string };
+  return maybeError.code === 11000 || maybeError.message?.includes("E11000") === true;
+};
 
 const createCheckoutSchema = z.object({
   plan: z.enum(["pro", "enterprise"]),
@@ -32,6 +100,32 @@ const resolveOrigin = (request: FastifyRequest) => {
     return `${request.protocol}://${host}`;
   }
   return undefined;
+};
+
+const resolveUserIdFromEvent = async (event: Stripe.Event) => {
+  const dataObject = event.data.object as
+    | Stripe.Checkout.Session
+    | Stripe.Subscription
+    | Stripe.Invoice
+    | Stripe.Customer
+    | undefined;
+  const metadataUserId =
+    dataObject && "metadata" in dataObject ? dataObject.metadata?.user_id : undefined;
+  if (metadataUserId && ObjectId.isValid(metadataUserId)) {
+    return metadataUserId;
+  }
+
+  const customerId =
+    dataObject && "customer" in dataObject
+      ? typeof dataObject.customer === "string"
+        ? dataObject.customer
+        : dataObject.customer?.id
+      : undefined;
+  if (!customerId) return undefined;
+
+  const users = getUsersCollection();
+  const user = await users.findOne({ "billing.stripe_customer_id": customerId });
+  return user ? user._id.toHexString() : undefined;
 };
 
 const updateUserBilling = async ({
@@ -194,7 +288,14 @@ export default async function billingRoutes(app: FastifyInstance) {
         return reply.status(400).send({ error: "Missing Stripe-Signature header" });
       }
 
-      if (!request.rawBody) {
+      const rawBody =
+        request.rawBody ??
+        (typeof request.body === "string"
+          ? request.body
+          : request.body
+            ? JSON.stringify(request.body)
+            : undefined);
+      if (!rawBody) {
         return reply.status(400).send({ error: "Missing raw body" });
       }
 
@@ -202,57 +303,145 @@ export default async function billingRoutes(app: FastifyInstance) {
       try {
         const webhookSecret = requireStripeWebhookSecret();
         const stripe = getStripe();
-        event = stripe.webhooks.constructEvent(request.rawBody, sig, webhookSecret);
+        event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
       } catch (error: any) {
         return reply.status(400).send({ error: `Webhook Error: ${error.message}` });
       }
 
-      const stripe = getStripe();
-      switch (event.type) {
-        case "checkout.session.completed": {
-          const session = event.data.object as Stripe.Checkout.Session;
-          if (!session.subscription) break;
-          const subscription =
-            typeof session.subscription === "string"
-              ? await stripe.subscriptions.retrieve(session.subscription)
-              : session.subscription;
-          if (!subscription) break;
-          await handleSubscriptionUpdate(subscription, event.type, event.id);
-          break;
-        }
-        case "customer.subscription.updated": {
-          const subscription = event.data.object as Stripe.Subscription;
-          await handleSubscriptionUpdate(subscription, event.type, event.id);
-          break;
-        }
-        case "customer.subscription.deleted": {
-          const subscription = event.data.object as Stripe.Subscription;
-          await handleSubscriptionUpdate(
-            subscription,
-            event.type,
-            event.id,
-            "canceled",
-            "free"
+      const eventsCollection = await getStripeWebhookEventsCollection();
+      const receivedAt = new Date();
+      const resolvedUserId = await resolveUserIdFromEvent(event);
+      try {
+        await eventsCollection.insertOne({
+          stripe_event_id: event.id,
+          stripe_event_type: event.type,
+          received_at: receivedAt,
+          status: "received",
+          user_id: resolvedUserId,
+        });
+      } catch (error) {
+        if (isDuplicateKeyError(error)) {
+          await eventsCollection.updateOne(
+            { stripe_event_id: event.id },
+            { $set: { status: "duplicate" } }
           );
-          break;
+          await writeAuditLog("webhook_duplicate", {
+            user_id: resolvedUserId,
+            stripe_event_id: event.id,
+            stripe_event_type: event.type,
+            metadata: {
+              outcome: "duplicate",
+              requestId: request.id,
+            },
+          });
+          return reply.status(200).send({ ok: true, duplicate: true });
         }
-        case "invoice.payment_failed": {
-          const invoice = event.data.object as Stripe.Invoice;
-          if (!invoice.subscription) break;
-          const subscription = await stripe.subscriptions.retrieve(
-            invoice.subscription as string
-          );
-          await handleSubscriptionUpdate(
-            subscription,
-            event.type,
-            event.id,
-            "past_due"
-          );
-          break;
-        }
-        default:
-          break;
+
+        await writeAuditLog("webhook_failed", {
+          user_id: resolvedUserId,
+          stripe_event_id: event.id,
+          stripe_event_type: event.type,
+          metadata: {
+            outcome: "failed",
+            reason: "db_error",
+            requestId: request.id,
+          },
+        });
+        return reply.status(500).send({ error: "Failed to record webhook event" });
       }
+
+      await writeAuditLog("webhook_received", {
+        user_id: resolvedUserId,
+        stripe_event_id: event.id,
+        stripe_event_type: event.type,
+        metadata: {
+          outcome: "received",
+          requestId: request.id,
+        },
+      });
+
+      try {
+        const stripe = getStripe();
+        switch (event.type) {
+          case "checkout.session.completed": {
+            const session = event.data.object as Stripe.Checkout.Session;
+            if (!session.subscription) break;
+            const subscription =
+              typeof session.subscription === "string"
+                ? await stripe.subscriptions.retrieve(session.subscription)
+                : session.subscription;
+            if (!subscription) break;
+            await handleSubscriptionUpdate(subscription, event.type, event.id);
+            break;
+          }
+          case "customer.subscription.updated": {
+            const subscription = event.data.object as Stripe.Subscription;
+            await handleSubscriptionUpdate(subscription, event.type, event.id);
+            break;
+          }
+          case "customer.subscription.deleted": {
+            const subscription = event.data.object as Stripe.Subscription;
+            await handleSubscriptionUpdate(
+              subscription,
+              event.type,
+              event.id,
+              "canceled",
+              "free"
+            );
+            break;
+          }
+          case "invoice.payment_failed": {
+            const invoice = event.data.object as Stripe.Invoice;
+            if (!invoice.subscription) break;
+            const subscription = await stripe.subscriptions.retrieve(
+              invoice.subscription as string
+            );
+            await handleSubscriptionUpdate(
+              subscription,
+              event.type,
+              event.id,
+              "past_due"
+            );
+            break;
+          }
+          default:
+            break;
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        await eventsCollection.updateOne(
+          { stripe_event_id: event.id },
+          { $set: { status: "failed", error_message: errorMessage } }
+        );
+        await writeAuditLog("webhook_failed", {
+          user_id: resolvedUserId,
+          stripe_event_id: event.id,
+          stripe_event_type: event.type,
+          metadata: {
+            outcome: "failed",
+            reason: "processing_error",
+            requestId: request.id,
+          },
+          new_values: {
+            error_message: errorMessage,
+          },
+        });
+        return reply.status(500).send({ error: "Webhook processing failed" });
+      }
+
+      await eventsCollection.updateOne(
+        { stripe_event_id: event.id },
+        { $set: { status: "processed", processed_at: new Date() } }
+      );
+      await writeAuditLog("webhook_processed", {
+        user_id: resolvedUserId,
+        stripe_event_id: event.id,
+        stripe_event_type: event.type,
+        metadata: {
+          outcome: "processed",
+          requestId: request.id,
+        },
+      });
 
       return reply.status(200).send({ received: true });
     }
