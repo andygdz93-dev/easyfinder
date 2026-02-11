@@ -213,7 +213,7 @@ export const buildServer = () => {
   app.register(sellerRoutes, { prefix: "/api/seller" });
   app.register(meRoutes, { prefix: "/api/me" });
   app.register(ndaRoutes, { prefix: "/api/nda" });
-  if (env.BILLING_ENABLED) {
+  if (env.BILLING_ENABLED === true) {
     app.register(billingRoutes, { prefix: "/api/billing" });
   }
 

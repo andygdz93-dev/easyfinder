@@ -142,6 +142,11 @@ describe("API", () => {
     expect(res.body.data.token).toBeTruthy();
   });
 
+  it("does not register billing routes when billing is disabled", async () => {
+    const res = await supertest(app.server).post("/api/billing/webhook").send({ test: true });
+    expect(res.status).toBe(404);
+  });
+
   it("demo cannot POST scoring configs", async () => {
     const res = await supertest(app.server)
       .post("/api/scoring-configs")
