@@ -43,6 +43,11 @@ export const Login = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          <div className="-mt-1 text-right">
+            <Link to="/forgot-password" className="text-xs text-accent">
+              Forgot password?
+            </Link>
+          </div>
           {error ? <p className="text-xs text-red-400">{error}</p> : null}
           <Button className="w-full" type="submit">
             Sign in
