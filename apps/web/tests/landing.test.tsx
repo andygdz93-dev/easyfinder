@@ -15,6 +15,6 @@ it("renders landing page with demo entry", () => {
   const demoLinks = screen.getAllByRole("link", { name: /demo/i });
   expect(demoLinks.length).toBeGreaterThan(0);
   demoLinks.forEach((link) => {
-    expect(link).toHaveAttribute("href", "/demo");
+    expect(link).toHaveAttribute("href", "/demo/tour");
   });
 });
