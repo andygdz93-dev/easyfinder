@@ -51,6 +51,20 @@ describe("auth flow", () => {
         } as Response;
       }
 
+      if (url.endsWith("/api/auth/me")) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              id: "u1",
+              email: "buyer@easyfinder.ai",
+              name: "Buyer",
+              role: "buyer",
+            },
+          }),
+        } as Response;
+      }
+
       if (url.endsWith("/api/me")) {
         return {
           ok: true,
@@ -116,7 +130,8 @@ describe("auth flow", () => {
 
     const session = JSON.parse(rawSession ?? "{}");
     expect(session.token).toBe("jwt-123");
-    expect(session.user.email).toBe("buyer@easyfinder.ai");
+    expect(rawSession).toContain("jwt-123");
+    expect(await screen.findByText("buyer@easyfinder.ai")).toBeInTheDocument();
   });
 
   it("RequireAuth allows /app/listings when session token exists", async () => {
@@ -124,7 +139,6 @@ describe("auth flow", () => {
       AUTH_SESSION_STORAGE_KEY,
       JSON.stringify({
         token: "jwt-existing",
-        user: { id: "u1", email: "buyer@easyfinder.ai", name: "Buyer", role: "buyer" },
       })
     );
 
@@ -140,6 +154,19 @@ describe("auth flow", () => {
                 status: "active",
                 current_period_end: "2099-01-01T00:00:00.000Z",
               },
+            },
+          }),
+        } as Response;
+      }
+      if (url.endsWith("/api/auth/me")) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              id: "u1",
+              email: "buyer@easyfinder.ai",
+              name: "Buyer",
+              role: "buyer",
             },
           }),
         } as Response;
@@ -161,6 +188,7 @@ describe("auth flow", () => {
     renderApp(["/app/listings"]);
 
     expect(await screen.findByPlaceholderText(/max hours/i)).toBeInTheDocument();
+    expect(await screen.findByText("buyer@easyfinder.ai")).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.queryByRole("heading", { name: /sign in/i })).not.toBeInTheDocument();
     });
