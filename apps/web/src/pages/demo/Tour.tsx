@@ -280,6 +280,7 @@ export const DemoTour = () => {
   const [started, setStarted] = useState(false);
   const [step, setStep] = useState(1);
   const [role, setRole] = useState<TourRole>("buyer");
+  const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
 
   const steps =
     role === "buyer" ? buyerSteps : role === "seller" ? sellerSteps : enterpriseSteps;
@@ -292,14 +293,24 @@ export const DemoTour = () => {
           <div className="relative z-0">
             <TourIntro
               role={role}
-              onRoleChange={setRole}
+              onRoleChange={(nextRole) => {
+                setRole(nextRole);
+                setSelectedListingId(null);
+                setStep(1);
+              }}
               onStart={() => setStarted(true)}
             />
           </div>
         ) : (
           <div className="flex h-screen overflow-hidden">
             <div className="min-w-0 flex-1 overflow-y-auto">
-              <TourStepContent step={step} role={role} />
+              <TourStepContent
+                step={step}
+                role={role}
+                onStepChange={setStep}
+                selectedListingId={selectedListingId}
+                onSelectListingId={setSelectedListingId}
+              />
             </div>
             <TourOverlay
               step={step}
@@ -310,6 +321,7 @@ export const DemoTour = () => {
               onExit={() => {
                 setStarted(false);
                 setStep(1);
+                setSelectedListingId(null);
               }}
               role={role}
             />
@@ -472,7 +484,19 @@ const TourOverlay = ({
   );
 };
 
-const TourStepContent = ({ step, role }: { step: number; role: TourRole }) => {
+const TourStepContent = ({
+  step,
+  role,
+  onStepChange,
+  selectedListingId,
+  onSelectListingId,
+}: {
+  step: number;
+  role: TourRole;
+  onStepChange: (step: number) => void;
+  selectedListingId: string | null;
+  onSelectListingId: (listingId: string | null) => void;
+}) => {
   if (role === "seller") {
     switch (step) {
       case 1:
@@ -513,9 +537,36 @@ const TourStepContent = ({ step, role }: { step: number; role: TourRole }) => {
 
   switch (step) {
     case 1:
-      return <DemoListings />;
+      return (
+        <div
+          onClickCapture={(event) => {
+            if (role !== "buyer" || step !== 1) return;
+            if (event.button !== 0) return;
+            if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+            const target = event.target;
+            if (!(target instanceof Element)) return;
+
+            const listingLink = target.closest("a[href^='/demo/listings/']");
+            if (!(listingLink instanceof HTMLAnchorElement)) return;
+
+            const dataListingId =
+              listingLink.dataset.listingId ||
+              target.closest("[data-listing-id]")?.getAttribute("data-listing-id");
+            const pathListingId = listingLink.pathname.match(/^\/demo\/listings\/([^/?#]+)/)?.[1] ?? null;
+            const listingId = dataListingId || pathListingId;
+            if (!listingId) return;
+
+            event.preventDefault();
+            onSelectListingId(listingId);
+            onStepChange(2);
+          }}
+        >
+          <DemoListings />
+        </div>
+      );
     case 2:
-      return <TourListingDetail />;
+      return <TourListingDetail selectedListingId={selectedListingId} />;
     case 3:
       return <TourNdaPreview />;
     case 4:
@@ -529,8 +580,9 @@ const TourStepContent = ({ step, role }: { step: number; role: TourRole }) => {
   }
 };
 
-const TourListingDetail = () => {
-  const listing = demoListings[0];
+const TourListingDetail = ({ selectedListingId }: { selectedListingId: string | null }) => {
+  const listing =
+    demoListings.find((item) => item.id === selectedListingId) ?? demoListings[0];
 
   if (!listing?.id) {
     return (
