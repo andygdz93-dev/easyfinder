@@ -117,7 +117,7 @@ export const Listings = () => {
         </div>
       ) : listingsQuery.isError || hasInvalidData ? (
         <Card className="border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-300">
-          Live listings are not available in DEMO_MODE.
+          Marketplace integrations available in Production accounts.
         </Card>
       ) : listings.length === 0 ? (
         <Card className="border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-300">

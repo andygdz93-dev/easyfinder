@@ -5,6 +5,7 @@ import { useAuth } from "../lib/auth";
 import { getMe } from "../lib/api";
 import { Billing, isBillingActive } from "../lib/billing";
 import { isDemoMode } from "../env";
+import DemoBanner from "./DemoBanner";
 
 const navSections = [
   {
@@ -42,6 +43,7 @@ export const AppShell = ({
 }) => {
   const { user, token, clearSession } = useAuth();
   const demoMode = isDemoMode();
+  const showDemoBanner = import.meta.env.VITE_DEMO_MODE === "true";
   const [billing, setBilling] = useState<Billing | null>(null);
   const [billingError, setBillingError] = useState<string | null>(null);
 
@@ -155,6 +157,7 @@ export const AppShell = ({
           )}
         </aside>
         <main className="flex-1">
+          {showDemoBanner ? <DemoBanner /> : null}
           <header className="flex items-center justify-between border-b border-slate-800 px-8 py-6">
             <div>
               <h2 className="text-lg font-semibold">Welcome back</h2>
