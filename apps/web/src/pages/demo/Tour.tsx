@@ -293,7 +293,11 @@ export const DemoTour = () => {
           <div className="relative z-0">
             <TourIntro
               role={role}
-              onRoleChange={setRole}
+              onRoleChange={(nextRole) => {
+                setRole(nextRole);
+                setSelectedListingId(null);
+                setStep(1);
+              }}
               onStart={() => setStarted(true)}
             />
           </div>
@@ -317,6 +321,7 @@ export const DemoTour = () => {
               onExit={() => {
                 setStarted(false);
                 setStep(1);
+                setSelectedListingId(null);
               }}
               role={role}
             />
