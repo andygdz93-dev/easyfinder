@@ -66,6 +66,7 @@ export default async function ndaRoutes(app: FastifyInstance) {
     audit("NDA_ACCEPTED", {
       userId: request.user.id,
       ndaVersion: "v1",
+      ip: request.ip,
     });
 
     return ok(request, { accepted: true });

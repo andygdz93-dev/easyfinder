@@ -85,6 +85,7 @@ export default async function listingsRoutes(app: FastifyInstance) {
   app.post("/", writeHandlers, async (request, reply) => {
     audit("LISTING_CREATED", {
       userId: request.user.id,
+      ip: request.ip,
     });
 
     return fail(request, reply, "NOT_IMPLEMENTED", "Listing creation is not available yet.", 501);
