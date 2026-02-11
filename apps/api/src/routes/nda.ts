@@ -3,6 +3,7 @@ import { z } from "zod";
 import { ObjectId } from "mongodb";
 import { getUsersCollection } from "../users.js";
 import { fail, ok } from "../response.js";
+import { audit } from "../lib/audit.js";
 
 type UserDocument = {
   _id: ObjectId;
@@ -61,6 +62,11 @@ export default async function ndaRoutes(app: FastifyInstance) {
     if (!updateResult.matchedCount) {
       return fail(request, reply, "NOT_FOUND", "User not found.", 404);
     }
+
+    audit("NDA_ACCEPTED", {
+      userId: request.user.id,
+      ndaVersion: "v1",
+    });
 
     return ok(request, { accepted: true });
   });

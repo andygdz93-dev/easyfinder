@@ -6,6 +6,7 @@ import { listings } from "../store.js";
 import { requireNDA } from "../middleware/requireNDA.js";
 import { config } from "../config.js";
 import { disableWritesInDemo } from "../middleware/disableWritesInDemo.js";
+import { audit } from "../lib/audit.js";
 
 export default async function listingsRoutes(app: FastifyInstance) {
   /**
@@ -82,6 +83,10 @@ export default async function listingsRoutes(app: FastifyInstance) {
   };
 
   app.post("/", writeHandlers, async (request, reply) => {
+    audit("LISTING_CREATED", {
+      userId: request.user.id,
+    });
+
     return fail(request, reply, "NOT_IMPLEMENTED", "Listing creation is not available yet.", 501);
   });
 
