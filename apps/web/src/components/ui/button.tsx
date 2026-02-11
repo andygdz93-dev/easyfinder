@@ -1,9 +1,9 @@
 import { clsx } from "clsx";
 
 const variants = {
-  primary: "bg-accent text-slate-900 hover:bg-sky-300",
+  primary: "bg-[rgb(var(--accent))] text-slate-950 hover:bg-[rgb(var(--accent)/0.85)]",
   secondary: "bg-slate-800 text-white hover:bg-slate-700",
-  outline: "border border-slate-700 text-slate-200 hover:bg-slate-800",
+  outline: "border border-[rgb(var(--accent)/0.45)] text-[rgb(var(--accent))] hover:bg-[rgb(var(--accent)/0.14)]",
 };
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
