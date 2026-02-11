@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../lib/auth";
 import { useRuntime } from "../lib/runtime";
 
 type Mode = "demo" | "live";
@@ -15,7 +16,7 @@ const modeConfig: Record<
     bannerClass: "border-amber-200/40 bg-amber-100/10 text-amber-100",
   },
   live: {
-    label: "LIVE MODE",
+    label: "Loading…",
     badgeClass: "bg-sky-400 text-sky-950",
     shellClass: "live-shell",
     bannerClass: "border-sky-400/30 bg-sky-500/10 text-sky-100",
@@ -29,8 +30,24 @@ export const ModeLayout = ({
   mode: Mode;
   children: ReactNode;
 }) => {
-  const { demoMode } = useRuntime();
+  const { demoMode, hydrated } = useRuntime();
+  const { user, isUserLoading } = useAuth();
   const config = modeConfig[mode];
+
+  const authRole = user?.role;
+  const roleLabel = authRole === "seller" ? "Seller" : "Buyer";
+
+  const billingPlan = (user as { billing?: { plan?: unknown } } | null)?.billing?.plan;
+  const planLabel =
+    billingPlan === "pro"
+      ? "Pro"
+      : billingPlan === "enterprise"
+        ? "Enterprise"
+        : "Free";
+
+  const isLoading = !hydrated || isUserLoading;
+  const liveBadgeLabel = isLoading ? "Loading…" : `${planLabel} ${roleLabel}`;
+  const badgeLabel = mode === "demo" ? config.label : liveBadgeLabel;
 
   return (
     <div className={`min-h-screen ${config.shellClass}`}>
@@ -39,7 +56,7 @@ export const ModeLayout = ({
       >
         <div className="flex items-center gap-3">
           <span className={`rounded-full px-3 py-1 text-[10px] font-semibold ${config.badgeClass}`}>
-            {config.label}
+            {badgeLabel}
           </span>
         </div>
         {demoMode ? (
