@@ -5,6 +5,8 @@ export type AuthUser = {
   email: string;
   name?: string;
   role: "demo" | "buyer" | "seller" | "admin";
+  ndaAccepted?: boolean;
+  ndaAcceptedAt?: Date | null;
 };
 
 export const getRoleFromRequest = (request: FastifyRequest) =>

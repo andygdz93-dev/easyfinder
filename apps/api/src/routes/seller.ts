@@ -1,11 +1,12 @@
 import { FastifyInstance } from "fastify";
 import { listings } from "../store.js";
 import { fail, ok } from "../response.js";
+import { requireNDA } from "../middleware/requireNDA.js";
 
 const sellerOnly = new Set(["seller", "admin"]);
 
 export default async function sellerRoutes(app: FastifyInstance) {
-  app.get("/insights", { preHandler: app.authenticate }, async (request, reply) => {
+  app.get("/insights", { preHandler: [app.authenticate, requireNDA] }, async (request, reply) => {
     if (!sellerOnly.has(request.user.role)) {
       return fail(request, reply, "FORBIDDEN", "Seller access only.", 403);
     }

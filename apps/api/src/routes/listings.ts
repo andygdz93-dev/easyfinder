@@ -3,6 +3,7 @@ import { defaultScoringConfig, scoreListing } from "@easyfinderai/shared";
 import { fail, ok } from "../response.js";
 import { requirePlan } from "../middleware/requirePlan.js";
 import { listings } from "../store.js";
+import { requireNDA } from "../middleware/requireNDA.js";
 import { config } from "../config.js";
 
 export default async function listingsRoutes(app: FastifyInstance) {
@@ -10,7 +11,7 @@ export default async function listingsRoutes(app: FastifyInstance) {
    * GET /api/listings
    * Returns ranked live listings
    */
-  app.get("/", { preHandler: [app.authenticate, requirePlan(["pro", "enterprise"])] }, async (request, reply) => {
+  app.get("/", { preHandler: [app.authenticate, requireNDA, requirePlan(["pro", "enterprise"])] }, async (request, reply) => {
     if (config.demoMode) {
       return fail(
         request,
@@ -45,7 +46,7 @@ export default async function listingsRoutes(app: FastifyInstance) {
    */
   app.get<{ Params: { id: string } }>(
     "/:id",
-    { preHandler: [app.authenticate, requirePlan(["pro", "enterprise"])] },
+    { preHandler: [app.authenticate, requireNDA, requirePlan(["pro", "enterprise"])] },
     async (request, reply) => {
     const { id } = request.params;
 

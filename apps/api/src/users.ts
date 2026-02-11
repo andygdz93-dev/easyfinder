@@ -11,7 +11,8 @@ export type UserDocument = {
   name: string;
   role: "buyer" | "seller" | "admin";
   passwordHash?: string;
-  ndaAcceptedAt?: Date;
+  ndaAccepted: boolean;
+  ndaAcceptedAt: Date | null;
   ndaVersion?: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -30,7 +31,7 @@ type UsersCollection = {
   updateOne: (
     query: UserQuery,
     update: { $set: Partial<UserDocument> }
-  ) => Promise<void>;
+  ) => Promise<{ matchedCount: number }>;
 };
 
 const testUsers = new Map<string, UserDocument>();
@@ -48,6 +49,8 @@ const seedTestUsers = () => {
       name: user.name ?? "Demo User",
       role: user.role === "demo" ? "buyer" : user.role ?? "buyer",
       passwordHash: user.passwordHash ?? "",
+      ndaAccepted: Boolean(user.ndaAccepted),
+      ndaAcceptedAt: user.ndaAcceptedAt ? new Date(user.ndaAcceptedAt) : null,
       billing: normalizeBilling(
         user.billing
           ? {
@@ -74,7 +77,8 @@ export const getUsersCollection = (): UsersCollection => {
         await collection.insertOne(doc);
       },
       updateOne: async (query, update) => {
-        await collection.updateOne(query, update);
+        const result = await collection.updateOne(query, update);
+        return { matchedCount: result.matchedCount };
       },
     };
   } catch (error) {
@@ -133,13 +137,14 @@ export const getUsersCollection = (): UsersCollection => {
           return null;
         })();
 
-        if (!existing) return;
+        if (!existing) return { matchedCount: 0 };
         const next: UserDocument = {
           ...existing,
           ...update.$set,
           updatedAt: new Date(),
         };
         testUsers.set(next.emailLower, next);
+        return { matchedCount: 1 };
       },
     };
   }
