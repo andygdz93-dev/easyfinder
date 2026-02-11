@@ -202,8 +202,48 @@ export type ListingFilters = {
   operable?: boolean;
 };
 
-export const getHealth = () =>
-  apiRequest<{ ok: boolean; mongoConfigured: boolean }>("/health");
+export type HealthResponse = {
+  ok: boolean;
+  demoMode: boolean;
+  billingEnabled: boolean;
+};
+
+const buildHealthUrl = (baseUrl = requireApiBaseUrl()) => {
+  try {
+    const url = new URL(baseUrl);
+    const withoutTrailingSlash = url.pathname.replace(/\/+$/, "");
+    if (withoutTrailingSlash === "/api") {
+      url.pathname = "/health";
+    } else {
+      url.pathname = `${withoutTrailingSlash || ""}/health`;
+    }
+    url.search = "";
+    url.hash = "";
+    return url.toString();
+  } catch {
+    const normalized = baseUrl.replace(/\/+$/, "");
+    if (normalized.endsWith("/api")) {
+      return `${normalized.slice(0, -4)}/health`;
+    }
+    return `${normalized}/health`;
+  }
+};
+
+export const getHealth = async (): Promise<HealthResponse> => {
+  const res = await fetch(buildHealthUrl(), {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  if (!res.ok) {
+    throw new ApiError("Unable to load backend health.", undefined, res.status);
+  }
+
+  const payload = (await res.json()) as HealthResponse;
+  return payload;
+};
 
 export const getListings = (filters: ListingFilters) => {
   const params = new URLSearchParams();

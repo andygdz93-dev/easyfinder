@@ -197,7 +197,11 @@ export const buildServer = () => {
     return reply.send({ ok: true });
   });
   app.get("/health", async (_request, reply) => {
-    return reply.send({ ok: true });
+    return reply.send({
+      ok: true,
+      demoMode: env.DEMO_MODE,
+      billingEnabled: env.BILLING_ENABLED,
+    });
   });
   app.get("/ready", async (_request, reply) => {
     return reply.send({ ready: true });

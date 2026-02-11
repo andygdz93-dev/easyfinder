@@ -4,7 +4,7 @@ import DemoListings from "./Listings";
 import DemoListingDetail from "./ListingDetail";
 import { DemoWatchlist } from "./Watchlist";
 import { useDemoWatchlist } from "../../lib/demoWatchlist";
-import { isDemoMode } from "../../env";
+import { useRuntime } from "../../lib/runtime";
 
 type TourRole = "buyer" | "seller" | "enterprise";
 
@@ -573,7 +573,7 @@ const TourSellerDashboard = () => {
 
 const TourSellerManualEntry = () => {
   const { addSellerListing } = useDemoTour();
-  const demoMode = isDemoMode();
+  const { demoMode } = useRuntime();
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [price, setPrice] = useState("");
@@ -700,7 +700,7 @@ const TourSellerManualEntry = () => {
 
 const TourSellerCsvUpload = () => {
   const { addSellerListings } = useDemoTour();
-  const demoMode = isDemoMode();
+  const { demoMode } = useRuntime();
   const [previewRows, setPreviewRows] = useState<Record<string, string>[]>([]);
   const [error, setError] = useState("");
 
