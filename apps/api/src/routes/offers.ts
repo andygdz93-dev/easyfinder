@@ -11,6 +11,7 @@ export default async function offersRoutes(app: FastifyInstance) {
     async (request, reply) => {
       audit("OFFER_SUBMITTED", {
         userId: request.user.id,
+        ip: request.ip,
       });
 
       return fail(request, reply, "NOT_IMPLEMENTED", "Offer creation is not available yet.", 501);
