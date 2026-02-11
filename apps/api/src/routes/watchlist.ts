@@ -5,11 +5,12 @@ import { demoListings } from "@easyfinderai/shared";
 import { ok, fail } from "../response.js";
 import { WatchlistItem } from "@easyfinderai/shared";
 import { requirePlan } from "../middleware/requirePlan.js";
+import { requireNDA } from "../middleware/requireNDA.js";
 
 const resolveUserId = (request: FastifyRequest) => request.user?.id ?? demoUserId;
 
 export default async function watchlistRoutes(app: FastifyInstance) {
-  app.get("/", { preHandler: [app.authenticate, requirePlan(["pro", "enterprise"])] }, async (request) => {
+  app.get("/", { preHandler: [app.authenticate, requireNDA, requirePlan(["pro", "enterprise"])] }, async (request) => {
     const userId = resolveUserId(request);
     const watchlist = watchlists.get(userId) ?? new Map<string, WatchlistItem>();
     return ok(request, { items: Array.from(watchlist.values()) });
@@ -17,7 +18,7 @@ export default async function watchlistRoutes(app: FastifyInstance) {
 
   app.post<{ Params: { listingId: string } }>(
     "/:listingId",
-    { preHandler: [app.authenticate, requirePlan(["pro", "enterprise"])] },
+    { preHandler: [app.authenticate, requireNDA, requirePlan(["pro", "enterprise"])] },
     async (request, reply) => {
     const userId = resolveUserId(request);
     const { listingId } = request.params;
@@ -60,7 +61,7 @@ export default async function watchlistRoutes(app: FastifyInstance) {
 
   app.delete<{ Params: { listingId: string } }>(
     "/:listingId",
-    { preHandler: [app.authenticate, requirePlan(["pro", "enterprise"])] },
+    { preHandler: [app.authenticate, requireNDA, requirePlan(["pro", "enterprise"])] },
     async (request, reply) => {
     const userId = resolveUserId(request);
     const { listingId } = request.params;

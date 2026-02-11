@@ -1,12 +1,13 @@
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { ObjectId } from "mongodb";
-import { getCollection } from "../db.js";
+import { getUsersCollection } from "../users.js";
 import { fail, ok } from "../response.js";
 
 type UserDocument = {
   _id: ObjectId;
-  ndaAcceptedAt?: Date;
+  ndaAccepted?: boolean;
+  ndaAcceptedAt?: Date | null;
   ndaVersion?: string;
 };
 
@@ -15,7 +16,7 @@ const acceptSchema = z.object({
 });
 
 export default async function ndaRoutes(app: FastifyInstance) {
-  const usersCollection = () => getCollection<UserDocument>("users");
+  const usersCollection = () => getUsersCollection();
 
   app.get("/status", { preHandler: app.authenticate }, async (request, reply) => {
     try {
@@ -30,7 +31,7 @@ export default async function ndaRoutes(app: FastifyInstance) {
       }
 
       return ok(request, {
-        accepted: Boolean(user.ndaAcceptedAt),
+        accepted: Boolean(user.ndaAccepted),
       });
     } catch {
       return ok(request, { accepted: false });
@@ -50,6 +51,7 @@ export default async function ndaRoutes(app: FastifyInstance) {
       { _id: new ObjectId(request.user.id) },
       {
         $set: {
+          ndaAccepted: true,
           ndaAcceptedAt: now,
           ndaVersion: "v1",
         },
