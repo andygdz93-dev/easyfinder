@@ -42,18 +42,23 @@ export const AppShell = ({
   className?: string;
 }) => {
   const { user, token, clearSession } = useAuth();
-  const { demoMode } = useRuntime();
+  const { demoMode, hydrated } = useRuntime();
   const showDemoBanner = demoMode;
   const [billing, setBilling] = useState<Billing | null>(null);
   const [billingError, setBillingError] = useState<string | null>(null);
+  const [billingLoading, setBillingLoading] = useState(false);
 
   useEffect(() => {
     let isActive = true;
     if (!token) {
       setBilling(null);
       setBillingError(null);
+      setBillingLoading(false);
       return;
     }
+
+    setBillingLoading(true);
+
     getMe()
       .then((data) => {
         if (!isActive) return;
@@ -64,6 +69,10 @@ export const AppShell = ({
         if (!isActive) return;
         setBilling(null);
         setBillingError(error instanceof Error ? error.message : "Unable to load billing.");
+      })
+      .finally(() => {
+        if (!isActive) return;
+        setBillingLoading(false);
       });
     return () => {
       isActive = false;
@@ -72,6 +81,20 @@ export const AppShell = ({
 
   const billingActive = isBillingActive(billing);
   const plan = billing?.plan ?? "free";
+  const userPlan = billing?.plan ?? "free";
+  const userRole = user?.role ?? "buyer";
+  const planLabel =
+    userPlan === "free" ? "Free" : userPlan === "pro" ? "Pro" : "Enterprise";
+  const roleLabel =
+    userRole === "seller"
+      ? "Seller"
+      : userRole === "admin"
+        ? "Admin"
+        : userRole === "demo"
+          ? "Demo"
+          : "Buyer";
+  const isShellLoading = !hydrated || billingLoading || (Boolean(token) && !user);
+  const modeLabel = isShellLoading ? "Loading…" : `${planLabel} ${roleLabel} Mode`;
   const visibleSections = useMemo(() => {
     return navSections
       .map((section) => {
@@ -172,6 +195,9 @@ export const AppShell = ({
               >
                 Toggle mode
               </button>
+              <div className="rounded-full border border-slate-700 px-4 py-2 text-xs text-slate-300">
+                {modeLabel}
+              </div>
               <div className="rounded-full bg-slate-800 px-3 py-2 text-xs text-slate-200">
                 {user?.email ?? "demo"}
               </div>
