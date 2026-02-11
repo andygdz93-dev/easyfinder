@@ -32,11 +32,9 @@ const EnvSchema = z
 
     // Feature toggles (prevents optional integrations from bricking prod)
     BILLING_ENABLED: z
-      .string()
-      .optional()
-      .transform((v) => v === "true")
+      .enum(["true", "false"])
       .default("false")
-      .pipe(z.boolean()),
+      .transform((v) => v === "true"),
     EMAIL_ENABLED: z
       .string()
       .optional()
