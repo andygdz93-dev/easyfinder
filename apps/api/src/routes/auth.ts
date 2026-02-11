@@ -118,6 +118,7 @@ export default async function authRoutes(app: FastifyInstance) {
     audit("USER_LOGIN", {
       userId: user._id.toHexString(),
       email: user.email,
+      ip: request.ip,
     });
 
     return ok(request, {
@@ -136,6 +137,7 @@ export default async function authRoutes(app: FastifyInstance) {
       audit("PASSWORD_RESET_REQUESTED", {
         userId: user._id.toHexString(),
         email: user.email,
+        ip: request.ip,
       });
 
       const token = randomBytes(32).toString("hex");
