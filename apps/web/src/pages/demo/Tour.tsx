@@ -296,24 +296,25 @@ export const DemoTour = () => {
               onStart={() => setStarted(true)}
             />
           ) : (
-            <TourStepContent step={step} role={role} />
+            <div className="flex">
+              <div className="min-w-0 flex-1">
+                <TourStepContent step={step} role={role} />
+              </div>
+              <TourOverlay
+                step={step}
+                title={currentStep.title}
+                description={currentStep.description}
+                onBack={() => setStep((prev) => Math.max(1, prev - 1))}
+                onNext={() => setStep((prev) => Math.min(steps.length, prev + 1))}
+                onExit={() => {
+                  setStarted(false);
+                  setStep(1);
+                }}
+                role={role}
+              />
+            </div>
           )}
         </div>
-
-        {started ? (
-          <TourOverlay
-            step={step}
-            title={currentStep.title}
-            description={currentStep.description}
-            onBack={() => setStep((prev) => Math.max(1, prev - 1))}
-            onNext={() => setStep((prev) => Math.min(steps.length, prev + 1))}
-            onExit={() => {
-              setStarted(false);
-              setStep(1);
-            }}
-            role={role}
-          />
-        ) : null}
       </div>
     </DemoTourProvider>
   );
@@ -427,9 +428,8 @@ const TourOverlay = ({
   const nextDisabled = role === "buyer" && step === 3 && !ndaAccepted;
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-10 flex">
-      <div className="flex-1 bg-black/60" />
-      <aside className="pointer-events-auto w-full max-w-[400px] border-l border-white/10 bg-slate-950/95 p-6 backdrop-blur">
+    <div className="sticky top-0 h-screen overflow-y-auto">
+      <aside className="pointer-events-auto h-full w-[400px] max-w-[400px] border-l border-white/10 bg-slate-950/95 p-6 backdrop-blur">
         <div className="space-y-3">
           <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
             Step {step} of 6
