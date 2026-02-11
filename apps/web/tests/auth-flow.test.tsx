@@ -5,15 +5,18 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, beforeEach, expect, it, vi } from "vitest";
 import App from "../src/App";
 import { AUTH_SESSION_STORAGE_KEY, AuthProvider } from "../src/lib/auth";
+import { RuntimeProvider } from "../src/lib/runtime";
 
 const renderApp = (initialEntries: string[]) => {
   const queryClient = new QueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <MemoryRouter initialEntries={initialEntries}>
-          <App />
-        </MemoryRouter>
+        <RuntimeProvider>
+          <MemoryRouter initialEntries={initialEntries}>
+            <App />
+          </MemoryRouter>
+        </RuntimeProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
@@ -23,11 +26,13 @@ describe("auth flow", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     localStorage.clear();
+    setRuntimeHealthMock({ demoMode: false, billingEnabled: false });
   });
 
-  it("login stores session under one key and grants access to /app routes", async () => {
+  it("login stores session under one key and hides seller write actions in demo runtime", async () => {
     const user = userEvent.setup();
-    global.fetch = vi.fn(async (input: RequestInfo | URL) => {
+    setRuntimeHealthMock({ demoMode: true, billingEnabled: false });
+    setTestFetchHandler(async (input: RequestInfo | URL) => {
       const url = String(input);
       if (url.endsWith("/api/auth/login")) {
         return {
@@ -40,6 +45,21 @@ describe("auth flow", () => {
                 email: "buyer@easyfinder.ai",
                 name: "Buyer",
                 role: "buyer",
+              },
+            },
+          }),
+        } as Response;
+      }
+
+      if (url.endsWith("/api/me")) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              billing: {
+                plan: "pro",
+                status: "active",
+                current_period_end: "2099-01-01T00:00:00.000Z",
               },
             },
           }),
@@ -71,7 +91,7 @@ describe("auth flow", () => {
         ok: true,
         json: async () => ({ data: {} }),
       } as Response;
-    }) as unknown as typeof fetch;
+    });
 
     process.env.VITE_API_BASE_URL = "https://example.com";
 
@@ -82,6 +102,12 @@ describe("auth flow", () => {
     await user.click(screen.getByRole("button", { name: /sign in/i }));
 
     expect(await screen.findByPlaceholderText(/max hours/i)).toBeInTheDocument();
+    expect(
+      screen.getByText("DEMO MODE — All data is simulated and not saved")
+    ).toBeInTheDocument();
+
+    expect(screen.queryByRole("link", { name: "Add listing" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Upload listing" })).not.toBeInTheDocument();
 
     const rawSession = localStorage.getItem(AUTH_SESSION_STORAGE_KEY);
     expect(rawSession).toBeTruthy();
@@ -102,8 +128,22 @@ describe("auth flow", () => {
       })
     );
 
-    global.fetch = vi.fn(async (input: RequestInfo | URL) => {
+    setTestFetchHandler(async (input: RequestInfo | URL) => {
       const url = String(input);
+      if (url.endsWith("/api/me")) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              billing: {
+                plan: "pro",
+                status: "active",
+                current_period_end: "2099-01-01T00:00:00.000Z",
+              },
+            },
+          }),
+        } as Response;
+      }
       if (url.includes("/watchlist")) {
         return { ok: true, json: async () => ({ data: { items: [] } }) } as Response;
       }
@@ -114,7 +154,7 @@ describe("auth flow", () => {
         return { ok: true, json: async () => ({ data: [] }) } as Response;
       }
       return { ok: true, json: async () => ({ data: {} }) } as Response;
-    }) as unknown as typeof fetch;
+    });
 
     process.env.VITE_API_BASE_URL = "https://example.com";
 
