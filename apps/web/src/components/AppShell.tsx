@@ -97,7 +97,7 @@ export const AppShell = ({
             ? "Demo"
             : "Buyer";
   const isShellLoading = !hydrated || billingLoading || (Boolean(token) && !user);
-  const modeLabel = isShellLoading ? "Loading…" : `${planLabel} ${roleLabel} Mode`;
+  const badgeLabel = isShellLoading ? "Loading…" : `${planLabel} ${roleLabel}`;
   const visibleSections = useMemo(() => {
     return navSections
       .map((section) => {
@@ -208,7 +208,7 @@ export const AppShell = ({
                 </Link>
               )}
               <div className="rounded-full border border-slate-700 px-4 py-2 text-xs text-slate-300">
-                {modeLabel}
+                {badgeLabel}
               </div>
               <div className="rounded-full bg-slate-800 px-3 py-2 text-xs text-slate-200">
                 {user?.email ?? "demo"}
