@@ -29,7 +29,7 @@ export type MeResponse = {
   id: string;
   email: string;
   name: string;
-  role: "demo" | "buyer" | "seller" | "admin";
+  role: "demo" | "buyer" | "seller" | "enterprise" | "admin" | null;
   billing?: Billing;
 };
 
