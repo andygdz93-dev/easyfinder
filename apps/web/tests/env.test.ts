@@ -25,4 +25,12 @@ describe("env helpers", () => {
     const module = await import("../src/env");
     expect(module.getApiBaseUrl()).toBe("http://127.0.0.1:8080");
   });
+
+  it("isDemoMode reads VITE_DEMO_MODE", async () => {
+    vi.resetModules();
+    process.env.VITE_DEMO_MODE = "true";
+
+    const module = await import("../src/env");
+    expect(module.isDemoMode()).toBe(true);
+  });
 });

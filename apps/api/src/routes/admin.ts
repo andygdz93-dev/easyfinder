@@ -5,6 +5,7 @@ import { listings, sourceHealth } from "../store.js";
 import { Listing } from "@easyfinderai/shared";
 import { fail, ok } from "../response.js";
 import { requirePlan } from "../middleware/requirePlan.js";
+import { disableWritesInDemo } from "../middleware/disableWritesInDemo.js";
 
 const adminOnly = new Set(["admin"]);
 const fallbackImages = [
@@ -29,7 +30,7 @@ const csvSchema = z.object({
 export default async function adminRoutes(app: FastifyInstance) {
   app.post(
     "/ingest/csv",
-    { preHandler: [app.authenticate, requirePlan(["enterprise"])] },
+    { preHandler: [app.authenticate, requirePlan(["enterprise"]), disableWritesInDemo] },
     async (request, reply) => {
     if (!adminOnly.has(request.user.role)) {
       return fail(request, reply, "FORBIDDEN", "Admin access only.", 403);
@@ -71,7 +72,7 @@ export default async function adminRoutes(app: FastifyInstance) {
 
   app.post(
     "/sources/sync",
-    { preHandler: [app.authenticate, requirePlan(["enterprise"])] },
+    { preHandler: [app.authenticate, requirePlan(["enterprise"]), disableWritesInDemo] },
     async (request, reply) => {
     if (!adminOnly.has(request.user.role)) {
       return fail(request, reply, "FORBIDDEN", "Admin access only.", 403);
