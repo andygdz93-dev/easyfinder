@@ -96,6 +96,7 @@ export const AppShell = ({
           : userRole === "demo"
             ? "Demo"
             : "Buyer";
+  const badgeRoleLabel = userRole === "seller" ? "Seller" : "Buyer";
   const isShellLoading = !hydrated || billingLoading || (Boolean(token) && !user);
   const badgeLabel = isShellLoading ? "Loading…" : `${planLabel} ${roleLabel}`;
   const visibleSections = useMemo(() => {
