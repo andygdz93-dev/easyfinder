@@ -43,6 +43,7 @@ export const AppShell = ({
 }) => {
   const { user, token, clearSession } = useAuth();
   const { demoMode, hydrated } = useRuntime();
+  const isDemoMode = demoMode;
   const showDemoBanner = demoMode;
   const [billing, setBilling] = useState<Billing | null>(null);
   const [billingError, setBillingError] = useState<string | null>(null);
@@ -187,14 +188,26 @@ export const AppShell = ({
               <p className="text-sm text-slate-400">Premium equipment intelligence</p>
             </div>
             <div className="flex items-center gap-3">
-              <button
-                className="rounded-full border border-slate-700 px-4 py-2 text-xs text-slate-300"
-                onClick={() =>
-                  document.documentElement.classList.toggle("dark")
-                }
-              >
-                Toggle mode
-              </button>
+              {isDemoMode && (
+                <button
+                  className="rounded-full border border-slate-700 px-4 py-2 text-xs text-slate-300"
+                  onClick={() =>
+                    document.documentElement.classList.toggle("dark")
+                  }
+                >
+                  Switch Mode
+                </button>
+              )}
+              {!isDemoMode && (
+                <button
+                  className="rounded-full border border-slate-700 px-4 py-2 text-xs text-slate-300"
+                  onClick={() =>
+                    document.documentElement.classList.toggle("dark")
+                  }
+                >
+                  Upgrade
+                </button>
+              )}
               <div className="rounded-full border border-slate-700 px-4 py-2 text-xs text-slate-300">
                 {modeLabel}
               </div>
