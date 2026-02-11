@@ -4,7 +4,7 @@ export type AuthUser = {
   id: string;
   email: string;
   name?: string;
-  role: "demo" | "buyer" | "seller" | "admin";
+  role: "demo" | "buyer" | "seller" | "enterprise" | "admin" | null;
   ndaAccepted?: boolean;
   ndaAcceptedAt?: Date | null;
 };

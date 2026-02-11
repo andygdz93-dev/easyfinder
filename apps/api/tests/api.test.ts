@@ -262,6 +262,92 @@ describe("API", () => {
     expect(removeRes.body.data.removed).toBe(true);
   });
 
+
+
+  it("sets role via /api/me/role and persists to backend", async () => {
+    const email = `role-${Date.now()}@easyfinder.ai`;
+    const registerRes = await supertest(app.server)
+      .post("/api/auth/register")
+      .send({ email, password: "RolePass123!", name: "Role User" });
+
+    expect(registerRes.status).toBe(200);
+    expect(registerRes.body.data.user.role).toBeNull();
+
+    const token = registerRes.body.data.token;
+    const updateRes = await supertest(app.server)
+      .patch("/api/me/role")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ role: "seller" });
+
+    expect(updateRes.status).toBe(200);
+    expect(updateRes.body.data.role).toBe("seller");
+
+    const loginRes = await supertest(app.server)
+      .post("/api/auth/login")
+      .send({ email, password: "RolePass123!" });
+
+    expect(loginRes.status).toBe(200);
+    expect(loginRes.body.data.user.role).toBe("seller");
+  });
+
+  it("rejects enterprise role when user is not enterprise entitled", async () => {
+    const loginRes = await supertest(app.server)
+      .post("/api/auth/login")
+      .send({ email: "buyer@easyfinder.ai", password: "BuyerPass123!" });
+
+    const token = loginRes.body.data.token;
+    const col = getUsersCollection();
+    await col.updateOne(
+      { emailLower: "buyer@easyfinder.ai" },
+      {
+        $set: {
+          billing: {
+            plan: "pro",
+            status: "active",
+            current_period_end: new Date(Date.now() + 86400000),
+          },
+        },
+      }
+    );
+
+    const res = await supertest(app.server)
+      .patch("/api/me/role")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ role: "enterprise" });
+
+    expect(res.status).toBe(403);
+    expect(res.body.error.code).toBe("ROLE_NOT_ALLOWED");
+  });
+
+  it("allows enterprise role when enterprise entitlement is active", async () => {
+    const loginRes = await supertest(app.server)
+      .post("/api/auth/login")
+      .send({ email: "buyer@easyfinder.ai", password: "BuyerPass123!" });
+
+    const token = loginRes.body.data.token;
+    const col = getUsersCollection();
+    await col.updateOne(
+      { emailLower: "buyer@easyfinder.ai" },
+      {
+        $set: {
+          billing: {
+            plan: "enterprise",
+            status: "active",
+            current_period_end: new Date(Date.now() + 86400000),
+          },
+        },
+      }
+    );
+
+    const res = await supertest(app.server)
+      .patch("/api/me/role")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ role: "enterprise" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.role).toBe("enterprise");
+  });
+
   it("seller-only endpoint blocked for buyer", async () => {
     const loginRes = await supertest(app.server)
       .post("/api/auth/login")
