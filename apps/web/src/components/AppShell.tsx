@@ -98,7 +98,7 @@ export const AppShell = ({
             : "Buyer";
   const badgeRoleLabel = userRole === "seller" ? "Seller" : "Buyer";
   const isShellLoading = !hydrated || billingLoading || (Boolean(token) && !user);
-  const badgeLabel = isShellLoading ? "Loading…" : `${planLabel} ${badgeRoleLabel}`;
+  const badgeLabel = isShellLoading ? "Loading…" : `${planLabel} ${roleLabel}`;
   const visibleSections = useMemo(() => {
     return navSections
       .map((section) => {
