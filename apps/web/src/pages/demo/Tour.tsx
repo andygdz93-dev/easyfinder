@@ -4,6 +4,7 @@ import DemoListings from "./Listings";
 import DemoListingDetail from "./ListingDetail";
 import { DemoWatchlist } from "./Watchlist";
 import { useDemoWatchlist } from "../../lib/demoWatchlist";
+import { isDemoMode } from "../../env";
 
 type TourRole = "buyer" | "seller" | "enterprise";
 
@@ -572,6 +573,7 @@ const TourSellerDashboard = () => {
 
 const TourSellerManualEntry = () => {
   const { addSellerListing } = useDemoTour();
+  const demoMode = isDemoMode();
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [price, setPrice] = useState("");
@@ -586,6 +588,19 @@ const TourSellerManualEntry = () => {
       .map((file) => URL.createObjectURL(file));
     setImages(nextImages);
   };
+
+  if (demoMode) {
+    return (
+      <div className="mx-auto w-full max-w-5xl px-4 py-6 md:px-6">
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+          <h2 className="text-xl font-semibold">Manual Listing Entry</h2>
+          <p className="mt-2 text-sm text-slate-200">
+            Creating or modifying listings is disabled in demo mode.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -685,8 +700,22 @@ const TourSellerManualEntry = () => {
 
 const TourSellerCsvUpload = () => {
   const { addSellerListings } = useDemoTour();
+  const demoMode = isDemoMode();
   const [previewRows, setPreviewRows] = useState<Record<string, string>[]>([]);
   const [error, setError] = useState("");
+
+  if (demoMode) {
+    return (
+      <div className="mx-auto w-full max-w-5xl px-4 py-6 md:px-6">
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+          <h2 className="text-xl font-semibold">CSV Upload</h2>
+          <p className="mt-2 text-sm text-slate-200">
+            Uploading listings is disabled in demo mode.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const handleCsv = (file: File | null) => {
     if (!file) return;

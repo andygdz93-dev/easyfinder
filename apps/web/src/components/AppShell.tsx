@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 import { useAuth } from "../lib/auth";
 import { getMe } from "../lib/api";
 import { Billing, isBillingActive } from "../lib/billing";
+import { isDemoMode } from "../env";
 
 const navSections = [
   {
@@ -19,7 +20,7 @@ const navSections = [
     items: [
       { to: "/app/seller/listings", label: "Listings" },
       { to: "/app/seller/add", label: "Add listing" },
-      { to: "/app/seller/upload", label: "Upload" },
+      { to: "/app/seller/upload", label: "Upload listing" },
     ],
   },
   {
@@ -40,6 +41,7 @@ export const AppShell = ({
   className?: string;
 }) => {
   const { user, token, clearSession } = useAuth();
+  const demoMode = isDemoMode();
   const [billing, setBilling] = useState<Billing | null>(null);
   const [billingError, setBillingError] = useState<string | null>(null);
 
@@ -68,22 +70,37 @@ export const AppShell = ({
 
   const billingActive = isBillingActive(billing);
   const plan = billing?.plan ?? "free";
-  const visibleSections = useMemo(
-    () =>
-      navSections.filter((section) => {
+  const visibleSections = useMemo(() => {
+    return navSections
+      .map((section) => {
+        if (section.title === "Seller" && demoMode) {
+          return {
+            ...section,
+            items: section.items.filter(
+              (item) => item.label !== "Add listing" && item.label !== "Upload listing"
+            ),
+          };
+        }
+        return section;
+      })
+      .filter((section) => {
         if (section.title === "Buyer") {
           return billingActive;
         }
         if (section.title === "Seller") {
-          return billingActive && (plan === "pro" || plan === "enterprise");
+          return (
+            billingActive &&
+            (plan === "pro" || plan === "enterprise") &&
+            section.items.length > 0
+          );
         }
         if (section.title === "Enterprise") {
           return billingActive && plan === "enterprise";
         }
         return true;
-      }),
-    [billingActive, plan]
-  );
+      });
+  }, [billingActive, demoMode, plan]);
+
 
   return (
     <div className={`min-h-screen text-slate-100 ${className ?? ""}`}>

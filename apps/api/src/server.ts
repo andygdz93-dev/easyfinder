@@ -19,6 +19,7 @@ import adminRoutes from "./routes/admin.js";
 import sellerRoutes from "./routes/seller.js";
 import ndaRoutes from "./routes/nda.js";
 import billingRoutes from "./routes/billing.js";
+import offersRoutes from "./routes/offers.js";
 import { ZodError } from "zod";
 import { env } from "./env.js";
 import meRoutes from "./routes/me.js";
@@ -206,6 +207,7 @@ export const buildServer = () => {
   app.register(listingRoutes, { prefix: "/api/listings" });
   app.register(scoringRoutes, { prefix: "/api/scoring-configs" });
   app.register(watchlistRoutes, { prefix: "/api/watchlist" });
+  app.register(offersRoutes, { prefix: "/api/offers" });
   app.register(authRoutes, { prefix: "/api/auth" });
   app.register(adminRoutes, { prefix: "/api/admin" });
   app.register(sellerRoutes, { prefix: "/api/seller" });
