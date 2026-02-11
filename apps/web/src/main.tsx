@@ -5,6 +5,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { AuthProvider } from "./lib/auth";
+import { RuntimeProvider } from "./lib/runtime";
 import "./index.css";
 
 const queryClient = new QueryClient();
@@ -14,9 +15,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <ErrorBoundary>
-            <App />
-          </ErrorBoundary>
+          <RuntimeProvider>
+            <ErrorBoundary>
+              <App />
+            </ErrorBoundary>
+          </RuntimeProvider>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
