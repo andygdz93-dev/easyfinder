@@ -8,6 +8,7 @@ import { getUsersCollection, UserDocument } from "../users.js";
 import { defaultBilling } from "../billing.js";
 import { sendPasswordResetEmail } from "../email.js";
 import { getPasswordResetTokensCollection } from "../passwordResetTokens.js";
+import { audit } from "../lib/audit.js";
 
 const toUserDto = (user: UserDocument) => ({
   id: user._id.toHexString(),
@@ -114,6 +115,11 @@ export default async function authRoutes(app: FastifyInstance) {
       name: user.name,
     });
 
+    audit("USER_LOGIN", {
+      userId: user._id.toHexString(),
+      email: user.email,
+    });
+
     return ok(request, {
       token,
       user: toUserDto(user),
@@ -127,6 +133,11 @@ export default async function authRoutes(app: FastifyInstance) {
     const user = await usersCol.findOne({ emailLower });
 
     if (user) {
+      audit("PASSWORD_RESET_REQUESTED", {
+        userId: user._id.toHexString(),
+        email: user.email,
+      });
+
       const token = randomBytes(32).toString("hex");
       const now = new Date();
       const expiresAt = new Date(now.getTime() + PASSWORD_RESET_TTL_MS);
