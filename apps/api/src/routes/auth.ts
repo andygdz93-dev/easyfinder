@@ -59,7 +59,7 @@ export default async function authRoutes(app: FastifyInstance) {
       email: payload.email,
       emailLower,
       name: payload.name ?? "New User",
-      role: "buyer",
+      role: null,
       passwordHash,
       ndaAccepted: false,
       ndaAcceptedAt: null,
@@ -80,7 +80,7 @@ export default async function authRoutes(app: FastifyInstance) {
     const token = await reply.jwtSign({
       id: userDocument._id.toHexString(),
       email: userDocument.email,
-      role: "buyer",
+      role: null,
       name: userDocument.name,
     });
 
@@ -111,7 +111,7 @@ export default async function authRoutes(app: FastifyInstance) {
     const token = await reply.jwtSign({
       id: user._id.toHexString(),
       email: user.email,
-      role: user.role ?? "buyer",
+      role: user.role,
       name: user.name,
     });
 

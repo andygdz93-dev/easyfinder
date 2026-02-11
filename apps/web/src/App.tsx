@@ -1,4 +1,4 @@
-import { Navigate, Outlet, Route, Routes, useParams } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { RequireAuth } from "./components/RequireAuth";
 import { RequireEnterprise } from "./components/RequireEnterprise";
 import { RequireLiveNda } from "./components/RequireLiveNda";
@@ -23,10 +23,46 @@ import { DemoTour } from "./pages/demo/Tour";
 import { DemoLayout } from "./layouts/DemoLayout";
 import { LiveLayout } from "./layouts/LiveLayout";
 import { NdaProvider } from "./lib/nda";
+import { useAuth } from "./lib/auth";
+import { SelectRole } from "./pages/app/SelectRole";
 
 const LegacyListingRedirect = () => {
   const { id } = useParams();
   return <Navigate to={`/app/listings/${id ?? ""}`} replace />;
+};
+
+
+const DashboardRedirect = () => {
+  const { user } = useAuth();
+
+  if (user?.role === "seller") {
+    return <Navigate to="/app/seller/listings" replace />;
+  }
+
+  if (user?.role === "admin") {
+    return <Navigate to="/app/admin/sources" replace />;
+  }
+
+  return <Navigate to="/app/listings" replace />;
+};
+
+const RequireRoleSelection = ({ children }: { children?: React.ReactNode }) => {
+  const { user, isUserLoading } = useAuth();
+  const location = useLocation();
+
+  if (isUserLoading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center text-sm text-slate-400">
+        Loading account...
+      </div>
+    );
+  }
+
+  if (user?.role === null) {
+    return <Navigate to="/app/select-role" replace state={{ from: location.pathname }} />;
+  }
+
+  return <>{children ?? <Outlet />}</>;
 };
 
 export default function App() {
@@ -60,7 +96,10 @@ export default function App() {
           </RequireAuth>
         }
       >
-        <Route index element={<Navigate to="listings" replace />} />
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="select-role" element={<SelectRole />} />
+        <Route path="dashboard" element={<DashboardRedirect />} />
+        <Route element={<RequireRoleSelection />}>
         <Route path="listings" element={<Listings />} />
         <Route path="listings/:id" element={<ListingDetail />} />
         <Route path="watchlist" element={<Watchlist />} />
@@ -81,6 +120,7 @@ export default function App() {
         />
         <Route path="upgrade" element={<Upgrade />} />
         <Route path="nda" element={<Nda />} />
+        </Route>
       </Route>
 
       <Route

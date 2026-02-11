@@ -16,7 +16,7 @@ const weightLabels: Record<keyof ScoringConfig["weights"], string> = {
   completeness: "Data completeness",
 };
 
-const isEnterpriseUser = (role?: string) => role === "admin";
+const isEnterpriseUser = (role?: string | null) => role === "admin";
 
 export const ScoringConfigs = () => {
   const { token, user } = useAuth();
