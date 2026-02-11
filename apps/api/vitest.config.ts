@@ -12,5 +12,8 @@ export default defineConfig({
   },
   test: {
     include: ["tests/**/*.test.ts"],
+    env: {
+      BILLING_ENABLED: "false",
+    },
   },
 });
