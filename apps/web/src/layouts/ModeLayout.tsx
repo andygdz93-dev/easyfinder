@@ -39,7 +39,6 @@ export const ModeLayout = ({
           <span className={`rounded-full px-3 py-1 text-[10px] font-semibold ${config.badgeClass}`}>
             {config.label}
           </span>
-          <span className="text-[10px]">Experience separator enabled</span>
         </div>
         <Link to="/" className="text-[10px] font-semibold underline-offset-4 hover:underline">
           Switch mode
