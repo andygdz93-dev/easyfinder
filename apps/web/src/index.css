@@ -4,6 +4,23 @@
 @tailwind components;
 @tailwind utilities;
 
+
+:root {
+  --accent: 59 130 246;
+}
+
+[data-role="buyer"] {
+  --accent: 59 130 246;
+}
+
+[data-role="seller"] {
+  --accent: 16 185 129;
+}
+
+[data-role="enterprise"] {
+  --accent: 168 85 247;
+}
+
 body {
   font-family: "Inter", system-ui, sans-serif;
 }
