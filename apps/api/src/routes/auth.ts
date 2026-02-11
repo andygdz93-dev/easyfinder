@@ -60,6 +60,8 @@ export default async function authRoutes(app: FastifyInstance) {
       name: payload.name ?? "New User",
       role: "buyer",
       passwordHash,
+      ndaAccepted: false,
+      ndaAcceptedAt: null,
       billing: defaultBilling(),
       createdAt: now,
       updatedAt: now,

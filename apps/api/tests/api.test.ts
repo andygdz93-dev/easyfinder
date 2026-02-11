@@ -11,6 +11,15 @@ process.env.STRIPE_PRICE_ID_ENTERPRISE =
 let app: ReturnType<(typeof import("../src/server.js"))["buildServer"]>;
 let getUsersCollection: (typeof import("../src/users.js"))["getUsersCollection"];
 
+const acceptNda = async (token: string) => {
+  const res = await supertest(app.server)
+    .post("/api/nda/accept")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ accepted: true });
+  expect(res.status).toBe(200);
+  expect(res.body.data.accepted).toBe(true);
+};
+
 beforeAll(async () => {
   const serverModule = await import("../src/server.js");
   const usersModule = await import("../src/users.js");
@@ -53,17 +62,26 @@ describe("API", () => {
     expect(res.body.error.code).toBe("UNAUTHORIZED");
   });
 
-  it("returns the current user for /api/me with auth", async () => {
+  it("requires NDA for /api/me until accepted", async () => {
     const loginRes = await supertest(app.server)
       .post("/api/auth/login")
       .send({ email: "buyer@easyfinder.ai", password: "BuyerPass123!" });
     const token = loginRes.body.data.token;
-    const res = await supertest(app.server)
+
+    const blockedRes = await supertest(app.server)
       .get("/api/me")
       .set("Authorization", `Bearer ${token}`);
-    expect(res.status).toBe(200);
-    expect(res.body.data.email).toBe("buyer@easyfinder.ai");
-    expect(res.body.data.role).toBe("buyer");
+    expect(blockedRes.status).toBe(403);
+    expect(blockedRes.body.error.code).toBe("NDA_REQUIRED");
+
+    await acceptNda(token);
+
+    const allowedRes = await supertest(app.server)
+      .get("/api/me")
+      .set("Authorization", `Bearer ${token}`);
+    expect(allowedRes.status).toBe(200);
+    expect(allowedRes.body.data.email).toBe("buyer@easyfinder.ai");
+    expect(allowedRes.body.data.role).toBe("buyer");
   });
 
   it("returns nda status with accepted boolean", async () => {
@@ -168,6 +186,7 @@ describe("API", () => {
         },
       }
     );
+    await acceptNda(token);
     const res = await supertest(app.server)
       .post("/api/scoring-configs")
       .set("Authorization", `Bearer ${token}`)
@@ -214,6 +233,8 @@ describe("API", () => {
       }
     );
 
+    await acceptNda(token);
+
     const addRes = await supertest(app.server)
       .post("/api/watchlist/demo-1")
       .set("Authorization", `Bearer ${token}`);
@@ -239,9 +260,13 @@ describe("API", () => {
       .post("/api/auth/login")
       .send({ email: "buyer@easyfinder.ai", password: "BuyerPass123!" });
     const token = loginRes.body.data.token;
+
+    await acceptNda(token);
+
     const res = await supertest(app.server)
       .get("/api/seller/insights")
       .set("Authorization", `Bearer ${token}`);
     expect(res.status).toBe(403);
+    expect(res.body.error.code).toBe("FORBIDDEN");
   });
 });
