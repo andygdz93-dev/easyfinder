@@ -220,14 +220,7 @@ export const AppShell = ({
                 >
                   Switch Mode
                 </button>
-              ) : (
-                <Link
-                  to="/app/upgrade"
-                  className="rounded-full border border-[rgb(var(--accent)/0.45)] px-4 py-2 text-xs text-[rgb(var(--accent))]"
-                >
-                  Upgrade
-                </Link>
-              )}
+              ) : null}
               <div className="rounded-full border border-[rgb(var(--accent)/0.45)] px-4 py-2 text-xs text-[rgb(var(--accent))]">
                 {badgeLabel}
               </div>
