@@ -30,24 +30,22 @@ export const ModeLayout = ({
   mode: Mode;
   children: ReactNode;
 }) => {
-  const { demoMode, hydrated } = useRuntime();
-  const { user, isUserLoading } = useAuth();
+  const { demoMode, hydrated, billingEnabled } = useRuntime();
+  const { token, user } = useAuth();
   const config = modeConfig[mode];
 
-  const authRole = user?.role;
-  const roleLabel = authRole === "seller" ? "Seller" : "Buyer";
+  const roleLabel = user?.role === "seller" ? "Seller" : "Buyer";
+  const planLabel = billingEnabled ? "Enterprise" : "Free";
+  const isLoading = !hydrated || (!!token && !user);
 
-  const billingPlan = (user as { billing?: { plan?: unknown } } | null)?.billing?.plan;
-  const planLabel =
-    billingPlan === "pro"
-      ? "Pro"
-      : billingPlan === "enterprise"
-        ? "Enterprise"
-        : "Free";
-
-  const isLoading = !hydrated || isUserLoading;
   const liveBadgeLabel = isLoading ? "Loading…" : `${planLabel} ${roleLabel}`;
   const badgeLabel = mode === "demo" ? config.label : liveBadgeLabel;
+  const badgeClass =
+    mode === "demo"
+      ? config.badgeClass
+      : roleLabel === "Seller"
+        ? "bg-emerald-400 text-emerald-950"
+        : config.badgeClass;
 
   return (
     <div className={`min-h-screen ${config.shellClass}`}>
@@ -55,7 +53,7 @@ export const ModeLayout = ({
         className={`flex items-center justify-between border-b px-6 py-3 text-xs uppercase tracking-[0.3em] ${config.bannerClass}`}
       >
         <div className="flex items-center gap-3">
-          <span className={`rounded-full px-3 py-1 text-[10px] font-semibold ${config.badgeClass}`}>
+          <span className={`rounded-full px-3 py-1 text-[10px] font-semibold ${badgeClass}`}>
             {badgeLabel}
           </span>
         </div>
