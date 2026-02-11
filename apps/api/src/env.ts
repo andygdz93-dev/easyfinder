@@ -3,7 +3,11 @@ import { z } from "zod";
 /**
  * EasyFinder API environment validation (Zod)
  * - Fails fast with readable errors
- * - No "dev-secret in prod" footguns
+ * - Avoids "optional integration takes down prod" footguns
+ *
+ * IMPORTANT:
+ * - Core app (auth, listings, etc.) must boot in production even if Stripe isn't configured yet.
+ * - Stripe + Resend are OPTIONAL unless explicitly enabled via BILLING_ENABLED / EMAIL_ENABLED.
  */
 
 const EnvSchema = z
@@ -15,13 +19,30 @@ const EnvSchema = z
       .string()
       .optional()
       .transform((v) => (v ? Number(v) : 8080))
-      .refine((n) => Number.isFinite(n) && n > 0 && n < 65536, "PORT must be a valid port"),
+      .refine(
+        (n) => Number.isFinite(n) && n > 0 && n < 65536,
+        "PORT must be a valid port"
+      ),
 
     // Demo Mode
     DEMO_MODE: z
       .string()
       .optional()
       .transform((v) => v === "true"),
+
+    // Feature toggles (prevents optional integrations from bricking prod)
+    BILLING_ENABLED: z
+      .string()
+      .optional()
+      .transform((v) => v === "true")
+      .default("false")
+      .pipe(z.boolean()),
+    EMAIL_ENABLED: z
+      .string()
+      .optional()
+      .transform((v) => v === "true")
+      .default("true")
+      .pipe(z.boolean()),
 
     // Security / Auth (required)
     JWT_SECRET: z
@@ -45,12 +66,11 @@ const EnvSchema = z
     APP_BASE_URL: z.string().url().default("http://localhost:5173"),
 
     // Resend (for password reset emails, etc.)
-    // Required to send real emails in production.
     RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY is required").optional(),
     // Must be a verified sender in Resend, e.g. "EasyFinder <no-reply@yourdomain.com>"
     RESEND_FROM: z.string().min(1, "RESEND_FROM is required").optional(),
 
-    // Stripe (required in production)
+    // Stripe (billing)
     STRIPE_SECRET_KEY: z.string().min(1, "STRIPE_SECRET_KEY is required").optional(),
     STRIPE_WEBHOOK_SECRET: z.string().min(1, "STRIPE_WEBHOOK_SECRET is required").optional(),
     STRIPE_PRICE_ID_PRO: z.string().min(1, "STRIPE_PRICE_ID_PRO is required").optional(),
@@ -62,33 +82,37 @@ const EnvSchema = z
   .superRefine((values, ctx) => {
     if (values.NODE_ENV !== "production") return;
 
-    // Stripe required in production (as you already wanted)
-    const stripeRequired = [
-      "STRIPE_SECRET_KEY",
-      "STRIPE_WEBHOOK_SECRET",
-      "STRIPE_PRICE_ID_PRO",
-      "STRIPE_PRICE_ID_ENTERPRISE",
-    ] as const;
+    // Only enforce Stripe if billing is enabled
+    if (values.BILLING_ENABLED) {
+      const stripeRequired = [
+        "STRIPE_SECRET_KEY",
+        "STRIPE_WEBHOOK_SECRET",
+        "STRIPE_PRICE_ID_PRO",
+        "STRIPE_PRICE_ID_ENTERPRISE",
+      ] as const;
 
-    for (const key of stripeRequired) {
-      if (!values[key]) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: [key],
-          message: `${key} is required in production`,
-        });
+      for (const key of stripeRequired) {
+        if (!values[key]) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [key],
+            message: `${key} is required in production when BILLING_ENABLED=true`,
+          });
+        }
       }
     }
 
-    // Resend required in production if you want real reset emails in prod
-    const resendRequired = ["RESEND_API_KEY", "RESEND_FROM"] as const;
-    for (const key of resendRequired) {
-      if (!values[key]) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: [key],
-          message: `${key} is required in production (needed for password reset emails)`,
-        });
+    // Only enforce Resend if emails are enabled
+    if (values.EMAIL_ENABLED) {
+      const resendRequired = ["RESEND_API_KEY", "RESEND_FROM"] as const;
+      for (const key of resendRequired) {
+        if (!values[key]) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [key],
+            message: `${key} is required in production when EMAIL_ENABLED=true`,
+          });
+        }
       }
     }
   });
@@ -100,6 +124,8 @@ const testDefaults =
         MONGO_URL: "mongodb://localhost:27017",
         DB_NAME: "easyfinder_test",
         APP_BASE_URL: "http://localhost:5173",
+        BILLING_ENABLED: "false",
+        EMAIL_ENABLED: "false",
       }
     : {};
 
