@@ -9,6 +9,8 @@ export const demoUsers: User[] = [
     email: "demo@easyfinder.ai",
     name: "Demo User",
     role: "demo",
+    ndaAccepted: false,
+    ndaAcceptedAt: null,
     billing: {
       plan: "free",
       status: "canceled",
@@ -20,6 +22,8 @@ export const demoUsers: User[] = [
     email: "buyer@easyfinder.ai",
     name: "Buyer User",
     role: "buyer",
+    ndaAccepted: false,
+    ndaAcceptedAt: null,
     billing: {
       plan: "free",
       status: "canceled",
@@ -31,6 +35,8 @@ export const demoUsers: User[] = [
     email: "seller@easyfinder.ai",
     name: "Seller User",
     role: "seller",
+    ndaAccepted: false,
+    ndaAcceptedAt: null,
     billing: {
       plan: "free",
       status: "canceled",
@@ -42,6 +48,8 @@ export const demoUsers: User[] = [
     email: "admin@easyfinder.ai",
     name: "Admin User",
     role: "admin",
+    ndaAccepted: false,
+    ndaAcceptedAt: null,
     billing: {
       plan: "free",
       status: "canceled",

@@ -3,6 +3,7 @@ import { ObjectId } from "mongodb";
 import { AuthUser } from "../auth.js";
 import { getCollection } from "../db.js";
 import { defaultBilling, normalizeBilling, serializeBilling } from "../billing.js";
+import { requireNDA } from "../middleware/requireNDA.js";
 
 type UserDocument = {
   _id: ObjectId;
@@ -24,7 +25,7 @@ export default async function meRoutes(app: FastifyInstance) {
   // IMPORTANT: do NOT call getCollection() until inside a try/catch
   const usersCollection = () => getCollection<UserDocument>("users");
 
-  app.get("/", { preHandler: app.authenticate }, async (request, reply) => {
+  app.get("/", { preHandler: [app.authenticate, requireNDA] }, async (request, reply) => {
     const fallbackUser = () => {
       const currentUser = request.user as Partial<AuthUser>;
       return {

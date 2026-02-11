@@ -11,6 +11,8 @@ declare module "fastify" {
       email: string;
       name?: string;
       role: "demo" | "buyer" | "seller" | "admin";
+      ndaAccepted?: boolean;
+      ndaAcceptedAt?: Date | null;
     };
     billing?: BillingInfo;
     rawBody?: string;
@@ -31,12 +33,16 @@ declare module "@fastify/jwt" {
       email: string;
       name?: string;
       role: "demo" | "buyer" | "seller" | "admin";
+      ndaAccepted?: boolean;
+      ndaAcceptedAt?: Date | null;
     };
     user: {
       id: string;
       email: string;
       name?: string;
       role: "demo" | "buyer" | "seller" | "admin";
+      ndaAccepted?: boolean;
+      ndaAcceptedAt?: Date | null;
     };
   }
 }

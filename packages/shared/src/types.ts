@@ -97,6 +97,8 @@ export const userSchema = z.object({
   email: z.string().email(),
   name: z.string(),
   role: userRoleSchema,
+  ndaAccepted: z.boolean().optional(),
+  ndaAcceptedAt: z.string().nullable().optional(),
   billing: billingSchema.optional(),
 });
 export type User = z.infer<typeof userSchema>;

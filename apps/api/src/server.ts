@@ -7,6 +7,8 @@ import multipart from "@fastify/multipart";
 import { nanoid } from "nanoid";
 import { config } from "./config.js";
 import { AuthUser, getRoleFromRequest } from "./auth.js";
+import { getUsersCollection } from "./users.js";
+import { ObjectId } from "mongodb";
 import listingRoutes from "./routes/listings.js";
 import demoListingRoutes from "./routes/demo-listings.js";
 import scoringRoutes from "./routes/scoring.js";
@@ -100,11 +102,23 @@ export const buildServer = () => {
   app.decorate("authenticate", async (request: FastifyRequest, reply: FastifyReply) => {
     try {
       const payload = await request.jwtVerify<AuthUser>();
+      let ndaAccepted = Boolean(payload.ndaAccepted);
+      let ndaAcceptedAt = payload.ndaAcceptedAt ?? null;
+
+      if (ObjectId.isValid(payload.id)) {
+        const col = getUsersCollection();
+        const user = await col.findOne({ _id: new ObjectId(payload.id) });
+        ndaAccepted = Boolean(user?.ndaAccepted);
+        ndaAcceptedAt = user?.ndaAcceptedAt ?? null;
+      }
+
       request.user = {
         id: payload.id,
         email: payload.email,
         name: payload.name,
         role: payload.role,
+        ndaAccepted,
+        ndaAcceptedAt,
       };
     } catch {
       return reply.status(401).send({
@@ -150,6 +164,8 @@ export const buildServer = () => {
           email: payload.email,
           name: payload.name,
           role: payload.role,
+          ndaAccepted: payload.ndaAccepted,
+          ndaAcceptedAt: payload.ndaAcceptedAt ?? null,
         };
       } catch {
         // ignore, optional auth
