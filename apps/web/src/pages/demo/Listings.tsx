@@ -153,7 +153,7 @@ function ListingCard({
             <button
               type="button"
               onClick={onToggleWatchlist}
-              className="rounded-full border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700"
+              className="bg-neutral-800 text-white border border-neutral-600 hover:bg-neutral-700 px-4 py-2 rounded"
             >
               {isSaved ? "Remove from Watchlist" : "Add to Watchlist"}
             </button>
