@@ -9,11 +9,12 @@ export type UserDocument = {
   email: string;
   emailLower: string;
   name: string;
-  role: "buyer" | "seller" | "admin";
+  role: "buyer" | "seller" | "enterprise" | "admin" | null;
   passwordHash?: string;
   ndaAccepted: boolean;
   ndaAcceptedAt: Date | null;
   ndaVersion?: string;
+  roleSetAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
   billing?: BillingInfo;

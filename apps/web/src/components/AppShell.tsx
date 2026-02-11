@@ -89,11 +89,13 @@ export const AppShell = ({
   const roleLabel =
     userRole === "seller"
       ? "Seller"
-      : userRole === "admin"
-        ? "Admin"
-        : userRole === "demo"
-          ? "Demo"
-          : "Buyer";
+      : userRole === "enterprise"
+        ? "Enterprise"
+        : userRole === "admin"
+          ? "Admin"
+          : userRole === "demo"
+            ? "Demo"
+            : "Buyer";
   const isShellLoading = !hydrated || billingLoading || (Boolean(token) && !user);
   const modeLabel = isShellLoading ? "Loading…" : `${planLabel} ${roleLabel} Mode`;
   const visibleSections = useMemo(() => {
@@ -135,7 +137,7 @@ export const AppShell = ({
           <Link to="/" className="text-xl font-semibold text-white">
             Easy Finder AI
           </Link>
-          <p className="mt-2 text-xs text-slate-400">Role: {user?.role ?? "demo"}</p>
+          <p className="mt-2 text-xs text-slate-400">Role: {roleLabel}</p>
           <p className="text-xs text-slate-400">
             Plan: {plan} {billing?.status ? `(${billing.status})` : ""}
           </p>

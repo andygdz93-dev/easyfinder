@@ -1,16 +1,23 @@
 import { FastifyInstance } from "fastify";
 import { ObjectId } from "mongodb";
+import { z } from "zod";
 import { AuthUser } from "../auth.js";
-import { getCollection } from "../db.js";
-import { defaultBilling, normalizeBilling, serializeBilling } from "../billing.js";
+import { defaultBilling, isBillingActive, normalizeBilling, serializeBilling } from "../billing.js";
+import { getUsersCollection } from "../users.js";
 import { requireNDA } from "../middleware/requireNDA.js";
+import { fail, ok } from "../response.js";
 
-type UserDocument = {
+const roleUpdateSchema = z.object({
+  role: z.enum(["buyer", "seller", "enterprise"]),
+});
+
+const toUserDto = (user: {
   _id: ObjectId;
   email: string;
   name: string;
-  role: "buyer" | "seller" | "admin";
-  ndaAcceptedAt?: Date;
+  role: "buyer" | "seller" | "enterprise" | "admin" | null;
+  ndaAccepted?: boolean;
+  ndaAcceptedAt?: Date | null;
   ndaVersion?: string;
   billing?: {
     stripe_customer_id?: string;
@@ -19,52 +26,100 @@ type UserDocument = {
     status: "active" | "past_due" | "canceled" | "incomplete";
     current_period_end: Date;
   };
-};
+}) => ({
+  id: user._id.toHexString(),
+  email: user.email,
+  name: user.name,
+  role: user.role,
+  ndaAccepted: Boolean(user.ndaAccepted),
+  ndaAcceptedAt: user.ndaAcceptedAt ? user.ndaAcceptedAt.toISOString() : null,
+  ndaVersion: user.ndaVersion,
+  billing: serializeBilling(normalizeBilling(user.billing ?? defaultBilling())),
+});
 
 export default async function meRoutes(app: FastifyInstance) {
-  // IMPORTANT: do NOT call getCollection() until inside a try/catch
-  const usersCollection = () => getCollection<UserDocument>("users");
+  const usersCollection = () => getUsersCollection();
 
-  app.get("/", { preHandler: [app.authenticate, requireNDA] }, async (request, reply) => {
+  app.get("/", { preHandler: [app.authenticate, requireNDA] }, async (request) => {
     const fallbackUser = () => {
       const currentUser = request.user as Partial<AuthUser>;
       return {
         id: currentUser.id,
         email: currentUser.email,
         name: currentUser.name,
-        role: (currentUser.role as UserDocument["role"]) ?? "buyer",
+        role: (currentUser.role as "buyer" | "seller" | "enterprise" | "admin" | null) ?? null,
+        ndaAccepted: Boolean(currentUser.ndaAccepted),
+        ndaAcceptedAt: currentUser.ndaAcceptedAt
+          ? new Date(currentUser.ndaAcceptedAt).toISOString()
+          : null,
         billing: serializeBilling(defaultBilling()),
       };
     };
 
-    // If the JWT payload already has email/role, we can always return something.
     const fallback = fallbackUser();
 
-    // If we don't even have an id, DB lookup is impossible anyway.
     if (!fallback.id || !ObjectId.isValid(fallback.id)) {
       return { data: fallback };
     }
 
     try {
-      const col = usersCollection(); // can throw if DB not initialized
+      const col = usersCollection();
       const user = await col.findOne({ _id: new ObjectId(fallback.id) });
 
       if (!user) {
         return { data: fallback };
       }
 
-      return {
-        data: {
-          id: user._id.toHexString(),
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          billing: serializeBilling(normalizeBilling(user.billing)),
-        },
-      };
+      return { data: toUserDto(user) };
     } catch {
-      // DB not initialized (tests) or DB down: never 500 /api/me
       return { data: fallback };
     }
+  });
+
+  app.patch("/role", { preHandler: app.authenticate }, async (request, reply) => {
+    const payload = roleUpdateSchema.parse(request.body);
+    const userId = request.user?.id;
+
+    if (!userId || !ObjectId.isValid(userId)) {
+      return fail(request, reply, "NOT_FOUND", "User not found.", 404);
+    }
+
+    const col = usersCollection();
+    const existing = await col.findOne({ _id: new ObjectId(userId) });
+
+    if (!existing) {
+      return fail(request, reply, "NOT_FOUND", "User not found.", 404);
+    }
+
+    if (payload.role === "enterprise") {
+      const billing = normalizeBilling(existing.billing ?? defaultBilling());
+      if (!(isBillingActive(billing) && billing.plan === "enterprise")) {
+        return fail(
+          request,
+          reply,
+          "ROLE_NOT_ALLOWED",
+          "Enterprise role requires an active enterprise subscription.",
+          403
+        );
+      }
+    }
+
+    await col.updateOne(
+      { _id: existing._id },
+      {
+        $set: {
+          role: payload.role,
+          roleSetAt: new Date(),
+          updatedAt: new Date(),
+        },
+      }
+    );
+
+    const updated = await col.findOne({ _id: existing._id });
+    if (!updated) {
+      return fail(request, reply, "NOT_FOUND", "User not found.", 404);
+    }
+
+    return ok(request, toUserDto(updated));
   });
 }
