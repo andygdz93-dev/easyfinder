@@ -84,6 +84,21 @@ export const AppShell = ({
   const plan = billing?.plan ?? "free";
   const userPlan = billing?.plan ?? "free";
   const userRole = user?.role ?? "buyer";
+  const userRoleResolved =
+    userRole === "enterprise" ? "enterprise" : userRole === "seller" ? "seller" : "buyer";
+  const planResolved = plan === "enterprise" ? "enterprise" : plan === "pro" ? "pro" : "free";
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.setAttribute("data-role", userRoleResolved);
+    root.setAttribute("data-plan", planResolved);
+
+    return () => {
+      root.removeAttribute("data-role");
+      root.removeAttribute("data-plan");
+    };
+  }, [planResolved, userRoleResolved]);
+
   const planLabel =
     userPlan === "free" ? "Free" : userPlan === "pro" ? "Pro" : "Enterprise";
   const roleLabel =
@@ -96,7 +111,6 @@ export const AppShell = ({
           : userRole === "demo"
             ? "Demo"
             : "Buyer";
-  const badgeRoleLabel = userRole === "seller" ? "Seller" : "Buyer";
   const isShellLoading = !hydrated || billingLoading || (Boolean(token) && !user);
   const badgeLabel = isShellLoading ? "Loading…" : `${planLabel} ${roleLabel}`;
   const visibleSections = useMemo(() => {
@@ -132,7 +146,11 @@ export const AppShell = ({
 
 
   return (
-    <div className={`min-h-screen text-slate-100 ${className ?? ""}`}>
+    <div
+      className={`min-h-screen text-slate-100 ${className ?? ""}`}
+      data-role={userRoleResolved}
+      data-plan={planResolved}
+    >
       <div className="flex">
         <aside className="min-h-screen w-64 border-r border-slate-800 bg-slate-900/70 px-6 py-8">
           <Link to="/" className="text-xl font-semibold text-white">
@@ -158,7 +176,9 @@ export const AppShell = ({
                       to={item.to}
                       className={({ isActive }) =>
                         `block rounded-xl px-3 py-2 text-sm ${
-                          isActive ? "bg-slate-800 text-white" : "text-slate-400 hover:text-white"
+                          isActive
+                            ? "bg-[rgb(var(--accent)/0.2)] text-[rgb(var(--accent))]"
+                            : "text-slate-400 hover:text-white"
                         }`
                       }
                     >
@@ -203,12 +223,12 @@ export const AppShell = ({
               ) : (
                 <Link
                   to="/app/upgrade"
-                  className="rounded-full border border-slate-700 px-4 py-2 text-xs text-slate-300"
+                  className="rounded-full border border-[rgb(var(--accent)/0.45)] px-4 py-2 text-xs text-[rgb(var(--accent))]"
                 >
                   Upgrade
                 </Link>
               )}
-              <div className="rounded-full border border-slate-700 px-4 py-2 text-xs text-slate-300">
+              <div className="rounded-full border border-[rgb(var(--accent)/0.45)] px-4 py-2 text-xs text-[rgb(var(--accent))]">
                 {badgeLabel}
               </div>
               <div className="rounded-full bg-slate-800 px-3 py-2 text-xs text-slate-200">
