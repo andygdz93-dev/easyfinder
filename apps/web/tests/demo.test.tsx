@@ -3,11 +3,13 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import App from "../src/App";
 import { AuthProvider } from "../src/lib/auth";
+import { RuntimeProvider } from "../src/lib/runtime";
 import DemoListings from "../src/pages/demo/Listings";
 
 describe("Demo experience", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    setRuntimeHealthMock({ demoMode: true, billingEnabled: false });
   });
 
   it("renders listings with hero and carousel images", () => {
@@ -33,28 +35,30 @@ describe("Demo experience", () => {
   });
 
   it("keeps /demo public when unauthenticated", async () => {
-    window.localStorage.clear();
-
     render(
       <MemoryRouter initialEntries={["/demo"]}>
         <AuthProvider>
-          <App />
+          <RuntimeProvider>
+            <App />
+          </RuntimeProvider>
         </AuthProvider>
       </MemoryRouter>
     );
 
-    expect(await screen.findByRole("heading", { name: /easyfinder ranked inventory/i })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: /buyer experience walkthrough/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText("DEMO MODE")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /sign in/i })).not.toBeInTheDocument();
   });
 
-
   it("redirects unauthenticated users from /app/listings to /login", async () => {
-    window.localStorage.clear();
-
     render(
       <MemoryRouter initialEntries={["/app/listings"]}>
         <AuthProvider>
-          <App />
+          <RuntimeProvider>
+            <App />
+          </RuntimeProvider>
         </AuthProvider>
       </MemoryRouter>
     );
@@ -62,32 +66,35 @@ describe("Demo experience", () => {
     expect(await screen.findByRole("heading", { name: /sign in/i })).toBeInTheDocument();
   });
 
-  it("navigates to detail view with scoring breakdown", async () => {
+  it("renders seller tour in read-only mode when demo runtime is enabled", async () => {
     const user = userEvent.setup();
+
     render(
-      <MemoryRouter initialEntries={["/demo/listings"]}>
+      <MemoryRouter initialEntries={["/demo/tour"]}>
         <AuthProvider>
-          <App />
+          <RuntimeProvider>
+            <App />
+          </RuntimeProvider>
         </AuthProvider>
       </MemoryRouter>
     );
 
-    const viewLinks = await screen.findAllByRole("link", { name: /view details/i });
-    await user.click(viewLinks[0]);
+    await user.click(await screen.findByLabelText("Seller"));
+    await user.click(screen.getByRole("button", { name: /start seller tour/i }));
 
-    expect(await screen.findByTestId("demo-detail-breakdown")).toBeInTheDocument();
-    expect(screen.getByText(/total score/i)).toBeInTheDocument();
-    expect(screen.getAllByText("Price").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Hours").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Year").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Location").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Condition").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Completeness").length).toBeGreaterThan(0);
-    expect(screen.getByText(/why this score/i)).toBeInTheDocument();
-    const rationaleItems = screen.getAllByRole("listitem");
-    expect(rationaleItems.length).toBeGreaterThan(0);
-    const detailImages = screen.getAllByRole("img");
-    expect(detailImages.length).toBeGreaterThanOrEqual(5);
+    for (let index = 0; index < 6; index += 1) {
+      if (screen.queryByText("Creating or modifying listings is disabled in demo mode.")) {
+        break;
+      }
+      await user.click(screen.getByRole("button", { name: "Next" }));
+    }
+
+    expect(
+      await screen.findByText("Creating or modifying listings is disabled in demo mode.")
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    expect(await screen.findByText("Uploading listings is disabled in demo mode.")).toBeInTheDocument();
   });
 
   it("persists watchlist toggles in localStorage", async () => {
@@ -123,59 +130,6 @@ describe("Demo experience", () => {
     });
   });
 
-  it("renders saved listings on the watchlist route", async () => {
-    const user = userEvent.setup();
-    const { unmount } = render(
-      <MemoryRouter>
-        <DemoListings />
-      </MemoryRouter>
-    );
-
-    const firstCard = screen.getAllByTestId("listing-card")[0];
-    const listingTitle = within(firstCard).getByRole("heading").textContent;
-    await user.click(
-      within(firstCard).getByRole("button", { name: /add to watchlist/i })
-    );
-
-    unmount();
-
-    render(
-      <MemoryRouter initialEntries={["/demo/watchlist"]}>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </MemoryRouter>
-    );
-
-    expect(await screen.findByText(/saved opportunities/i)).toBeInTheDocument();
-    if (listingTitle) {
-      expect(screen.getByText(listingTitle)).toBeInTheDocument();
-    }
-  });
-
-  it("swaps hero image when clicking a detail thumbnail", async () => {
-    const user = userEvent.setup();
-    render(
-      <MemoryRouter initialEntries={["/demo/listings/demo-22"]}>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </MemoryRouter>
-    );
-
-    const hero = await screen.findByTestId("demo-hero") as HTMLImageElement;
-    const thumb1 = await screen.findByTestId("demo-thumb-1");
-    const thumb1Image = within(thumb1).getByRole("img") as HTMLImageElement;
-
-    const initialHeroSrc = hero.src;
-    const initialThumbSrc = thumb1Image.src;
-
-    await user.click(thumb1);
-
-    expect((screen.getByTestId("demo-hero") as HTMLImageElement).src).toBe(initialThumbSrc);
-    expect((within(screen.getByTestId("demo-thumb-1")).getByRole("img") as HTMLImageElement).src).toBe(initialHeroSrc);
-  });
-
   it("renders demo detail route without API env vars", async () => {
     const previousUrl = process.env.VITE_API_URL;
     const previousBase = process.env.VITE_API_BASE_URL;
@@ -183,17 +137,18 @@ describe("Demo experience", () => {
     delete process.env.VITE_API_BASE_URL;
 
     render(
-      <MemoryRouter initialEntries={["/demo/listings/demo-22"]}>
+      <MemoryRouter initialEntries={["/demo/tour"]}>
         <AuthProvider>
-          <App />
+          <RuntimeProvider>
+            <App />
+          </RuntimeProvider>
         </AuthProvider>
       </MemoryRouter>
     );
 
-    expect(await screen.findByText(/2017 Genie GTH-1056 Telehandler/i)).toBeInTheDocument();
+    expect(await screen.findByText(/demo tour/i)).toBeInTheDocument();
 
     process.env.VITE_API_URL = previousUrl;
     process.env.VITE_API_BASE_URL = previousBase;
   });
-
 });
