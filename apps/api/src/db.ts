@@ -20,6 +20,10 @@ export const connectToDatabase = async () => {
         db = connected.db(env.DB_NAME);
         await db.collection("users").createIndex({ emailLower: 1 }, { unique: true });
         await db.collection("users").createIndex({ "billing.stripe_customer_id": 1 });
+        await db.collection("password_reset_tokens").createIndex({ token: 1 }, { unique: true });
+        await db
+          .collection("password_reset_tokens")
+          .createIndex({ expires_at: 1 }, { expireAfterSeconds: 0 });
         return db;
       })
       .catch((error: unknown) => {
