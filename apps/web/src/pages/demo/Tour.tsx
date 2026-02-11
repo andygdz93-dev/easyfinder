@@ -328,7 +328,15 @@ const TourIntro = ({
   onRoleChange: (role: TourRole) => void;
   onStart: () => void;
 }) => {
-  const roleLabel = role === "buyer" ? "Buyer" : role === "seller" ? "Seller" : "Enterprise";
+  const headingRoleLabel =
+    role === "buyer" ? "Buyer" : role === "seller" ? "Seller" : "Enterprise";
+  const selectedRole = role;
+  const roleLabel =
+    selectedRole === "buyer"
+      ? "buyer"
+      : selectedRole === "seller"
+      ? "seller"
+      : "enterprise";
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-10 md:px-6">
@@ -337,11 +345,11 @@ const TourIntro = ({
           Demo tour
         </p>
         <h1 className="mt-3 text-3xl font-semibold">
-          {roleLabel} Experience Walkthrough
+          {headingRoleLabel} Experience Walkthrough
         </h1>
         <p className="mt-3 max-w-2xl text-base text-slate-200">
-          This guided tour walks through the buyer workflow using demo-only data. No logins,
-          payments, or backend calls are required. Choose a role to begin.
+          This guided tour walks through the {roleLabel} workflow using demo-only data. No
+          logins, payments, or backend calls are required. Choose a role to begin.
         </p>
         <div className="mt-6 flex flex-col gap-4">
           <div className="flex items-center gap-3 rounded-2xl border border-amber-200/30 bg-slate-900/60 p-4">
