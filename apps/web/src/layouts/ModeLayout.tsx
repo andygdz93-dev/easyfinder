@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { useRuntime } from "../lib/runtime";
 
 type Mode = "demo" | "live";
 
@@ -28,6 +29,7 @@ export const ModeLayout = ({
   mode: Mode;
   children: ReactNode;
 }) => {
+  const { demoMode } = useRuntime();
   const config = modeConfig[mode];
 
   return (
@@ -40,9 +42,18 @@ export const ModeLayout = ({
             {config.label}
           </span>
         </div>
-        <Link to="/" className="text-[10px] font-semibold underline-offset-4 hover:underline">
-          Switch mode
-        </Link>
+        {demoMode ? (
+          <Link to="/" className="text-[10px] font-semibold underline-offset-4 hover:underline">
+            Switch mode
+          </Link>
+        ) : (
+          <Link
+            to="/app/upgrade"
+            className="text-[10px] font-semibold underline-offset-4 hover:underline"
+          >
+            Upgrade
+          </Link>
+        )}
       </div>
       <div className="min-h-[calc(100vh-52px)]">{children}</div>
     </div>
