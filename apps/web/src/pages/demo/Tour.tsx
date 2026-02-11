@@ -288,33 +288,33 @@ export const DemoTour = () => {
   return (
     <DemoTourProvider>
       <div className="relative min-h-screen bg-slate-950 text-white">
-        <div className="relative z-0">
-          {!started ? (
+        {!started ? (
+          <div className="relative z-0">
             <TourIntro
               role={role}
               onRoleChange={setRole}
               onStart={() => setStarted(true)}
             />
-          ) : (
-            <div className="flex">
-              <div className="min-w-0 flex-1">
-                <TourStepContent step={step} role={role} />
-              </div>
-              <TourOverlay
-                step={step}
-                title={currentStep.title}
-                description={currentStep.description}
-                onBack={() => setStep((prev) => Math.max(1, prev - 1))}
-                onNext={() => setStep((prev) => Math.min(steps.length, prev + 1))}
-                onExit={() => {
-                  setStarted(false);
-                  setStep(1);
-                }}
-                role={role}
-              />
+          </div>
+        ) : (
+          <div className="flex h-screen overflow-hidden">
+            <div className="min-w-0 flex-1 overflow-y-auto">
+              <TourStepContent step={step} role={role} />
             </div>
-          )}
-        </div>
+            <TourOverlay
+              step={step}
+              title={currentStep.title}
+              description={currentStep.description}
+              onBack={() => setStep((prev) => Math.max(1, prev - 1))}
+              onNext={() => setStep((prev) => Math.min(steps.length, prev + 1))}
+              onExit={() => {
+                setStarted(false);
+                setStep(1);
+              }}
+              role={role}
+            />
+          </div>
+        )}
       </div>
     </DemoTourProvider>
   );
@@ -428,49 +428,47 @@ const TourOverlay = ({
   const nextDisabled = role === "buyer" && step === 3 && !ndaAccepted;
 
   return (
-    <div className="sticky top-0 h-screen overflow-y-auto">
-      <aside className="pointer-events-auto h-full w-[400px] max-w-[400px] border-l border-white/10 bg-slate-950/95 p-6 backdrop-blur">
-        <div className="space-y-3">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-            Step {step} of 6
-          </p>
-          <h2 className="text-xl font-semibold">{title}</h2>
-          <p className="text-sm leading-relaxed text-slate-200">{description}</p>
-        </div>
-        <div className="mt-6 flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={onBack}
-              disabled={step === 1}
-              className="rounded-full border border-white/20 px-4 py-2 text-xs font-semibold text-white disabled:opacity-40"
-            >
-              Back
-            </button>
-            <button
-              type="button"
-              onClick={onNext}
-              disabled={step === 6 || nextDisabled}
-              className="rounded-full bg-amber-300 px-4 py-2 text-xs font-semibold text-slate-950 disabled:opacity-40"
-            >
-              Next
-            </button>
-          </div>
-          {nextDisabled ? (
-            <p className="text-xs text-amber-200">
-              Accept the NDA to continue.
-            </p>
-          ) : null}
+    <aside className="pointer-events-auto sticky top-0 h-screen w-[420px] shrink-0 border-l border-white/10 bg-slate-950/95 p-6 backdrop-blur">
+      <div className="space-y-3">
+        <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+          Step {step} of 6
+        </p>
+        <h2 className="text-xl font-semibold">{title}</h2>
+        <p className="text-sm leading-relaxed text-slate-200">{description}</p>
+      </div>
+      <div className="mt-6 flex flex-col gap-3">
+        <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={onExit}
-            className="text-left text-xs font-semibold text-slate-400 hover:text-slate-200"
+            onClick={onBack}
+            disabled={step === 1}
+            className="rounded-full border border-white/20 px-4 py-2 text-xs font-semibold text-white disabled:opacity-40"
           >
-            Exit tour
+            Back
+          </button>
+          <button
+            type="button"
+            onClick={onNext}
+            disabled={step === 6 || nextDisabled}
+            className="rounded-full bg-amber-300 px-4 py-2 text-xs font-semibold text-slate-950 disabled:opacity-40"
+          >
+            Next
           </button>
         </div>
-      </aside>
-    </div>
+        {nextDisabled ? (
+          <p className="text-xs text-amber-200">
+            Accept the NDA to continue.
+          </p>
+        ) : null}
+        <button
+          type="button"
+          onClick={onExit}
+          className="text-left text-xs font-semibold text-slate-400 hover:text-slate-200"
+        >
+          Exit tour
+        </button>
+      </div>
+    </aside>
   );
 };
 
