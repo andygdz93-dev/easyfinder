@@ -39,34 +39,55 @@ const EnvSchema = z
     MONGO_URL: z.string().min(1, "MONGO_URL is required"),
     DB_NAME: z.string().min(1, "DB_NAME is required"),
 
-    // Stripe (optional unless production)
-    STRIPE_SECRET_KEY: z.string().min(1).optional(),
-    STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
-    STRIPE_PRICE_ID_PRO: z.string().min(1).optional(),
-    STRIPE_PRICE_ID_ENTERPRISE: z.string().min(1).optional(),
+    // App base URL (used for building absolute links in emails)
+    // Local: http://localhost:5173
+    // Prod:  https://<your-vercel-domain>
+    APP_BASE_URL: z.string().url().default("http://localhost:5173"),
 
-    // Email (Resend)
-    RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY is required"),
+    // Resend (for password reset emails, etc.)
+    // Required to send real emails in production.
+    RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY is required").optional(),
+    // Must be a verified sender in Resend, e.g. "EasyFinder <no-reply@yourdomain.com>"
+    RESEND_FROM: z.string().min(1, "RESEND_FROM is required").optional(),
 
-    // Frontend base URL (for reset links)
-    APP_BASE_URL: z.string().min(1, "APP_BASE_URL is required"),
+    // Stripe (required in production)
+    STRIPE_SECRET_KEY: z.string().min(1, "STRIPE_SECRET_KEY is required").optional(),
+    STRIPE_WEBHOOK_SECRET: z.string().min(1, "STRIPE_WEBHOOK_SECRET is required").optional(),
+    STRIPE_PRICE_ID_PRO: z.string().min(1, "STRIPE_PRICE_ID_PRO is required").optional(),
+    STRIPE_PRICE_ID_ENTERPRISE: z
+      .string()
+      .min(1, "STRIPE_PRICE_ID_ENTERPRISE is required")
+      .optional(),
   })
   .superRefine((values, ctx) => {
     if (values.NODE_ENV !== "production") return;
 
-    const requiredStripeKeys = [
+    // Stripe required in production (as you already wanted)
+    const stripeRequired = [
       "STRIPE_SECRET_KEY",
       "STRIPE_WEBHOOK_SECRET",
       "STRIPE_PRICE_ID_PRO",
       "STRIPE_PRICE_ID_ENTERPRISE",
     ] as const;
 
-    for (const key of requiredStripeKeys) {
+    for (const key of stripeRequired) {
       if (!values[key]) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: [key],
           message: `${key} is required in production`,
+        });
+      }
+    }
+
+    // Resend required in production if you want real reset emails in prod
+    const resendRequired = ["RESEND_API_KEY", "RESEND_FROM"] as const;
+    for (const key of resendRequired) {
+      if (!values[key]) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: [key],
+          message: `${key} is required in production (needed for password reset emails)`,
         });
       }
     }
@@ -78,7 +99,6 @@ const testDefaults =
         JWT_SECRET: "test-secret-1234567890",
         MONGO_URL: "mongodb://localhost:27017",
         DB_NAME: "easyfinder_test",
-        RESEND_API_KEY: "test_key",
         APP_BASE_URL: "http://localhost:5173",
       }
     : {};
@@ -88,9 +108,7 @@ const parsed = EnvSchema.safeParse({ ...process.env, ...testDefaults });
 if (!parsed.success) {
   throw new Error(
     "❌ Invalid environment variables:\n" +
-      parsed.error.issues
-        .map((i) => `- ${i.path.join(".")}: ${i.message}`)
-        .join("\n")
+      parsed.error.issues.map((i) => `- ${i.path.join(".")}: ${i.message}`).join("\n")
   );
 }
 
