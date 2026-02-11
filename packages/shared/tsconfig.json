@@ -5,7 +5,11 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "target": "ES2022",
-    "declaration": true
+    "declaration": true,
+    "composite": true,
+    "declarationMap": true
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }
