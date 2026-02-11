@@ -1,10 +1,13 @@
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "crypto";
 import { ObjectId } from "mongodb";
 import { fail, ok } from "../response.js";
 import { getUsersCollection, UserDocument } from "../users.js";
 import { defaultBilling } from "../billing.js";
+import { sendPasswordResetEmail } from "../email.js";
+import { getPasswordResetTokensCollection } from "../passwordResetTokens.js";
 
 const toUserDto = (user: UserDocument) => ({
   id: user._id.toHexString(),
@@ -24,8 +27,20 @@ const loginSchema = z.object({
   password: z.string().min(8),
 });
 
+const forgotPasswordSchema = z.object({
+  email: z.string().email(),
+});
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  newPassword: z.string().min(8),
+});
+
+const PASSWORD_RESET_TTL_MS = 15 * 60 * 1000;
+
 export default async function authRoutes(app: FastifyInstance) {
   const usersCollection = () => getUsersCollection();
+  const passwordResetTokensCollection = () => getPasswordResetTokensCollection();
 
   app.post("/register", async (request, reply) => {
     const col = usersCollection();
@@ -101,6 +116,62 @@ export default async function authRoutes(app: FastifyInstance) {
       token,
       user: toUserDto(user),
     });
+  });
+
+  app.post("/forgot-password", async (request) => {
+    const usersCol = usersCollection();
+    const payload = forgotPasswordSchema.parse(request.body);
+    const emailLower = payload.email.toLowerCase();
+    const user = await usersCol.findOne({ emailLower });
+
+    if (user) {
+      const token = randomBytes(32).toString("hex");
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + PASSWORD_RESET_TTL_MS);
+
+      await passwordResetTokensCollection().insertOne({
+        _id: new ObjectId(),
+        user_id: user._id,
+        token,
+        created_at: now,
+        expires_at: expiresAt,
+      });
+
+      await sendPasswordResetEmail(user.email, token);
+    }
+
+    return ok(request, { success: true });
+  });
+
+  app.post("/reset-password", async (request, reply) => {
+    const usersCol = usersCollection();
+    const tokensCol = passwordResetTokensCollection();
+    const payload = resetPasswordSchema.parse(request.body);
+
+    const resetToken = await tokensCol.findOne({
+      token: payload.token,
+      expires_at: { $gt: new Date() },
+    });
+
+    if (!resetToken) {
+      return fail(request, reply, "INVALID_TOKEN", "Invalid or expired reset token.", 400);
+    }
+
+    const passwordHash = await bcrypt.hash(payload.newPassword, 10);
+
+    await usersCol.updateOne(
+      { _id: resetToken.user_id },
+      {
+        $set: {
+          passwordHash,
+          updatedAt: new Date(),
+        },
+      }
+    );
+
+    await tokensCol.deleteOne({ _id: resetToken._id });
+
+    return ok(request, { success: true });
   });
 
   app.get("/me", { preHandler: app.authenticate }, async (request, reply) => {

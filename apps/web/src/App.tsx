@@ -17,6 +17,8 @@ import { Upgrade } from "./pages/app/Upgrade";
 import { Nda } from "./pages/app/Nda";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
+import { ForgotPassword } from "./pages/ForgotPassword";
+import { ResetPassword } from "./pages/ResetPassword";
 import { DemoTour } from "./pages/demo/Tour";
 import { DemoLayout } from "./layouts/DemoLayout";
 import { LiveLayout } from "./layouts/LiveLayout";
@@ -33,6 +35,8 @@ export default function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/app/login" element={<Login />} />
       <Route path="/app/register" element={<Register />} />
       <Route path="/listings" element={<Navigate to="/app/listings" replace />} />
