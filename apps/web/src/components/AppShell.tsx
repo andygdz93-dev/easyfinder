@@ -200,14 +200,12 @@ export const AppShell = ({
                   Switch Mode
                 </button>
               ) : (
-                <button
+                <Link
+                  to="/app/upgrade"
                   className="rounded-full border border-slate-700 px-4 py-2 text-xs text-slate-300"
-                  onClick={() =>
-                    document.documentElement.classList.toggle("dark")
-                  }
                 >
                   Upgrade
-                </button>
+                </Link>
               )}
               <div className="rounded-full border border-slate-700 px-4 py-2 text-xs text-slate-300">
                 {modeLabel}
