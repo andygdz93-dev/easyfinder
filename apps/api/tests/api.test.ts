@@ -36,7 +36,9 @@ describe("API", () => {
   it("health returns 200", async () => {
     const res = await supertest(app.server).get("/api/health");
     expect(res.status).toBe(200);
-    expect(res.body.data.status).toBe("ok");
+    expect(res.body.data.ok).toBe(true);
+    expect(typeof res.body.data.demoMode).toBe("boolean");
+    expect(typeof res.body.data.billingEnabled).toBe("boolean");
   });
 
   it("register/login returns token", async () => {

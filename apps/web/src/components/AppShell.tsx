@@ -4,7 +4,7 @@ import { Button } from "./ui/button";
 import { useAuth } from "../lib/auth";
 import { getMe } from "../lib/api";
 import { Billing, isBillingActive } from "../lib/billing";
-import { isDemoMode } from "../env";
+import { useRuntime } from "../lib/runtime";
 import DemoBanner from "./DemoBanner";
 
 const navSections = [
@@ -42,8 +42,8 @@ export const AppShell = ({
   className?: string;
 }) => {
   const { user, token, clearSession } = useAuth();
-  const demoMode = isDemoMode();
-  const showDemoBanner = import.meta.env.VITE_DEMO_MODE === "true";
+  const { demoMode } = useRuntime();
+  const showDemoBanner = demoMode;
   const [billing, setBilling] = useState<Billing | null>(null);
   const [billingError, setBillingError] = useState<string | null>(null);
 
