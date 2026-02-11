@@ -29,3 +29,8 @@ export const requireApiBaseUrl = (): string => {
 // Backward-compatible aliases
 export const getApiUrl = getApiBaseUrl;
 export const requireApiUrl = requireApiBaseUrl;
+
+export const isDemoMode = (): boolean => {
+  const configured = readEnv("VITE_DEMO_MODE") ?? readEnv("DEMO_MODE");
+  return configured === "true";
+};

@@ -5,6 +5,7 @@ import { requirePlan } from "../middleware/requirePlan.js";
 import { listings } from "../store.js";
 import { requireNDA } from "../middleware/requireNDA.js";
 import { config } from "../config.js";
+import { disableWritesInDemo } from "../middleware/disableWritesInDemo.js";
 
 export default async function listingsRoutes(app: FastifyInstance) {
   /**
@@ -75,4 +76,20 @@ export default async function listingsRoutes(app: FastifyInstance) {
     });
     }
   );
+
+  const writeHandlers = {
+    preHandler: [app.authenticate, requireNDA, disableWritesInDemo],
+  };
+
+  app.post("/", writeHandlers, async (request, reply) => {
+    return fail(request, reply, "NOT_IMPLEMENTED", "Listing creation is not available yet.", 501);
+  });
+
+  app.put("/", writeHandlers, async (request, reply) => {
+    return fail(request, reply, "NOT_IMPLEMENTED", "Listing updates are not available yet.", 501);
+  });
+
+  app.delete("/", writeHandlers, async (request, reply) => {
+    return fail(request, reply, "NOT_IMPLEMENTED", "Listing deletion is not available yet.", 501);
+  });
 }
