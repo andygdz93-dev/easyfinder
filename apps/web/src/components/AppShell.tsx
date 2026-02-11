@@ -190,7 +190,7 @@ export const AppShell = ({
               <p className="text-sm text-slate-400">Premium equipment intelligence</p>
             </div>
             <div className="flex items-center gap-3">
-              {isDemoMode && (
+              {isDemoMode ? (
                 <button
                   className="rounded-full border border-slate-700 px-4 py-2 text-xs text-slate-300"
                   onClick={() =>
@@ -199,8 +199,7 @@ export const AppShell = ({
                 >
                   Switch Mode
                 </button>
-              )}
-              {!isDemoMode && (
+              ) : (
                 <button
                   className="rounded-full border border-slate-700 px-4 py-2 text-xs text-slate-300"
                   onClick={() =>
