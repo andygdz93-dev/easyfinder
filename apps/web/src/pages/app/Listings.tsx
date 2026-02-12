@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/button";
@@ -10,6 +10,7 @@ import {
   addToWatchlist,
   removeFromWatchlist,
   getListings,
+  getMe,
   getRequestId,
   getWatchlist,
 } from "../../lib/api";
@@ -20,16 +21,42 @@ import { useRuntime } from "../../lib/runtime";
 const FREE_BUYER_LISTING_LIMIT = 10;
 
 export const Listings = () => {
-  const { user } = useAuth();
+  const { token, user } = useAuth();
   const runtime = useRuntime();
   const [state, setState] = useState("");
   const [maxHours, setMaxHours] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [operableOnly, setOperableOnly] = useState(true);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [showUpgradeToast, setShowUpgradeToast] = useState(false);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const plan = (user as { billing?: { plan?: string } } | null)?.billing?.plan ?? "free";
+  const meQuery = useQuery({
+    queryKey: ["me"],
+    enabled: Boolean(token),
+    queryFn: getMe,
+  });
+
+  const plan = meQuery.data?.billing?.plan ?? "free";
   const isFreeBuyerLive = !runtime.demoMode && user?.role === "buyer" && plan === "free";
+
+  const triggerUpgradeToast = () => {
+    setShowUpgradeToast(true);
+    if (toastTimer.current !== null) {
+      clearTimeout(toastTimer.current);
+    }
+    toastTimer.current = setTimeout(() => {
+      setShowUpgradeToast(false);
+    }, 2500);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (toastTimer.current !== null) {
+        clearTimeout(toastTimer.current);
+      }
+    };
+  }, []);
 
   const listingsQuery = useQuery<ListingWithScore[]>({
     queryKey: ["listings", state, maxHours, maxPrice, operableOnly, isFreeBuyerLive],
@@ -88,8 +115,13 @@ export const Listings = () => {
         <select
           className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm"
           value={state}
-          onChange={(event) => setState(event.target.value)}
-          disabled={isFreeBuyerLive}
+          onChange={(event) => {
+            if (isFreeBuyerLive) {
+              triggerUpgradeToast();
+              return;
+            }
+            setState(event.target.value);
+          }}
         >
           <option value="">All states</option>
           <option value="CA">CA</option>
@@ -102,23 +134,58 @@ export const Listings = () => {
           min="0"
           placeholder="Max hours"
           value={maxHours}
-          onChange={(event) => setMaxHours(event.target.value)}
-          disabled={isFreeBuyerLive}
+          onChange={(event) => {
+            if (isFreeBuyerLive) {
+              triggerUpgradeToast();
+              return;
+            }
+            setMaxHours(event.target.value);
+          }}
+          onFocus={() => {
+            if (isFreeBuyerLive) {
+              triggerUpgradeToast();
+            }
+          }}
+          onKeyDown={() => {
+            if (isFreeBuyerLive) {
+              triggerUpgradeToast();
+            }
+          }}
         />
         <Input
           type="number"
           min="0"
           placeholder="Max price"
           value={maxPrice}
-          onChange={(event) => setMaxPrice(event.target.value)}
-          disabled={isFreeBuyerLive}
+          onChange={(event) => {
+            if (isFreeBuyerLive) {
+              triggerUpgradeToast();
+              return;
+            }
+            setMaxPrice(event.target.value);
+          }}
+          onFocus={() => {
+            if (isFreeBuyerLive) {
+              triggerUpgradeToast();
+            }
+          }}
+          onKeyDown={() => {
+            if (isFreeBuyerLive) {
+              triggerUpgradeToast();
+            }
+          }}
         />
         <label className="flex items-center gap-2 text-xs text-slate-300">
           <input
             type="checkbox"
             checked={operableOnly}
-            onChange={(event) => setOperableOnly(event.target.checked)}
-            disabled={isFreeBuyerLive}
+            onChange={(event) => {
+              if (isFreeBuyerLive) {
+                triggerUpgradeToast();
+                return;
+              }
+              setOperableOnly(event.target.checked);
+            }}
           />
           Operable only
         </label>
@@ -134,6 +201,11 @@ export const Listings = () => {
         <Card className="border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-100">
           {actionError}
         </Card>
+      )}
+      {showUpgradeToast && (
+        <div className="fixed bottom-6 right-6 z-50 rounded-lg border border-white/10 bg-slate-900/95 px-4 py-2 text-xs text-slate-100 shadow-lg">
+          Upgrade to use filters.
+        </div>
       )}
       {listingsQuery.isLoading ? (
         <div className="grid gap-4 md:grid-cols-2">
