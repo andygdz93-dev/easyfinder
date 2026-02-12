@@ -1,5 +1,6 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { getMe } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useRuntime } from "../lib/runtime";
 
@@ -30,13 +31,45 @@ export const ModeLayout = ({
   mode: Mode;
   children: ReactNode;
 }) => {
-  const { demoMode, hydrated, billingEnabled } = useRuntime();
+  const { demoMode, hydrated } = useRuntime();
   const { token, user } = useAuth();
   const config = modeConfig[mode];
+  const [plan, setPlan] = useState<"free" | "pro" | "enterprise">("free");
+  const [planLoading, setPlanLoading] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    if (!token) {
+      setPlan("free");
+      setPlanLoading(false);
+      return;
+    }
+
+    setPlanLoading(true);
+
+    getMe()
+      .then((data) => {
+        if (!active) return;
+        setPlan(data.billing?.plan ?? "free");
+      })
+      .catch(() => {
+        if (!active) return;
+        setPlan("free");
+      })
+      .finally(() => {
+        if (!active) return;
+        setPlanLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [token]);
 
   const roleLabel = user?.role === "seller" ? "Seller" : "Buyer";
-  const planLabel = billingEnabled ? "Enterprise" : "Free";
-  const isLoading = !hydrated || (!!token && !user);
+  const planLabel = plan === "free" ? "Free" : plan === "pro" ? "Pro" : "Enterprise";
+  const isLoading = !hydrated || (!!token && !user) || planLoading;
 
   const liveBadgeLabel = isLoading ? "Loading…" : `${planLabel} ${roleLabel}`;
   const badgeLabel = mode === "demo" ? config.label : liveBadgeLabel;
