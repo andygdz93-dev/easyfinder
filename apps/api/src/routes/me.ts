@@ -6,6 +6,7 @@ import { defaultBilling, isBillingActive, normalizeBilling, serializeBilling } f
 import { getUsersCollection } from "../users.js";
 import { requireNDA } from "../middleware/requireNDA.js";
 import { fail, ok } from "../response.js";
+import { env } from "../env.js";
 
 const roleUpdateSchema = z.object({
   role: z.enum(["buyer", "seller", "enterprise"]),
@@ -37,6 +38,14 @@ const toUserDto = (user: {
   billing: serializeBilling(normalizeBilling(user.billing ?? defaultBilling())),
 });
 
+const resolveBillingPlan = (fallbackPlan: "free" | "pro" | "enterprise" = "free") => {
+  if (env.BILLING_STUB_PLAN) {
+    return env.BILLING_STUB_PLAN;
+  }
+
+  return env.BILLING_ENABLED ? fallbackPlan : "free";
+};
+
 export default async function meRoutes(app: FastifyInstance) {
   const usersCollection = () => getUsersCollection();
 
@@ -52,7 +61,10 @@ export default async function meRoutes(app: FastifyInstance) {
         ndaAcceptedAt: currentUser.ndaAcceptedAt
           ? new Date(currentUser.ndaAcceptedAt).toISOString()
           : null,
-        billing: serializeBilling(defaultBilling()),
+        billing: {
+          ...serializeBilling(defaultBilling()),
+          plan: resolveBillingPlan(),
+        },
       };
     };
 
@@ -70,7 +82,16 @@ export default async function meRoutes(app: FastifyInstance) {
         return { data: fallback };
       }
 
-      return { data: toUserDto(user) };
+      const userDto = toUserDto(user);
+      return {
+        data: {
+          ...userDto,
+          billing: {
+            ...userDto.billing,
+            plan: resolveBillingPlan(userDto.billing.plan),
+          },
+        },
+      };
     } catch {
       return { data: fallback };
     }
