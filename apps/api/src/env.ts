@@ -35,6 +35,7 @@ const EnvSchema = z
       .enum(["true", "false"])
       .default("false")
       .transform((v) => v === "true"),
+    BILLING_STUB_PLAN: z.enum(["free", "pro", "enterprise"]).optional(),
     EMAIL_ENABLED: z
       .string()
       .optional()

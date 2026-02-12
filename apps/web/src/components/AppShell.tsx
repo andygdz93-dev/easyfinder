@@ -82,7 +82,6 @@ export const AppShell = ({
 
   const billingActive = isBillingActive(billing);
   const plan = billing?.plan ?? "free";
-  const userPlan = billing?.plan ?? "free";
   const userRole = user?.role ?? "buyer";
   const userRoleResolved =
     userRole === "enterprise" ? "enterprise" : userRole === "seller" ? "seller" : "buyer";
@@ -99,8 +98,7 @@ export const AppShell = ({
     };
   }, [planResolved, userRoleResolved]);
 
-  const planLabel =
-    userPlan === "free" ? "Free" : userPlan === "pro" ? "Pro" : "Enterprise";
+  const planLabel = plan === "free" ? "Free" : plan === "pro" ? "Pro" : "Enterprise";
   const roleLabel =
     userRole === "seller"
       ? "Seller"
