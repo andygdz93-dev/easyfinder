@@ -7,12 +7,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const getListingsMock = vi.fn();
 const getWatchlistMock = vi.fn();
 const addToWatchlistMock = vi.fn();
+const getMeMock = vi.fn();
 
 vi.mock("../src/lib/api", () => ({
   getListings: getListingsMock,
   getWatchlist: getWatchlistMock,
   addToWatchlist: addToWatchlistMock,
   getRequestId: vi.fn(),
+  getMe: getMeMock,
 }));
 
 const renderWithProviders = (ListingsComponent: React.ComponentType) => {
@@ -70,6 +72,7 @@ describe("Listings", () => {
     ]);
     getWatchlistMock.mockResolvedValue({ items: [] });
     addToWatchlistMock.mockResolvedValue({ item: { id: "1", listingId: "listing-1" } });
+    getMeMock.mockResolvedValue({ billing: { plan: "free" } });
   });
 
   it("renders listings from API data", async () => {
