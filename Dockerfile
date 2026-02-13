@@ -6,6 +6,7 @@ RUN corepack enable
 COPY . .
 RUN pnpm install --frozen-lockfile
 
+RUN rm -rf /repo/packages/shared/dist /repo/packages/shared/*.tsbuildinfo || true
 RUN pnpm --filter @easyfinderai/shared build
 RUN sh -lc '\
 echo "DEBUG_SHARED_BEGIN"; \
