@@ -12,6 +12,9 @@ import { Offers } from "./pages/app/Offers";
 import { SellerListings } from "./pages/app/SellerListings";
 import { SellerAdd } from "./pages/app/SellerAdd";
 import { SellerUpload } from "./pages/app/SellerUpload";
+import { SellerDashboard } from "./pages/app/SellerDashboard";
+import SellerInquiries from "./pages/app/SellerInquiries";
+import SellerPipeline from "./pages/app/SellerPipeline";
 import { Settings } from "./pages/app/Settings";
 import { Upgrade } from "./pages/app/Upgrade";
 import { Nda } from "./pages/app/Nda";
@@ -37,7 +40,7 @@ const DashboardRedirect = () => {
   const { user } = useAuth();
 
   if (user?.role === "seller") {
-    return <Navigate to="/app/seller/listings" replace />;
+    return <Navigate to="/app/seller/dashboard" replace />;
   }
 
   if (user?.role === "enterprise") {
@@ -120,7 +123,10 @@ export default function App() {
             <Route path="scoring" element={<ScoringConfigs />} />
             <Route path="offers" element={<Offers />} />
             <Route path="seller" element={<Navigate to="seller/listings" replace />} />
+            <Route path="seller/dashboard" element={<SellerDashboard />} />
             <Route path="seller/listings" element={<SellerListings />} />
+            <Route path="seller/inquiries" element={<SellerInquiries />} />
+            <Route path="seller/pipeline" element={<SellerPipeline />} />
             <Route path="seller/add" element={<SellerAdd />} />
             <Route path="seller/upload" element={<SellerUpload />} />
             <Route
