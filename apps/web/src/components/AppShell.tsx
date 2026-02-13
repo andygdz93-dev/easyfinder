@@ -84,7 +84,14 @@ export const AppShell = ({
   const plan = billing?.plan ?? "free";
   const userRole = user?.role ?? null;
   const userRoleResolved =
-    userRole === "enterprise" ? "enterprise" : userRole === "seller" ? "seller" : "buyer";
+  userRole === "enterprise"
+    ? "enterprise"
+    : userRole === "seller"
+      ? "seller"
+      : userRole === "buyer"
+        ? "buyer"
+        : "demo";
+
   const planResolved = plan === "enterprise" ? "enterprise" : plan === "pro" ? "pro" : "free";
 
   useEffect(() => {
