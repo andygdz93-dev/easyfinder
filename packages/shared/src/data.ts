@@ -1,4 +1,4 @@
-import { Listing, User } from "./types.js";
+import { Listing, User } from "./types";
 
 /**
  * Demo users
