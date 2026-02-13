@@ -7,6 +7,7 @@ COPY . .
 RUN pnpm install --frozen-lockfile
 
 RUN pnpm --filter @easyfinderai/shared build
+RUN ls -la /repo/packages/shared/dist && echo "----" && ls -la /repo/packages/shared/dist/*.d.ts || true
 RUN pnpm --filter @easyfinderai/api build
 
 # after your build + deploy step:
