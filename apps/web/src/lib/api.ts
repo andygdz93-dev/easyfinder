@@ -30,8 +30,8 @@ export type MeResponse = {
   email: string;
   name: string;
   role: "demo" | "buyer" | "seller" | "enterprise" | "admin" | null;
-  ndaAccepted?: boolean;
-  ndaAcceptedAt?: string | null;
+  ndaAccepted: boolean;
+  ndaAcceptedAt: string | null;
   billing?: Billing;
 };
 

@@ -7,6 +7,8 @@ import { Billing, isBillingActive } from "../lib/billing";
 import { useRuntime } from "../lib/runtime";
 import DemoBanner from "./DemoBanner";
 
+const NDA_WARNING_TEXT = "NDA must be accepted before accessing this resource.";
+
 const navSections = [
   {
     title: "Buyer",
@@ -167,12 +169,12 @@ export const AppShell = ({
           <p className="text-xs text-slate-400">
             Plan: {plan} {billing?.status ? `(${billing.status})` : ""}
           </p>
-          {billingError ? (
+          {billingError && billingError !== NDA_WARNING_TEXT ? (
             <p className="mt-2 text-xs text-rose-400">{billingError}</p>
           ) : null}
           {user?.ndaAccepted === false ? (
             <p className="mt-2 text-xs text-rose-400">
-              NDA must be accepted before accessing this resource.
+              {NDA_WARNING_TEXT}
             </p>
           ) : null}
           <nav className="mt-8 space-y-6">
