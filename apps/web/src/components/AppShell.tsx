@@ -82,7 +82,7 @@ export const AppShell = ({
 
   const billingActive = isBillingActive(billing);
   const plan = billing?.plan ?? "free";
-  const userRole = user?.role ?? "buyer";
+  const userRole = user?.role ?? null;
   const userRoleResolved =
     userRole === "enterprise" ? "enterprise" : userRole === "seller" ? "seller" : "buyer";
   const planResolved = plan === "enterprise" ? "enterprise" : plan === "pro" ? "pro" : "free";
@@ -108,7 +108,9 @@ export const AppShell = ({
           ? "Admin"
           : userRole === "demo"
             ? "Demo"
-            : "Buyer";
+            : userRole === null
+              ? "Unselected"
+              : "Buyer";
   const isShellLoading = !hydrated || billingLoading || (Boolean(token) && !user);
   const badgeLabel = isShellLoading ? "Loading…" : `${planLabel} ${roleLabel}`;
   const visibleSections = useMemo(() => {

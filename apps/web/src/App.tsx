@@ -25,6 +25,7 @@ import { LiveLayout } from "./layouts/LiveLayout";
 import { NdaProvider } from "./lib/nda";
 import { useAuth } from "./lib/auth";
 import { SelectRole } from "./pages/app/SelectRole";
+import { Billing } from "./pages/app/Billing";
 
 const LegacyListingRedirect = () => {
   const { id } = useParams();
@@ -58,7 +59,7 @@ const RequireRoleSelection = ({ children }: { children?: React.ReactNode }) => {
     );
   }
 
-  if (user?.role === null) {
+  if (user && user.role === null) {
     return <Navigate to="/app/select-role" replace state={{ from: location.pathname }} />;
   }
 
@@ -98,6 +99,7 @@ export default function App() {
       >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="select-role" element={<SelectRole />} />
+        <Route path="billing" element={<Billing />} />
         <Route path="dashboard" element={<DashboardRedirect />} />
         <Route element={<RequireRoleSelection />}>
         <Route path="listings" element={<Listings />} />
