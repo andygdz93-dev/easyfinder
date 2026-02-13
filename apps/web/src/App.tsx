@@ -59,7 +59,7 @@ const RequireRoleSelection = ({ children }: { children?: React.ReactNode }) => {
     );
   }
 
-  if (user && user.role === null) {
+  if (user && user.role === null && location.pathname !== "/app/select-role") {
     return <Navigate to="/app/select-role" replace state={{ from: location.pathname }} />;
   }
 
@@ -89,39 +89,47 @@ export default function App() {
         path="/app/*"
         element={
           <RequireAuth>
-            <NdaProvider>
-              <LiveLayout>
-                <RequireLiveNda />
-              </LiveLayout>
-            </NdaProvider>
+            <RequireRoleSelection>
+              <NdaProvider>
+                <Outlet />
+              </NdaProvider>
+            </RequireRoleSelection>
           </RequireAuth>
         }
       >
-        <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="select-role" element={<SelectRole />} />
-        <Route path="billing" element={<Billing />} />
-        <Route path="dashboard" element={<DashboardRedirect />} />
-        <Route element={<RequireRoleSelection />}>
-        <Route path="listings" element={<Listings />} />
-        <Route path="listings/:id" element={<ListingDetail />} />
-        <Route path="watchlist" element={<Watchlist />} />
-        <Route path="admin/sources" element={<AdminSources />} />
-        <Route path="scoring" element={<ScoringConfigs />} />
-        <Route path="offers" element={<Offers />} />
-        <Route path="seller" element={<Navigate to="seller/listings" replace />} />
-        <Route path="seller/listings" element={<SellerListings />} />
-        <Route path="seller/add" element={<SellerAdd />} />
-        <Route path="seller/upload" element={<SellerUpload />} />
-        <Route
-          path="settings"
-          element={
-            <RequireEnterprise>
-              <Settings />
-            </RequireEnterprise>
-          }
-        />
-        <Route path="upgrade" element={<Upgrade />} />
-        <Route path="nda" element={<Nda />} />
+        <Route element={<RequireLiveNda />}>
+          <Route
+            element={
+              <LiveLayout>
+                <Outlet />
+              </LiveLayout>
+            }
+          >
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="billing" element={<Billing />} />
+            <Route path="dashboard" element={<DashboardRedirect />} />
+            <Route path="listings" element={<Listings />} />
+            <Route path="listings/:id" element={<ListingDetail />} />
+            <Route path="watchlist" element={<Watchlist />} />
+            <Route path="admin/sources" element={<AdminSources />} />
+            <Route path="scoring" element={<ScoringConfigs />} />
+            <Route path="offers" element={<Offers />} />
+            <Route path="seller" element={<Navigate to="seller/listings" replace />} />
+            <Route path="seller/listings" element={<SellerListings />} />
+            <Route path="seller/add" element={<SellerAdd />} />
+            <Route path="seller/upload" element={<SellerUpload />} />
+            <Route
+              path="settings"
+              element={
+                <RequireEnterprise>
+                  <Settings />
+                </RequireEnterprise>
+              }
+            />
+            <Route path="upgrade" element={<Upgrade />} />
+            <Route path="nda" element={<Nda />} />
+          </Route>
         </Route>
       </Route>
 
