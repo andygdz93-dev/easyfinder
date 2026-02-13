@@ -42,7 +42,14 @@ describe("RequireLiveNda", () => {
     globalThis.setTestFetchHandler(() =>
       new Response(
         JSON.stringify({
-          data: { id: "u1", email: "buyer@easyfinder.ai", name: "Buyer", role: "buyer", ndaAccepted: false },
+          data: {
+            id: "u1",
+            email: "buyer@easyfinder.ai",
+            name: "Buyer",
+            role: "buyer",
+            ndaAccepted: false,
+            ndaAcceptedAt: null,
+          },
         }),
         { status: 200, headers: { "Content-Type": "application/json" } }
       )
@@ -59,7 +66,14 @@ describe("RequireLiveNda", () => {
     globalThis.setTestFetchHandler(() =>
       new Response(
         JSON.stringify({
-          data: { id: "u1", email: "buyer@easyfinder.ai", name: "Buyer", role: "buyer", ndaAccepted: true },
+          data: {
+            id: "u1",
+            email: "buyer@easyfinder.ai",
+            name: "Buyer",
+            role: "buyer",
+            ndaAccepted: true,
+            ndaAcceptedAt: null,
+          },
         }),
         { status: 200, headers: { "Content-Type": "application/json" } }
       )

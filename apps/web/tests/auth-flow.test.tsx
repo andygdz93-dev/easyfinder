@@ -45,6 +45,8 @@ describe("auth flow", () => {
                 email: "buyer@easyfinder.ai",
                 name: "Buyer",
                 role: "buyer",
+                ndaAccepted: true,
+                ndaAcceptedAt: null,
               },
             },
           }),
@@ -60,6 +62,8 @@ describe("auth flow", () => {
               email: "buyer@easyfinder.ai",
               name: "Buyer",
               role: "buyer",
+              ndaAccepted: true,
+              ndaAcceptedAt: null,
             },
           }),
         } as Response;
@@ -167,6 +171,8 @@ describe("auth flow", () => {
               email: "buyer@easyfinder.ai",
               name: "Buyer",
               role: "buyer",
+              ndaAccepted: true,
+              ndaAcceptedAt: null,
             },
           }),
         } as Response;
