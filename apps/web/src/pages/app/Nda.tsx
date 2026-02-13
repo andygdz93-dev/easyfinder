@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { acceptNda } from "../../lib/api";
+import { acceptNda, getMe } from "../../lib/api";
 import { useNda } from "../../lib/nda";
+import { useAuth } from "../../lib/auth";
 
 const NDA_SUMMARY = [
   "Keep EasyFinder data, pricing, and customer details confidential.",
@@ -20,6 +21,7 @@ export const Nda = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { setStatus, setChecked } = useNda();
+  const { setUser } = useAuth();
   const [isChecked, setIsChecked] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +38,8 @@ export const Nda = () => {
       const data = await acceptNda();
       setStatus(data);
       setChecked(true);
+      const updated = await getMe();
+      setUser(updated);
       navigate(nextPath, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to accept NDA.");

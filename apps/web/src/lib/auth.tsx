@@ -17,6 +17,7 @@ type AuthContextValue = {
   user: User | null;
   isUserLoading: boolean;
   setSession: (token: string, user: User) => void;
+  setUser: (user: User | null) => void;
   setUserRole: (role: "buyer" | "seller" | "enterprise") => Promise<void>;
   clearSession: () => void;
 };
@@ -158,6 +159,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(newUser);
         setIsUserLoading(false);
         writeStoredToken(newToken);
+      },
+      setUser: (nextUser: User | null) => {
+        setUser(nextUser);
       },
       setUserRole: async (role: "buyer" | "seller" | "enterprise") => {
         if (!token) {
