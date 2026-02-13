@@ -8,7 +8,7 @@ RUN pnpm install --frozen-lockfile
 
 RUN pnpm --filter @easyfinderai/shared build
 RUN echo "DEBUG_SHARED_DIST_V2" && ls -la /repo/packages/shared/dist && echo "----" && ls -la /repo/packages/shared/dist/*.d.ts || true
-RUN pnpm --filter @easyfinderai/api build
+RUN echo "STOP_AFTER_SHARED_DIST" && exit 1
 
 # after your build + deploy step:
 RUN pnpm --filter @easyfinderai/api deploy --prod /out
