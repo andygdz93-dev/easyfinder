@@ -103,7 +103,7 @@ export const ScoringConfigs = () => {
         <div className="grid gap-4 md:grid-cols-2">
           {(Object.entries(weightLabels) as [keyof ScoringConfig["weights"], string][]).map(
             ([key, label]) => {
-              const value = weights[key] ?? 0;
+              const value = (weights as Record<keyof ScoringConfig["weights"], number>)[key] ?? 0;
               return (
                 <div key={String(key)} className="space-y-2">
                   <div className="flex items-center justify-between text-sm text-slate-300">
