@@ -23,7 +23,7 @@ const normalizeRole = (role: string | null | undefined): UserRole => {
     return role;
   }
 
-  return "buyer";
+  return "demo";
 };
 
 const registerSchema = z.object({
