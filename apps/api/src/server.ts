@@ -25,6 +25,14 @@ import { env } from "./env.js";
 import meRoutes from "./routes/me.js";
 import { ok } from "./response.js";
 
+const normalizeRole = (role: unknown): "buyer" | "seller" | "admin" | "demo" => {
+  if (role === "buyer" || role === "seller" || role === "admin" || role === "demo") {
+    return role;
+  }
+
+  return "buyer";
+};
+
 
 
 /**
@@ -117,7 +125,7 @@ export const buildServer = () => {
         id: payload.id,
         email: payload.email,
         name: payload.name,
-        role: payload.role,
+        role: normalizeRole(payload.role),
         ndaAccepted,
         ndaAcceptedAt,
       };
@@ -164,7 +172,7 @@ export const buildServer = () => {
           id: payload.id,
           email: payload.email,
           name: payload.name,
-          role: payload.role,
+          role: normalizeRole(payload.role),
           ndaAccepted: payload.ndaAccepted,
           ndaAcceptedAt: payload.ndaAcceptedAt ?? null,
         };
