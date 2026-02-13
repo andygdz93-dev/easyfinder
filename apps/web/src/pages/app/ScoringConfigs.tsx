@@ -55,7 +55,8 @@ export const ScoringConfigs = () => {
     [config, sampleListing]
   );
 
-  const weights = config.weights ?? defaultScoringConfig.weights;
+  const weights: ScoringConfig["weights"] =
+    config.weights ?? defaultScoringConfig.weights;
   const sampleTotal = typeof sampleScore?.total === "number" ? sampleScore.total : 0;
   const sampleConfidence =
     typeof sampleScore?.confidence === "number" ? sampleScore.confidence : 0;
@@ -67,7 +68,7 @@ export const ScoringConfigs = () => {
     ? sampleScore.reasons
     : [];
 
-  const totalWeight = Object.values(weights).reduce<number>(
+  const totalWeight = Object.values(weights as Record<string, number>).reduce<number>(
     (sum, value) => sum + (typeof value === "number" ? value : 0),
     0
   );
@@ -100,28 +101,29 @@ export const ScoringConfigs = () => {
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
-          {Object.entries(weightLabels).map(([key, label]) => {
-            const weightKey = key as keyof ScoringConfig["weights"];
-            const value = weights[weightKey] ?? 0;
-            return (
-              <div key={key} className="space-y-2">
-                <div className="flex items-center justify-between text-sm text-slate-300">
-                  <span>{label}</span>
-                  <span>{(value * 100).toFixed(0)}%</span>
+          {(Object.entries(weightLabels) as [keyof ScoringConfig["weights"], string][]).map(
+            ([key, label]) => {
+              const value = weights[key] ?? 0;
+              return (
+                <div key={String(key)} className="space-y-2">
+                  <div className="flex items-center justify-between text-sm text-slate-300">
+                    <span>{label}</span>
+                    <span>{(value * 100).toFixed(0)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={5}
+                    value={Math.round(value * 100)}
+                    onChange={(event) => handleWeightChange(key, Number(event.target.value))}
+                    disabled={!enterprise}
+                    className="w-full accent-amber-400"
+                  />
                 </div>
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={5}
-                  value={Math.round(value * 100)}
-                  onChange={(event) => handleWeightChange(weightKey, Number(event.target.value))}
-                  disabled={!enterprise}
-                  className="w-full accent-amber-400"
-                />
-              </div>
-            );
-          })}
+              );
+            }
+          )}
         </div>
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
           <span>Total weight: {(totalWeight * 100).toFixed(0)}%</span>
