@@ -58,7 +58,10 @@ export const SellerDashboard = () => {
 
   const listingsQuery = useQuery({
     queryKey: ["seller-listings"],
-    queryFn: () => apiFetch<unknown>("/seller/listings"),
+    queryFn: () =>
+      apiFetch<unknown>("/seller/listings", {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
     enabled: Boolean(token && user && (user.role === "seller" || user.role === "admin")),
   });
 
