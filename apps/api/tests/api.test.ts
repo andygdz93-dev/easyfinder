@@ -271,7 +271,7 @@ describe("API", () => {
       .send({ email, password: "RolePass123!", name: "Role User" });
 
     expect(registerRes.status).toBe(200);
-    expect(registerRes.body.data.user.role).toBeNull();
+    expect(registerRes.body.data.user.role).toBe("buyer");
 
     const token = registerRes.body.data.token;
     const updateRes = await supertest(app.server)
