@@ -21,7 +21,10 @@ const navSections = [
   {
     title: "Seller",
     items: [
+      { to: "/app/seller/dashboard", label: "Dashboard" },
       { to: "/app/seller/listings", label: "Listings" },
+      { to: "/app/seller/inquiries", label: "Inquiries" },
+      { to: "/app/seller/pipeline", label: "Pipeline" },
       { to: "/app/seller/add", label: "Add listing" },
       { to: "/app/seller/upload", label: "Upload listing" },
     ],
