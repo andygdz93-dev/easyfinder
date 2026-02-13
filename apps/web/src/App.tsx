@@ -40,6 +40,10 @@ const DashboardRedirect = () => {
     return <Navigate to="/app/seller/listings" replace />;
   }
 
+  if (user?.role === "enterprise") {
+    return <Navigate to="/app/settings" replace />;
+  }
+
   if (user?.role === "admin") {
     return <Navigate to="/app/admin/sources" replace />;
   }
