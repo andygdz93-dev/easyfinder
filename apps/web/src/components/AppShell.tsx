@@ -170,6 +170,11 @@ export const AppShell = ({
           {billingError ? (
             <p className="mt-2 text-xs text-rose-400">{billingError}</p>
           ) : null}
+          {user?.ndaAccepted === false ? (
+            <p className="mt-2 text-xs text-rose-400">
+              NDA must be accepted before accessing this resource.
+            </p>
+          ) : null}
           <nav className="mt-8 space-y-6">
             {visibleSections.map((section) => (
               <div key={section.title} className="space-y-2">
