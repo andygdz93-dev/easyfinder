@@ -11,6 +11,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Block committed env/build artifacts
+        shell: bash
+        run: |
+          forbidden_files=()
+
+          while IFS= read -r -d '' file; do
+            if [[ "${file##*/}" == ".env.example" ]]; then
+              continue
+            fi
+
+            if [[ "$file" =~ (^|/)\.env($|\.) ]] || [[ "$file" =~ (^|/)node_modules/ ]] || [[ "$file" =~ (^|/)dist/ ]] || [[ "$file" =~ (^|/)\.turbo/ ]]; then
+              forbidden_files+=("$file")
+            fi
+          done < <(git ls-files -z)
+
+          if (( ${#forbidden_files[@]} > 0 )); then
+            echo "Found forbidden tracked files:"
+            printf ' - %s\n' "${forbidden_files[@]}"
+            exit 1
+          fi
+
       - uses: pnpm/action-setup@v4
         with:
           version: 9.6.0
