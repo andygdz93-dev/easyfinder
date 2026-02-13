@@ -7,13 +7,7 @@ COPY . .
 RUN pnpm install --frozen-lockfile
 
 RUN pnpm --filter @easyfinderai/shared build
-RUN echo "DEBUG_SHARED_DIST_FILES_BEGIN" \
- && find /repo/packages/shared/dist -maxdepth 1 -type f -print \
- && echo "DEBUG_SHARED_DIST_FILES_END" \
- && echo "DEBUG_SHARED_INDEX_DTS_BEGIN" \
- && (test -f /repo/packages/shared/dist/index.d.ts && head -n 5 /repo/packages/shared/dist/index.d.ts || echo "MISSING:index.d.ts") \
- && echo "DEBUG_SHARED_INDEX_DTS_END"
-RUN echo "STOP_AFTER_SHARED_DIST" && exit 1
+RUN sh -lc 'echo "DEBUG_BEGIN"; files="$(ls -1 /repo/packages/shared/dist 2>&1)"; echo "DEBUG_FILES:$files"; test -f /repo/packages/shared/dist/index.d.ts && echo "DEBUG_HAS_INDEX_DTS:YES" || echo "DEBUG_HAS_INDEX_DTS:NO"; echo "DEBUG_END"; exit 1'
 
 # after your build + deploy step:
 RUN pnpm --filter @easyfinderai/api deploy --prod /out
