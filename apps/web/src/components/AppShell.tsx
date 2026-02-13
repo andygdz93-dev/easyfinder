@@ -139,8 +139,8 @@ export const AppShell = ({
         }
         if (section.title === "Seller") {
           return (
-            billingActive &&
-            (plan === "pro" || plan === "enterprise") &&
+            ((billingActive && (plan === "pro" || plan === "enterprise")) ||
+              userRoleResolved === "seller") &&
             section.items.length > 0
           );
         }
@@ -149,7 +149,7 @@ export const AppShell = ({
         }
         return true;
       });
-  }, [billingActive, demoMode, plan]);
+  }, [billingActive, demoMode, plan, userRoleResolved]);
 
 
   return (

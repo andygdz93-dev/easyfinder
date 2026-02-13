@@ -15,19 +15,31 @@ export const SelectRole = () => {
   const { setUserRole } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showEnterpriseUpgradeCta, setShowEnterpriseUpgradeCta] = useState(false);
 
   const handleSelectRole = async (role: (typeof roleOptions)[number]["value"]) => {
     setIsSaving(true);
     setError(null);
+    setShowEnterpriseUpgradeCta(false);
 
     try {
       await setUserRole(role);
+      if (role === "seller") {
+        navigate("/app/seller/listings", { replace: true });
+        return;
+      }
+
+      if (role === "enterprise") {
+        navigate("/app/settings", { replace: true });
+        return;
+      }
+
       navigate("/app/listings", { replace: true });
     } catch (err) {
       const apiError = err as AuthApiError;
       if (apiError.code === "ROLE_NOT_ALLOWED" && role === "enterprise") {
-        navigate("/app/billing?role=enterprise", { replace: true });
-        return;
+        setError(apiError.message || "Enterprise access is not enabled for this account.");
+        setShowEnterpriseUpgradeCta(true);
       } else {
         setError(apiError.message || "Unable to set role right now.");
       }
@@ -55,6 +67,11 @@ export const SelectRole = () => {
           ))}
         </div>
         {error ? <p className="mt-4 text-sm text-rose-400">{error}</p> : null}
+        {showEnterpriseUpgradeCta ? (
+          <Button className="mt-4" onClick={() => navigate("/app/billing", { replace: true })}>
+            Go to billing
+          </Button>
+        ) : null}
       </Card>
     </div>
   );
