@@ -221,7 +221,9 @@ export const AppShell = ({
           {showDemoBanner ? <DemoBanner /> : null}
           <header className="flex items-center justify-between border-b border-slate-800 px-8 py-6">
             <div>
-              <h2 className="text-lg font-semibold">Welcome back</h2>
+              <h2 className="text-lg font-semibold">
+                {user?.ndaAccepted ? "Welcome back" : "Welcome to Easy Finder AI"}
+              </h2>
               <p className="text-sm text-slate-400">Premium equipment intelligence</p>
             </div>
             <div className="flex items-center gap-3">
