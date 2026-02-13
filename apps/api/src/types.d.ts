@@ -2,6 +2,7 @@ import "fastify";
 import "@fastify/jwt";
 import type { FastifyReply } from "fastify";
 import type { BillingInfo } from "./billing.js";
+import type { UserRole } from "./auth.js";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -10,7 +11,7 @@ declare module "fastify" {
       id: string;
       email: string;
       name?: string;
-      role: "demo" | "buyer" | "seller" | "admin";
+      role: UserRole;
       ndaAccepted?: boolean;
       ndaAcceptedAt?: Date | null;
     };
@@ -32,7 +33,7 @@ declare module "@fastify/jwt" {
       id: string;
       email: string;
       name?: string;
-      role: "demo" | "buyer" | "seller" | "admin";
+      role: UserRole;
       ndaAccepted?: boolean;
       ndaAcceptedAt?: Date | null;
     };
@@ -40,7 +41,7 @@ declare module "@fastify/jwt" {
       id: string;
       email: string;
       name?: string;
-      role: "demo" | "buyer" | "seller" | "admin";
+      role: UserRole;
       ndaAccepted?: boolean;
       ndaAcceptedAt?: Date | null;
     };
