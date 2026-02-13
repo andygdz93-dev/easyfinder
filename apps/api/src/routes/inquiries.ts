@@ -12,6 +12,8 @@ const createInquirySchema = z.object({
   message: z.string().min(1).max(2000),
 });
 
+const openStatuses: InquiryDocument["status"][] = ["new", "reviewing", "contacted"];
+
 const toInquiryDto = (inquiry: InquiryDocument) => ({
   id: inquiry._id.toHexString(),
   listingId: inquiry.listingId,
@@ -38,6 +40,24 @@ export default async function inquiriesRoutes(app: FastifyInstance) {
     const buyer = await usersCollection.findOne({ _id: new ObjectId(request.user.id) });
     if (!buyer) {
       return fail(request, reply, "NOT_FOUND", "Buyer not found.", 404);
+    }
+
+    const existingInquiries = await getInquiriesCollection().findMany();
+    const hasOpenInquiry = existingInquiries.some(
+      (inquiry) =>
+        inquiry.buyerId === request.user.id &&
+        inquiry.listingId === payload.listingId &&
+        openStatuses.includes(inquiry.status)
+    );
+
+    if (hasOpenInquiry) {
+      return fail(
+        request,
+        reply,
+        "INQUIRY_EXISTS",
+        "You already requested info for this listing.",
+        409
+      );
     }
 
     const now = new Date();

@@ -51,12 +51,14 @@ export type MeResponse = {
 export class ApiError extends Error {
   requestId?: string;
   status?: number;
+  code?: string;
 
-  constructor(message: string, requestId?: string, status?: number) {
+  constructor(message: string, requestId?: string, status?: number, code?: string) {
     super(message);
     this.name = "ApiError";
     this.requestId = requestId;
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -193,7 +195,7 @@ const apiRequest = async <T>(
 
   if (!res.ok) {
     const message = payload?.error?.message ?? "Request failed";
-    throw new ApiError(message, payload?.requestId, res.status);
+    throw new ApiError(message, payload?.requestId, res.status, payload?.error?.code);
   }
 
   if (!payload || payload.data === undefined) {
@@ -307,6 +309,12 @@ export const createCheckoutSession = (plan: "pro" | "enterprise") =>
   apiRequest<{ url: string }>("/billing/create-checkout-session", {
     method: "POST",
     body: JSON.stringify({ plan }),
+  });
+
+export const createInquiry = (input: { listingId: string; message: string }) =>
+  apiFetch<InquiryDto>("/inquiries", {
+    method: "POST",
+    body: JSON.stringify(input),
   });
 
 // Legacy helper for internal usage
