@@ -55,13 +55,25 @@ export const ScoringConfigs = () => {
     [config, sampleListing]
   );
 
-  const totalWeight = Object.values(config.weights).reduce(
-    (sum, value) => sum + value,
+  const weights = config.weights ?? defaultScoringConfig.weights;
+  const sampleTotal = typeof sampleScore?.total === "number" ? sampleScore.total : 0;
+  const sampleConfidence =
+    typeof sampleScore?.confidence === "number" ? sampleScore.confidence : 0;
+  const sampleBreakdown =
+    sampleScore?.breakdown && typeof sampleScore.breakdown === "object"
+      ? (sampleScore.breakdown as Record<string, number>)
+      : {};
+  const sampleReasons = Array.isArray(sampleScore?.reasons)
+    ? sampleScore.reasons
+    : [];
+
+  const totalWeight = Object.values(weights).reduce<number>(
+    (sum, value) => sum + (typeof value === "number" ? value : 0),
     0
   );
 
   const handleWeightChange = (key: keyof ScoringConfig["weights"], value: number) => {
-    setDraftConfig((prev) =>
+    setDraftConfig((prev: ScoringConfig | null) =>
       prev
         ? {
             ...prev,
@@ -90,7 +102,7 @@ export const ScoringConfigs = () => {
         <div className="grid gap-4 md:grid-cols-2">
           {Object.entries(weightLabels).map(([key, label]) => {
             const weightKey = key as keyof ScoringConfig["weights"];
-            const value = config.weights[weightKey] ?? 0;
+            const value = weights[weightKey] ?? 0;
             return (
               <div key={key} className="space-y-2">
                 <div className="flex items-center justify-between text-sm text-slate-300">
@@ -135,20 +147,20 @@ export const ScoringConfigs = () => {
           <div className="flex items-center justify-between text-sm text-slate-300">
             <span>Total score</span>
             <span className="rounded-full bg-amber-400 px-3 py-1 text-xs font-semibold text-black">
-              {sampleScore.total}
+              {sampleTotal}
             </span>
           </div>
           <div className="flex items-center justify-between text-sm text-slate-300">
             <span>Confidence</span>
             <span title="Confidence reflects data completeness.">
-              {(sampleScore.confidence * 100).toFixed(0)}%
+              {(sampleConfidence * 100).toFixed(0)}%
             </span>
           </div>
           <ul className="space-y-2 text-sm text-slate-300">
-            {Object.entries(sampleScore.breakdown).map(([key, value]) => (
+            {Object.entries(sampleBreakdown).map(([key, value]) => (
               <li key={key} className="flex items-center justify-between">
                 <span className="capitalize">{key}</span>
-                <span>{value}</span>
+                <span>{typeof value === "number" ? value : String(value)}</span>
               </li>
             ))}
           </ul>
@@ -157,8 +169,8 @@ export const ScoringConfigs = () => {
         <Card className="space-y-3">
           <h3 className="text-lg font-semibold">Why this score</h3>
           <ul className="list-disc space-y-2 pl-5 text-sm text-slate-300">
-            {sampleScore.reasons.map((reason) => (
-              <li key={reason}>{reason}</li>
+            {sampleReasons.map((reason: string) => (
+              <li key={String(reason)}>{String(reason)}</li>
             ))}
           </ul>
         </Card>

@@ -32,6 +32,20 @@ type SellerListing = {
   source: "manual" | "csv";
 };
 
+
+
+type DemoListing = {
+  id?: string;
+  title?: string;
+  category?: string;
+  price?: number;
+  hours?: number;
+  state?: string;
+  images?: string[];
+};
+
+const demoListingsData = (demoListings as DemoListing[]) ?? [];
+
 type DemoTourState = {
   ndaAccepted: boolean;
   contactEmailDraft: { subject: string; body: string };
@@ -582,7 +596,7 @@ const TourStepContent = ({
 
 const TourListingDetail = ({ selectedListingId }: { selectedListingId: string | null }) => {
   const listing =
-    demoListings.find((item) => item.id === selectedListingId) ?? demoListings[0];
+    demoListingsData.find((item: DemoListing) => item.id === selectedListingId) ?? demoListingsData[0];
 
   if (!listing?.id) {
     return (
@@ -875,15 +889,15 @@ const TourSellerListings = () => {
       </div>
       {sellerListings.length ? (
         <div className="grid gap-4 md:grid-cols-2">
-          {sellerListings.map((listing) => (
+          {sellerListings.map((listing, index) => (
             <div
-              key={listing.id}
+              key={listing.id ?? `listing-${index}`}
               className="rounded-2xl border border-white/10 bg-slate-900/60 p-4"
             >
               <p className="text-xs uppercase tracking-wide text-slate-400">
                 {listing.source === "manual" ? "Manual entry" : "CSV import"}
               </p>
-              <h3 className="mt-2 text-lg font-semibold">{listing.title}</h3>
+              <h3 className="mt-2 text-lg font-semibold">{listing.title ?? "Untitled listing"}</h3>
               <p className="text-sm text-slate-300">{listing.category}</p>
               <div className="mt-3 text-xs text-slate-300">
                 <span>Price: {listing.price || "—"}</span>
@@ -1069,13 +1083,20 @@ const TourEnterpriseScoring = () => {
     setEnterprisePreferredState,
   } = useDemoTour();
   const states = useMemo(
-    () => Array.from(new Set(demoListings.map((listing) => listing.state))).sort(),
+    () =>
+      Array.from(
+        new Set(
+          demoListingsData
+            .map((listing: DemoListing) => listing.state ?? "")
+            .filter((state): state is string => Boolean(state))
+        )
+      ).sort((a, b) => a.localeCompare(b)),
     []
   );
 
   const ranked = useMemo(() => {
-    const prices = demoListings.map((listing) => listing.price);
-    const hours = demoListings.map((listing) => listing.hours);
+    const prices = demoListingsData.map((listing: DemoListing) => listing.price ?? 0);
+    const hours = demoListingsData.map((listing: DemoListing) => listing.hours ?? 0);
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
     const minHours = Math.min(...hours);
@@ -1085,14 +1106,17 @@ const TourEnterpriseScoring = () => {
       1
     );
 
-    return demoListings
-      .map((listing) => {
-        const priceScore = 1 - normalizeValue(listing.price, minPrice, maxPrice);
-        const hoursScore = 1 - normalizeValue(listing.hours, minHours, maxHours);
+    return demoListingsData
+      .map((listing: DemoListing) => {
+        const listingPrice = listing.price ?? 0;
+        const listingHours = listing.hours ?? 0;
+        const listingState = listing.state ?? "";
+        const priceScore = 1 - normalizeValue(listingPrice, minPrice, maxPrice);
+        const hoursScore = 1 - normalizeValue(listingHours, minHours, maxHours);
         const locationScore =
           enterprisePreferredState === "Any"
             ? 0.5
-            : listing.state === enterprisePreferredState
+            : listingState === enterprisePreferredState
             ? 1
             : 0.1;
         const score =
@@ -1104,7 +1128,7 @@ const TourEnterpriseScoring = () => {
       })
       .sort(
         (a, b) =>
-          b.score - a.score || a.listing.id.localeCompare(b.listing.id)
+          b.score - a.score || (a.listing.id ?? "").localeCompare(b.listing.id ?? "")
       );
   }, [enterprisePreferredState, enterpriseWeights]);
 
@@ -1153,7 +1177,7 @@ const TourEnterpriseScoring = () => {
               className="ml-3 rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm"
             >
               <option value="Any">Any</option>
-              {states.map((state) => (
+              {states.map((state: string) => (
                 <option key={state} value={state}>
                   {state}
                 </option>
@@ -1168,20 +1192,20 @@ const TourEnterpriseScoring = () => {
       <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
         <h3 className="text-lg font-semibold">Ranked demo listings</h3>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          {ranked.map(({ listing, score }, index) => (
+          {ranked.map(({ listing, score }: { listing: DemoListing; score: number }, index: number) => (
             <div
-              key={listing.id}
+              key={listing.id ?? `listing-${index}`}
               className="rounded-2xl border border-white/10 bg-slate-900/60 p-4"
             >
               <p className="text-xs uppercase tracking-wide text-slate-400">
                 Rank {index + 1}
               </p>
-              <h4 className="mt-2 text-sm font-semibold">{listing.title}</h4>
-              <p className="text-xs text-slate-300">{listing.state} • {listing.category}</p>
+              <h4 className="mt-2 text-sm font-semibold">{listing.title ?? "Untitled listing"}</h4>
+              <p className="text-xs text-slate-300">{listing.state ?? "—"} • {listing.category ?? "Uncategorized"}</p>
               <div className="mt-3 text-xs text-slate-300">
-                <span>Price: ${listing.price.toLocaleString()}</span>
+                <span>Price: ${(listing.price ?? 0).toLocaleString()}</span>
                 <span className="mx-2">•</span>
-                <span>Hours: {listing.hours.toLocaleString()}</span>
+                <span>Hours: {(listing.hours ?? 0).toLocaleString()}</span>
               </div>
               <p className="mt-3 text-xs text-emerald-200">
                 Composite score: {(score * 100).toFixed(1)}
@@ -1466,7 +1490,7 @@ const TourEmailComposer = () => {
 
 const TourWatchlistPreview = () => {
   const watchlist = useDemoWatchlist();
-  const listing = demoListings[0];
+  const listing = demoListingsData[0];
 
   return (
     <div className="space-y-6">
