@@ -16,7 +16,7 @@ primary_region = "lax"
   processes = ["app"]
 
   [[http_service.checks]]
-    interval = "15s"
+    interval = "30s"
     timeout = "5s"
     grace_period = "10s"
     method = "GET"
