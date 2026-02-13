@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
 import { ObjectId } from "mongodb";
 import { fail, ok } from "../response.js";
+import type { UserRole } from "../auth.js";
 import { getUsersCollection, UserDocument } from "../users.js";
 import { defaultBilling } from "../billing.js";
 import { sendPasswordResetEmail } from "../email.js";
@@ -17,15 +18,9 @@ const toUserDto = (user: UserDocument) => ({
   role: user.role,
 });
 
-const normalizeRole = (
-  role: string | null | undefined
-): "demo" | "buyer" | "seller" | "admin" => {
-  if (role === "demo" || role === "buyer" || role === "seller" || role === "admin") {
+const normalizeRole = (role: string | null | undefined): UserRole => {
+  if (role === "demo" || role === "buyer" || role === "seller" || role === "admin" || role === "enterprise") {
     return role;
-  }
-
-  if (role === "enterprise") {
-    return "buyer";
   }
 
   return "buyer";
@@ -73,7 +68,7 @@ export default async function authRoutes(app: FastifyInstance) {
       email: payload.email,
       emailLower,
       name: payload.name ?? "New User",
-      role: null,
+      role: "buyer",
       passwordHash,
       ndaAccepted: false,
       ndaAcceptedAt: null,
