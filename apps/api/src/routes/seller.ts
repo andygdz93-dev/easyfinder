@@ -2,10 +2,35 @@ import { FastifyInstance } from "fastify";
 import { listings } from "../store.js";
 import { fail, ok } from "../response.js";
 import { requireNDA } from "../middleware/requireNDA.js";
+import { getInquiriesCollection, InquiryDocument } from "../inquiries.js";
 
 const sellerOnly = new Set(["seller", "admin"]);
 
+const toInquiryDto = (inquiry: InquiryDocument) => ({
+  id: inquiry._id.toHexString(),
+  listingId: inquiry.listingId,
+  buyerName: inquiry.buyerName,
+  buyerEmail: inquiry.buyerEmail,
+  message: inquiry.message,
+  status: inquiry.status,
+  createdAt: inquiry.createdAt,
+});
+
 export default async function sellerRoutes(app: FastifyInstance) {
+  app.get("/inquiries", { preHandler: app.authenticate }, async (request, reply) => {
+    if (!sellerOnly.has(request.user.role)) {
+      return fail(request, reply, "FORBIDDEN", "Seller access only.", 403);
+    }
+
+    const inquiries = await getInquiriesCollection().findMany();
+    inquiries.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    return ok(
+      request,
+      inquiries.map((inquiry) => toInquiryDto(inquiry))
+    );
+  });
+
   app.get("/insights", { preHandler: [app.authenticate, requireNDA] }, async (request, reply) => {
     if (!sellerOnly.has(request.user.role)) {
       return fail(request, reply, "FORBIDDEN", "Seller access only.", 403);

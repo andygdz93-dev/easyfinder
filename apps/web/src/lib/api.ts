@@ -25,6 +25,19 @@ export type NdaStatus = {
   ndaVersion?: string;
 };
 
+
+export type InquiryDto = {
+  id: string;
+  listingId: string;
+  buyerName: string;
+  buyerEmail: string;
+  message: string;
+  status: "new" | "reviewing" | "contacted" | "closed";
+  createdAt: string;
+};
+
+export type SellerInquiriesResponse = InquiryDto[];
+
 export type MeResponse = {
   id: string;
   email: string;
