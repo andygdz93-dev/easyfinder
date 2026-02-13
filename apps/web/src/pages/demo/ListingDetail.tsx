@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { demoListings } from "@easyfinderai/shared";
+import { defaultScoringConfig, demoListings, scoreListing } from "@easyfinderai/shared";
 import ImageGallery from "../../components/ImageGallery";
 import { useDemoWatchlist } from "../../lib/demoWatchlist";
 import { formatCategory } from "../../lib/formatters";
@@ -12,7 +12,7 @@ export default function DemoListingDetail({ listingId }: Props) {
   const params = useParams();
   const effectiveId = listingId ?? params.id;
 
-  const listing = demoListings.find((l) => l.id === effectiveId);
+  const listing = demoListings.find((l: { id?: string }) => l.id === effectiveId);
   const watchlist = useDemoWatchlist();
 
   if (!listing) {
@@ -23,10 +23,13 @@ export default function DemoListingDetail({ listingId }: Props) {
     );
   }
 
-  const breakdown = listing.score;
-  const components = breakdown?.breakdown ?? {};
-  const rationale = breakdown?.reasons ?? [];
-  const confidence = breakdown?.confidence ?? 0;
+  const breakdown = scoreListing(listing, defaultScoringConfig);
+  const components =
+    breakdown?.breakdown && typeof breakdown.breakdown === "object"
+      ? (breakdown.breakdown as Record<string, number>)
+      : {};
+  const rationale = Array.isArray(breakdown?.reasons) ? breakdown.reasons : [];
+  const confidence = typeof breakdown?.confidence === "number" ? breakdown.confidence : 0;
 
   const currentListingId = listing?.id ?? "";
   const isSaved = currentListingId
@@ -44,7 +47,7 @@ export default function DemoListingDetail({ listingId }: Props) {
   return (
     <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 md:px-6">
       <div className="grid gap-8 md:grid-cols-2">
-        <ImageGallery images={listing.images ?? []} />
+        <ImageGallery images={listing.images ?? []} alt={listing.title || "Listing image"} />
 
         <div className="space-y-6">
           <div>
@@ -86,15 +89,15 @@ export default function DemoListingDetail({ listingId }: Props) {
               {Object.entries(components).map(([key, value]) => (
                 <div key={key} className="flex items-center justify-between">
                   <span>{key}</span>
-                  <span>{value}</span>
+                  <span>{typeof value === "number" ? value : String(value)}</span>
                 </div>
               ))}
             </div>
 
             {rationale.length > 0 && (
               <div className="space-y-1 text-xs text-slate-400">
-                {rationale.map((reason, index) => (
-                  <p key={index}>• {reason}</p>
+                {rationale.map((reason: string, index: number) => (
+                  <p key={index}>• {String(reason)}</p>
                 ))}
               </div>
             )}
