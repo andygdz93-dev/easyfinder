@@ -48,7 +48,7 @@ const seedTestUsers = () => {
       email: user.email,
       emailLower: user.email.toLowerCase(),
       name: user.name ?? "Demo User",
-      role: user.role === "demo" ? "buyer" : user.role ?? "buyer",
+      role: user.role === "demo" ? "buyer" : user.role ?? null,
       passwordHash: user.passwordHash ?? "",
       ndaAccepted: Boolean(user.ndaAccepted),
       ndaAcceptedAt: user.ndaAcceptedAt ? new Date(user.ndaAcceptedAt) : null,
