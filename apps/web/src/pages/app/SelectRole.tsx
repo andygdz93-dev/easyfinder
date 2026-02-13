@@ -15,20 +15,19 @@ export const SelectRole = () => {
   const { setUserRole } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showContactSales, setShowContactSales] = useState(false);
 
   const handleSelectRole = async (role: (typeof roleOptions)[number]["value"]) => {
     setIsSaving(true);
     setError(null);
-    setShowContactSales(false);
 
     try {
       await setUserRole(role);
-      navigate("/app/dashboard", { replace: true });
+      navigate("/app/listings", { replace: true });
     } catch (err) {
       const apiError = err as AuthApiError;
       if (apiError.code === "ROLE_NOT_ALLOWED" && role === "enterprise") {
-        setShowContactSales(true);
+        navigate("/app/billing?role=enterprise", { replace: true });
+        return;
       } else {
         setError(apiError.message || "Unable to set role right now.");
       }
@@ -56,12 +55,6 @@ export const SelectRole = () => {
           ))}
         </div>
         {error ? <p className="mt-4 text-sm text-rose-400">{error}</p> : null}
-        {showContactSales ? (
-          <div className="mt-4 rounded-lg border border-amber-400/40 bg-amber-400/10 p-3 text-sm text-amber-100">
-            Enterprise access requires an active enterprise subscription. Please contact sales or
-            upgrade your plan.
-          </div>
-        ) : null}
       </Card>
     </div>
   );
