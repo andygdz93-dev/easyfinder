@@ -6,7 +6,7 @@ import rateLimit from "@fastify/rate-limit";
 import multipart from "@fastify/multipart";
 import { nanoid } from "nanoid";
 import { config } from "./config.js";
-import { AuthUser, getRoleFromRequest } from "./auth.js";
+import { AuthUser, getRoleFromRequest, UserRole } from "./auth.js";
 import { getUsersCollection } from "./users.js";
 import { ObjectId } from "mongodb";
 import listingRoutes from "./routes/listings.js";
@@ -25,8 +25,14 @@ import { env } from "./env.js";
 import meRoutes from "./routes/me.js";
 import { ok } from "./response.js";
 
-const normalizeRole = (role: unknown): "buyer" | "seller" | "admin" | "demo" => {
-  if (role === "buyer" || role === "seller" || role === "admin" || role === "demo") {
+const normalizeRole = (role: unknown): UserRole => {
+  if (
+    role === "buyer" ||
+    role === "seller" ||
+    role === "admin" ||
+    role === "demo" ||
+    role === "enterprise"
+  ) {
     return role;
   }
 
