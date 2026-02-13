@@ -17,6 +17,20 @@ const toUserDto = (user: UserDocument) => ({
   role: user.role,
 });
 
+const normalizeRole = (
+  role: string | null | undefined
+): "demo" | "buyer" | "seller" | "admin" => {
+  if (role === "demo" || role === "buyer" || role === "seller" || role === "admin") {
+    return role;
+  }
+
+  if (role === "enterprise") {
+    return "buyer";
+  }
+
+  return "buyer";
+};
+
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
@@ -80,7 +94,7 @@ export default async function authRoutes(app: FastifyInstance) {
     const token = await reply.jwtSign({
       id: userDocument._id.toHexString(),
       email: userDocument.email,
-      role: null,
+      role: "demo",
       name: userDocument.name,
     });
 
@@ -111,7 +125,7 @@ export default async function authRoutes(app: FastifyInstance) {
     const token = await reply.jwtSign({
       id: user._id.toHexString(),
       email: user.email,
-      role: user.role,
+      role: normalizeRole(user.role),
       name: user.name,
     });
 
