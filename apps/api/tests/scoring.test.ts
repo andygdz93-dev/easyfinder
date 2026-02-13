@@ -40,10 +40,25 @@ describe("scoring engine", () => {
     );
 
     expect(better.total ?? 0).toBeGreaterThan(worse.total ?? 0);
-    expect(better.breakdown.price).toBeGreaterThan(worse.breakdown.price);
-    expect(better.breakdown.hours).toBeGreaterThan(worse.breakdown.hours);
-    expect(better.breakdown.year).toBeGreaterThan(worse.breakdown.year);
-    expect(better.breakdown.location).toBeGreaterThan(worse.breakdown.location);
+    expect(better.breakdown).toBeDefined();
+    expect(worse.breakdown).toBeDefined();
+
+    const betterB = better.breakdown!;
+    const worseB = worse.breakdown!;
+
+    const betterPrice = betterB.price ?? 0;
+    const worsePrice = worseB.price ?? 0;
+    const betterHours = betterB.hours ?? 0;
+    const worseHours = worseB.hours ?? 0;
+    const betterYear = betterB.year ?? 0;
+    const worseYear = worseB.year ?? 0;
+    const betterLocation = betterB.location ?? 0;
+    const worseLocation = worseB.location ?? 0;
+
+    expect(betterPrice).toBeGreaterThan(worsePrice);
+    expect(betterHours).toBeGreaterThan(worseHours);
+    expect(betterYear).toBeGreaterThan(worseYear);
+    expect(betterLocation).toBeGreaterThan(worseLocation);
   });
 
   it("reduces confidence with missing data", () => {
@@ -52,6 +67,10 @@ describe("scoring engine", () => {
       defaultScoringConfig
     );
     expect(score.confidence).toBeLessThan(1);
-    expect(score.breakdown.completeness).toBeLessThan(100);
+    expect(score.breakdown).toBeDefined();
+
+    const b = score.breakdown!;
+
+    expect(b.completeness).toBeLessThan(100);
   });
 });
