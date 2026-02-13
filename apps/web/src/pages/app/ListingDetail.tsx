@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { Card } from "../../components/ui/card";
@@ -8,16 +8,26 @@ import ImageGallery from "../../components/ImageGallery";
 import {
   ApiError,
   addToWatchlist,
+  createInquiry,
   removeFromWatchlist,
   getListing,
   getRequestId,
   getWatchlist,
 } from "../../lib/api";
 import { WatchlistItem } from "@easyfinderai/shared";
+import { useAuth } from "../../lib/auth";
+import { useRuntime } from "../../lib/runtime";
 
 export const ListingDetail = () => {
   const { id } = useParams();
+  const { user } = useAuth();
+  const runtime = useRuntime();
   const [actionError, setActionError] = useState<string | null>(null);
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [inquiryMessage, setInquiryMessage] = useState("");
+  const [inquiryError, setInquiryError] = useState<string | null>(null);
+  const [inquirySuccess, setInquirySuccess] = useState(false);
+  const [isSubmittingInquiry, setIsSubmittingInquiry] = useState(false);
 
   const listingQuery = useQuery({
     queryKey: ["listing", id],
@@ -92,18 +102,52 @@ export const ListingDetail = () => {
   const scores = score?.breakdown ?? {};
   const rationale = score?.reasons ?? [];
   const listingId = data.id ?? "";
+  const canRequestInfo = !runtime.demoMode && (user?.role === "buyer" || user?.role === "admin");
+
+  const handleSubmitInquiry = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!id || !inquiryMessage.trim()) return;
+    setInquiryError(null);
+    setIsSubmittingInquiry(true);
+    try {
+      await createInquiry({ listingId: id, message: inquiryMessage.trim() });
+      setInquirySuccess(true);
+      setIsRequestModalOpen(false);
+    } catch (error) {
+      if (error instanceof ApiError && error.code === "INQUIRY_EXISTS") {
+        setInquiryError("You already requested info for this listing.");
+      } else {
+        setInquiryError("Unable to send request right now.");
+      }
+    } finally {
+      setIsSubmittingInquiry(false);
+    }
+  };
 
   return (
     <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
       <Card className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <h2 className="text-2xl font-semibold">{data.title}</h2>
-          <Badge
-            className="bg-accent text-slate-900"
-            title={`Confidence ${((score?.confidence ?? 0) * 100).toFixed(0)}%`}
-          >
-            Score {score?.total ?? data.totalScore ?? 0}
-          </Badge>
+          <div className="flex items-center gap-2">
+            {canRequestInfo && (
+              inquirySuccess ? (
+                <Button variant="secondary" disabled>
+                  Request sent
+                </Button>
+              ) : (
+                <Button variant="secondary" onClick={() => setIsRequestModalOpen(true)}>
+                  Request Info
+                </Button>
+              )
+            )}
+            <Badge
+              className="bg-accent text-slate-900"
+              title={`Confidence ${((score?.confidence ?? 0) * 100).toFixed(0)}%`}
+            >
+              Score {score?.total ?? data.totalScore ?? 0}
+            </Badge>
+          </div>
         </div>
 
         {images.length > 0 && (
@@ -136,6 +180,12 @@ export const ListingDetail = () => {
           </Button>
         </div>
         {actionError && <div className="text-xs text-rose-200">{actionError}</div>}
+        {inquirySuccess && (
+          <div className="text-xs text-emerald-200">
+            Request sent. EasyFinder will route your inquiry.
+          </div>
+        )}
+        {inquiryError && <div className="text-xs text-rose-200">{inquiryError}</div>}
 
         <div className="grid gap-3 text-xs text-slate-300">
           {Object.entries(scores).map(([key, value]) => (
@@ -158,6 +208,36 @@ export const ListingDetail = () => {
           ))}
         </ul>
       </Card>
+
+      {isRequestModalOpen && canRequestInfo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4">
+          <div className="w-full max-w-lg rounded-lg border border-slate-700 bg-slate-900 p-4">
+            <h3 className="text-lg font-semibold">Request Info</h3>
+            <form className="mt-3 space-y-3" onSubmit={handleSubmitInquiry}>
+              <textarea
+                className="min-h-28 w-full rounded-md border border-slate-700 bg-slate-950 p-2 text-sm text-slate-100"
+                value={inquiryMessage}
+                onChange={(event) => setInquiryMessage(event.target.value)}
+                required
+                maxLength={2000}
+              />
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsRequestModalOpen(false)}
+                  disabled={isSubmittingInquiry}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmittingInquiry || !inquiryMessage.trim()}>
+                  {isSubmittingInquiry ? "Sending..." : "Submit"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

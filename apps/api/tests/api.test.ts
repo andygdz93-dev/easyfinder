@@ -287,22 +287,51 @@ describe("API", () => {
   });
 
 
-  it("buyer can create inquiry", async () => {
+  it("buyer can create inquiry with listingId and message", async () => {
     const createRes = await supertest(app.server)
       .post("/api/inquiries")
       .set("Authorization", `Bearer ${buyerToken}`)
-      .send({ listingId: "demo-1", message: "Interested" });
+      .send({ listingId: "demo-request-info-1", message: "Interested" });
 
     expect(createRes.status).toBe(200);
     expect(createRes.body.data.status).toBe("new");
-    expect(createRes.body.data.listingId).toBe("demo-1");
+    expect(createRes.body.data.listingId).toBe("demo-request-info-1");
+  });
+
+  it("creating the same inquiry twice returns 409 and INQUIRY_EXISTS", async () => {
+    const payload = { listingId: "demo-request-info-duplicate", message: "Need details" };
+
+    const firstRes = await supertest(app.server)
+      .post("/api/inquiries")
+      .set("Authorization", `Bearer ${buyerToken}`)
+      .send(payload);
+
+    expect(firstRes.status).toBe(200);
+
+    const secondRes = await supertest(app.server)
+      .post("/api/inquiries")
+      .set("Authorization", `Bearer ${buyerToken}`)
+      .send(payload);
+
+    expect(secondRes.status).toBe(409);
+    expect(secondRes.body.error.code).toBe("INQUIRY_EXISTS");
+  });
+
+  it("seller cannot POST /api/inquiries", async () => {
+    const createRes = await supertest(app.server)
+      .post("/api/inquiries")
+      .set("Authorization", `Bearer ${sellerToken}`)
+      .send({ listingId: "demo-request-info-forbidden", message: "Interested" });
+
+    expect(createRes.status).toBe(403);
+    expect(createRes.body.error.code).toBe("FORBIDDEN");
   });
 
   it("seller can list inquiries", async () => {
     const createRes = await supertest(app.server)
       .post("/api/inquiries")
       .set("Authorization", `Bearer ${buyerToken}`)
-      .send({ listingId: "demo-1", message: "Interested" });
+      .send({ listingId: "demo-request-info-seller-list", message: "Interested" });
 
     expect(createRes.status).toBe(200);
 
@@ -313,7 +342,7 @@ describe("API", () => {
     expect(listRes.status).toBe(200);
     expect(Array.isArray(listRes.body.data)).toBe(true);
     expect(listRes.body.data.length).toBeGreaterThanOrEqual(1);
-    expect(listRes.body.data.some((inquiry: any) => inquiry.listingId === "demo-1")).toBe(true);
+    expect(listRes.body.data.some((inquiry: any) => inquiry.listingId === "demo-request-info-seller-list")).toBe(true);
   });
 
   it("sets role via /api/me/role and persists to backend", async () => {
