@@ -22,3 +22,16 @@ apps/web/.env
 apps/web/.env.local
 !.env.example
 !**/.env.example
+
+# --- EasyFinder safety: never commit secrets or build artifacts ---
+# Env files (keep *.example committed)
+**/.env
+**/.env.*
+!**/.env.example
+
+# Build outputs
+**/dist/
+**/.turbo/
+
+# Dependencies
+**/node_modules/
