@@ -1,4 +1,4 @@
-import { Listing, ScoreBreakdown, ScoringConfig } from "./types";
+import type { Listing, ScoreBreakdown, ScoringConfig } from "./types.js";
 
 export const defaultScoringConfig: ScoringConfig = {
   id: "default",
@@ -52,12 +52,18 @@ const inferYearFromTitle = (title?: string) => {
 
 const normalizeWeights = (weights: ScoringConfig["weights"]) => {
   const entries = Object.entries(weights);
-  const total = entries.reduce((sum, [, value]) => sum + (Number.isFinite(value) ? value : 0), 0);
+  const total = entries.reduce((sum, [, value]) => {
+    const asNumber = typeof value === "number" && Number.isFinite(value) ? value : 0;
+    return sum + asNumber;
+  }, 0);
   if (total <= 0) {
     const equalWeight = 1 / entries.length;
     return Object.fromEntries(entries.map(([key]) => [key, equalWeight])) as ScoringConfig["weights"];
   }
-  return Object.fromEntries(entries.map(([key, value]) => [key, value / total])) as ScoringConfig["weights"];
+  return Object.fromEntries(entries.map(([key, value]) => {
+    const asNumber = typeof value === "number" && Number.isFinite(value) ? value : 0;
+    return [key, asNumber / total];
+  })) as ScoringConfig["weights"];
 };
 
 export function scoreListing(
