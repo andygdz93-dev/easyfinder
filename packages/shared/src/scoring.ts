@@ -1,4 +1,4 @@
-import { Listing, ScoreBreakdown, ScoringConfig } from "./types.js";
+import { Listing, ScoreBreakdown, ScoringConfig } from "./types";
 
 export const defaultScoringConfig: ScoringConfig = {
   id: "default",
