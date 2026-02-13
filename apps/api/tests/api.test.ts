@@ -10,6 +10,8 @@ process.env.STRIPE_PRICE_ID_ENTERPRISE =
 
 let app: ReturnType<(typeof import("../src/server.js"))["buildServer"]>;
 let getUsersCollection: (typeof import("../src/users.js"))["getUsersCollection"];
+let buyerToken: string;
+let sellerToken: string;
 
 const acceptNda = async (token: string) => {
   const res = await supertest(app.server)
@@ -26,6 +28,27 @@ beforeAll(async () => {
   app = serverModule.buildServer();
   getUsersCollection = usersModule.getUsersCollection;
   await app.ready();
+
+  const users = getUsersCollection();
+  const buyer = await users.findOne({ emailLower: "buyer@easyfinder.ai" });
+  const seller = await users.findOne({ emailLower: "seller@easyfinder.ai" });
+  if (!buyer || !seller) {
+    throw new Error("Missing seeded test users.");
+  }
+
+  buyerToken = app.jwt.sign({
+    id: buyer._id.toHexString(),
+    email: buyer.email,
+    role: "buyer",
+    name: buyer.name,
+  });
+
+  sellerToken = app.jwt.sign({
+    id: seller._id.toHexString(),
+    email: seller.email,
+    role: "seller",
+    name: seller.name,
+  });
 });
 
 afterAll(async () => {
@@ -264,6 +287,34 @@ describe("API", () => {
   });
 
 
+  it("buyer can create inquiry", async () => {
+    const createRes = await supertest(app.server)
+      .post("/api/inquiries")
+      .set("Authorization", `Bearer ${buyerToken}`)
+      .send({ listingId: "demo-1", message: "Interested" });
+
+    expect(createRes.status).toBe(200);
+    expect(createRes.body.data.status).toBe("new");
+    expect(createRes.body.data.listingId).toBe("demo-1");
+  });
+
+  it("seller can list inquiries", async () => {
+    const createRes = await supertest(app.server)
+      .post("/api/inquiries")
+      .set("Authorization", `Bearer ${buyerToken}`)
+      .send({ listingId: "demo-1", message: "Interested" });
+
+    expect(createRes.status).toBe(200);
+
+    const listRes = await supertest(app.server)
+      .get("/api/seller/inquiries")
+      .set("Authorization", `Bearer ${sellerToken}`);
+
+    expect(listRes.status).toBe(200);
+    expect(Array.isArray(listRes.body.data)).toBe(true);
+    expect(listRes.body.data.length).toBeGreaterThanOrEqual(1);
+    expect(listRes.body.data.some((inquiry: any) => inquiry.listingId === "demo-1")).toBe(true);
+  });
 
   it("sets role via /api/me/role and persists to backend", async () => {
     const email = `role-${Date.now()}@easyfinder.ai`;
@@ -321,14 +372,10 @@ describe("API", () => {
   });
 
   it("allows enterprise role when enterprise entitlement is active", async () => {
-    const loginRes = await supertest(app.server)
-      .post("/api/auth/login")
-      .send({ email: "buyer@easyfinder.ai", password: "BuyerPass123!" });
-
-    const token = loginRes.body.data.token;
+    const token = sellerToken;
     const col = getUsersCollection();
     await col.updateOne(
-      { emailLower: "buyer@easyfinder.ai" },
+      { emailLower: "seller@easyfinder.ai" },
       {
         $set: {
           billing: {
@@ -350,10 +397,7 @@ describe("API", () => {
   });
 
   it("seller-only endpoint blocked for buyer", async () => {
-    const loginRes = await supertest(app.server)
-      .post("/api/auth/login")
-      .send({ email: "buyer@easyfinder.ai", password: "BuyerPass123!" });
-    const token = loginRes.body.data.token;
+    const token = buyerToken;
 
     await acceptNda(token);
 
