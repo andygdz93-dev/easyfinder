@@ -7,7 +7,16 @@ COPY . .
 RUN pnpm install --frozen-lockfile
 
 RUN pnpm --filter @easyfinderai/shared build
-RUN test -f /repo/packages/shared/dist/index.d.ts && echo "DEBUG_SHARED_INDEX_DTS_PRESENT" || (echo "DEBUG_SHARED_INDEX_DTS_MISSING" && ls -la /repo/packages/shared/dist)
+RUN sh -lc '\
+echo "DEBUG_SHARED_BEGIN"; \
+echo "HAS_SHARED_DIST_INDEX_DTS=$(test -f /repo/packages/shared/dist/index.d.ts && echo yes || echo no)"; \
+echo "--- shared dist files ---"; ls -1 /repo/packages/shared/dist || true; \
+echo "--- api node_modules shared package.json ---"; \
+cat /repo/apps/api/node_modules/@easyfinderai/shared/package.json 2>/dev/null || echo "MISSING: api node_modules shared package.json"; \
+echo "--- has api node_modules shared dist/index.d.ts ---"; \
+echo "HAS_API_NODEMODULES_SHARED_DTS=$(test -f /repo/apps/api/node_modules/@easyfinderai/shared/dist/index.d.ts && echo yes || echo no)"; \
+echo "DEBUG_SHARED_END"; \
+exit 1'
 RUN pnpm --filter @easyfinderai/api build
 
 # ---- runtime ----
