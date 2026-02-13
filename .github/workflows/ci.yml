@@ -45,6 +45,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Validate OpenAPI
+        run: pnpm -w openapi:validate
+
+      - name: Ensure context file exists
+        shell: bash
+        run: test -f ./.easyfinder-context.md
+
       - name: Lint
         run: pnpm -w lint
 
