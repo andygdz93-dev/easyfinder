@@ -34,7 +34,8 @@ apps/web/.env.local
 **/dist/
 **/.turbo/
 
-
+# TypeScript incremental build artifacts
+**/*.tsbuildinfo
 
 # Dependencies
 **/node_modules/
