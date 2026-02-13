@@ -3,13 +3,13 @@ import { requireApiBaseUrl } from "../env";
 
 export type UserRole = "demo" | "buyer" | "seller" | "enterprise" | "admin" | null;
 
-type User = {
+export type User = {
   id: string;
   email: string;
   name: string;
   role: UserRole;
-  ndaAccepted?: boolean;
-  ndaAcceptedAt?: string | null;
+  ndaAccepted: boolean;
+  ndaAcceptedAt: string | null;
 };
 
 type AuthContextValue = {
@@ -55,7 +55,7 @@ const readStoredToken = (): string | null => {
   }
 };
 
-const writeStoredToken = (token: string | null) => {
+const writeStoredSession = (token: string | null, user?: User | null) => {
   if (!token) {
     localStorage.removeItem(AUTH_SESSION_STORAGE_KEY);
     localStorage.removeItem("token");
@@ -63,7 +63,10 @@ const writeStoredToken = (token: string | null) => {
     return;
   }
 
-  localStorage.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify({ token }));
+  localStorage.setItem(
+    AUTH_SESSION_STORAGE_KEY,
+    JSON.stringify(user ? { token, user } : { token })
+  );
   localStorage.removeItem("token");
   localStorage.removeItem("user");
 };
@@ -71,7 +74,7 @@ const writeStoredToken = (token: string | null) => {
 export const getStoredAuthToken = (): string | null => readStoredToken();
 
 export const clearStoredSession = () => {
-  writeStoredToken(null);
+  writeStoredSession(null);
 };
 
 const buildApiUrl = (path: string) => {
@@ -137,7 +140,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (!active) return;
         setUser(null);
         setToken(null);
-        writeStoredToken(null);
+        writeStoredSession(null);
       })
       .finally(() => {
         if (!active) return;
@@ -158,10 +161,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setToken(newToken);
         setUser(newUser);
         setIsUserLoading(false);
-        writeStoredToken(newToken);
+        writeStoredSession(newToken, newUser);
       },
       setUser: (nextUser: User | null) => {
         setUser(nextUser);
+        writeStoredSession(token, nextUser);
       },
       setUserRole: async (role: "buyer" | "seller" | "enterprise") => {
         if (!token) {
@@ -177,7 +181,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setToken(null);
         setUser(null);
         setIsUserLoading(false);
-        writeStoredToken(null);
+        writeStoredSession(null);
       },
     }),
     [isUserLoading, token, user]
