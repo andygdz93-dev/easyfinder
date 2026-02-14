@@ -78,6 +78,8 @@ const EnvSchema = z
       .string()
       .min(1, "STRIPE_PRICE_ID_ENTERPRISE is required")
       .optional(),
+
+    LAUNCH_DATE: z.string().datetime().default("2026-02-01T00:00:00.000Z"),
   })
   .superRefine((values, ctx) => {
     if (values.NODE_ENV !== "production") return;

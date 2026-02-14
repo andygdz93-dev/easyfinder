@@ -7,6 +7,7 @@ import { getUsersCollection } from "../users.js";
 import { requireNDA } from "../middleware/requireNDA.js";
 import { fail, ok } from "../response.js";
 import { env } from "../env.js";
+import { getSellerEntitlements } from "../entitlements.js";
 
 const roleUpdateSchema = z.object({
   role: z.enum(["buyer", "seller", "enterprise"]),
@@ -46,6 +47,27 @@ const resolveBillingPlan = (fallbackPlan: "free" | "pro" | "enterprise" = "free"
   return env.BILLING_ENABLED ? fallbackPlan : "free";
 };
 
+const withSellerEntitlements = (billing: {
+  stripe_customer_id?: string;
+  stripe_subscription_id?: string;
+  plan: "free" | "pro" | "enterprise";
+  status: "active" | "past_due" | "canceled" | "incomplete";
+  current_period_end: string;
+}, role: "buyer" | "seller" | "enterprise" | "admin" | null) => {
+  const entitlements = getSellerEntitlements({ plan: billing.plan, role });
+
+  return {
+    ...billing,
+    promoActive: entitlements.promoActive,
+    promoEndsAt: entitlements.promoEndsAt,
+    entitlements: {
+      maxActiveListings: entitlements.maxActiveListings,
+      csvUpload: entitlements.csvUpload,
+      marketplaceIntegrations: entitlements.marketplaceIntegrations,
+    },
+  };
+};
+
 export default async function meRoutes(app: FastifyInstance) {
   const usersCollection = () => getUsersCollection();
 
@@ -61,10 +83,13 @@ export default async function meRoutes(app: FastifyInstance) {
         ndaAcceptedAt: currentUser.ndaAcceptedAt
           ? new Date(currentUser.ndaAcceptedAt).toISOString()
           : null,
-        billing: {
-          ...serializeBilling(defaultBilling()),
-          plan: resolveBillingPlan(),
-        },
+        billing: withSellerEntitlements(
+          {
+            ...serializeBilling(defaultBilling()),
+            plan: resolveBillingPlan(),
+          },
+          (currentUser.role as "buyer" | "seller" | "enterprise" | "admin" | null) ?? null
+        ),
       };
     };
 
@@ -86,10 +111,13 @@ export default async function meRoutes(app: FastifyInstance) {
       return {
         data: {
           ...userDto,
-          billing: {
-            ...userDto.billing,
-            plan: resolveBillingPlan(userDto.billing.plan),
-          },
+          billing: withSellerEntitlements(
+            {
+              ...userDto.billing,
+              plan: resolveBillingPlan(userDto.billing.plan),
+            },
+            userDto.role
+          ),
         },
       };
     } catch {
