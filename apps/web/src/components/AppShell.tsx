@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useAuth } from "../lib/auth";
 import { getMe } from "../lib/api";
@@ -66,6 +66,7 @@ export const AppShell = ({
   className?: string;
 }) => {
   const { user, token, clearSession } = useAuth();
+  const location = useLocation();
   const { demoMode, hydrated } = useRuntime();
   const isDemoMode = demoMode;
   const showDemoBanner = demoMode;
@@ -102,7 +103,7 @@ export const AppShell = ({
     return () => {
       isActive = false;
     };
-  }, [token]);
+  }, [location.pathname, location.search, token]);
 
   const billingActive = isBillingActive(billing);
   const plan = billing?.plan ?? "free";
@@ -143,7 +144,19 @@ export const AppShell = ({
               ? "Unselected"
               : "Buyer";
   const isShellLoading = !hydrated || billingLoading || (Boolean(token) && !user);
-  const badgeLabel = isShellLoading ? "Loading…" : `${planLabel} ${roleLabel}`;
+  const badgeLabel = isShellLoading
+    ? "Loading…"
+    : billing?.promoActive === true && userRoleResolved === "seller"
+      ? "Pro Seller (promo)"
+      : `${planLabel} ${roleLabel}`;
+  const listingLimitLabel =
+    typeof billing?.entitlements?.maxActiveListings === "number"
+      ? String(billing.entitlements.maxActiveListings)
+      : plan === "enterprise"
+        ? "Unlimited"
+        : plan === "pro"
+          ? "200"
+          : "25";
   const visibleSections = useMemo(() => {
     const csvUploadAllowed = billing?.entitlements?.csvUpload === true;
 
@@ -204,9 +217,7 @@ export const AppShell = ({
           </p>
           {userRoleResolved === "seller" ? (
             <p className="text-xs text-slate-400">
-              Listings: {typeof billing?.entitlements?.maxActiveListings === "number"
-                ? billing.entitlements.maxActiveListings
-                : "Unlimited"}
+              Listings: {listingLimitLabel}
             </p>
           ) : null}
           {billingError && billingError !== NDA_WARNING_TEXT ? (
