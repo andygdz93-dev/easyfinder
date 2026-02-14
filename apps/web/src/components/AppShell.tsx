@@ -9,6 +9,28 @@ import DemoBanner from "./DemoBanner";
 
 const NDA_WARNING_TEXT = "NDA must be accepted before accessing this resource.";
 
+function formatPlanLabel(billing?: {
+  plan?: string;
+  status?: string;
+  promo?: { endsAt?: string } | null;
+  promoActive?: boolean;
+}) {
+  const plan = billing?.plan ?? "free";
+  const status = billing?.status ?? null;
+
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+  if (plan === "free") return "Free";
+
+  if (plan === "pro" && (billing?.promoActive || billing?.promo?.endsAt)) {
+    return "Pro (promo)";
+  }
+
+  let label = cap(plan);
+  if (status && status !== "active") label += ` (${status.replaceAll("_", " ")})`;
+  return label;
+}
+
 const navSections = [
   {
     title: "Buyer",
@@ -170,7 +192,7 @@ export const AppShell = ({
           </Link>
           <p className="mt-2 text-xs text-slate-400">Role: {roleLabel}</p>
           <p className="text-xs text-slate-400">
-            Plan: {plan} {billing?.status ? `(${billing.status})` : ""}
+            Plan: {formatPlanLabel(billing ?? undefined)}
           </p>
           {billingError && billingError !== NDA_WARNING_TEXT ? (
             <p className="mt-2 text-xs text-rose-400">{billingError}</p>
