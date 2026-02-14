@@ -3,7 +3,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useAuth } from "../lib/auth";
 import { getMe } from "../lib/api";
-import { Billing, isBillingActive } from "../lib/billing";
+import { Billing } from "../lib/billing";
 import { useRuntime } from "../lib/runtime";
 import DemoBanner from "./DemoBanner";
 
@@ -105,17 +105,17 @@ export const AppShell = ({
     };
   }, [location.pathname, location.search, token]);
 
-  const billingActive = isBillingActive(billing);
-  const plan = billing?.plan ?? "free";
   const userRole = user?.role ?? null;
   const userRoleResolved =
-  userRole === "enterprise"
-    ? "enterprise"
-    : userRole === "seller"
-      ? "seller"
-      : userRole === "buyer"
-        ? "buyer"
-        : "demo";
+    userRole === "enterprise"
+      ? "enterprise"
+      : userRole === "seller"
+        ? "seller"
+        : userRole === "buyer"
+          ? "buyer"
+          : userRole === "admin"
+            ? "admin"
+            : "demo";
 
   const planResolved = billing?.plan ?? "free";
 
@@ -189,22 +189,32 @@ export const AppShell = ({
         return section;
       })
       .filter((section) => {
-        if (section.title === "Buyer") {
-          return billingActive;
-        }
-        if (section.title === "Seller") {
+        if (userRoleResolved === "seller") {
           return (
-            ((billingActive && (plan === "pro" || plan === "enterprise")) ||
-              userRoleResolved === "seller") &&
-            section.items.length > 0
+            (section.title === "Seller" || section.title === "Upgrade") &&
+            (section.title !== "Seller" || section.items.length > 0)
           );
         }
-        if (section.title === "Enterprise") {
-          return billingActive && plan === "enterprise";
+
+        if (userRoleResolved === "buyer") {
+          return section.title === "Buyer" || section.title === "Upgrade";
         }
-        return true;
+
+        if (userRoleResolved === "enterprise") {
+          return (
+            section.title === "Buyer" ||
+            section.title === "Enterprise" ||
+            section.title === "Upgrade"
+          );
+        }
+
+        if (userRoleResolved === "admin") {
+          return true;
+        }
+
+        return section.title === "Upgrade";
       });
-  }, [billing?.entitlements?.csvUpload, billingActive, demoMode, plan, userRoleResolved]);
+  }, [billing?.entitlements?.csvUpload, demoMode, userRoleResolved]);
 
 
   return (
