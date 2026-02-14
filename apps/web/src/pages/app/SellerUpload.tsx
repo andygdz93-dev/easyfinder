@@ -89,6 +89,15 @@ const parseCsv = (csvText: string) => {
   return { header, rows };
 };
 
+const csvEscape = (value: unknown) => {
+  const s = String(value ?? "");
+  const needsQuotes = /[",\r\n]/.test(s);
+  const escaped = s.replace(/"/g, '""');
+  return needsQuotes ? `"${escaped}"` : escaped;
+};
+
+const rowsToCsv = (rows: Array<Array<unknown>>) => rows.map((row) => row.map(csvEscape).join(",")).join("\r\n");
+
 export const SellerUpload = () => {
   const { token, user, isUserLoading } = useAuth();
   const [file, setFile] = useState<File | null>(null);
@@ -128,17 +137,53 @@ export const SellerUpload = () => {
   const headerDisplay = useMemo(() => REQUIRED_HEADERS.join(","), []);
 
   const downloadTemplate = () => {
-    const exampleRow =
-      '2019 CAT 320 Excavator,Caterpillar,320,2019,4200,125000,good,CA,"Well maintained, ready to work",https://example.com/img1.jpg,,,,';
-    const csvContent = `${REQUIRED_HEADERS.join(",")}\n${exampleRow}\n`;
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const header = [
+      "title",
+      "make",
+      "model",
+      "year",
+      "hours",
+      "price",
+      "condition",
+      "state",
+      "description",
+      "image1",
+      "image2",
+      "image3",
+      "image4",
+      "image5",
+    ];
+
+    const sample = [
+      "2019 CAT 320 Excavator",
+      "Caterpillar",
+      "320",
+      2019,
+      4200,
+      125000,
+      "good",
+      "CA",
+      "Well maintained, ready to work",
+      "https://example.com/img1.jpg",
+      "",
+      "",
+      "",
+      "",
+    ];
+
+    const csv = rowsToCsv([header, sample]);
+
+    // Excel-friendly: UTF-8 BOM + CRLF
+    const bom = "\uFEFF";
+    const blob = new Blob([bom + csv + "\r\n"], { type: "text/csv;charset=utf-8;" });
+
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "easyfinder_template.csv";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "easyfinder_template.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
     URL.revokeObjectURL(url);
   };
 
