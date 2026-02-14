@@ -7,6 +7,12 @@ export type Billing = {
   plan: BillingPlan;
   status: BillingStatus;
   current_period_end?: string;
+  promo?: { endsAt?: string } | null;
+  promoActive?: boolean;
+  entitlements?: {
+    csvUpload?: boolean;
+    maxActiveListings?: number;
+  };
 };
 
 export const isBillingActive = (billing?: Billing | null) => {

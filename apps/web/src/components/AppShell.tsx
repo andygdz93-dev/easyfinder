@@ -9,12 +9,7 @@ import DemoBanner from "./DemoBanner";
 
 const NDA_WARNING_TEXT = "NDA must be accepted before accessing this resource.";
 
-function formatPlanLabel(billing?: {
-  plan?: string;
-  status?: string;
-  promo?: { endsAt?: string } | null;
-  promoActive?: boolean;
-}) {
+function formatPlanLabel(billing?: Billing) {
   const plan = billing?.plan ?? "free";
   const status = billing?.status ?? null;
 
@@ -22,12 +17,18 @@ function formatPlanLabel(billing?: {
 
   if (plan === "free") return "Free";
 
-  if (plan === "pro" && (billing?.promoActive || billing?.promo?.endsAt)) {
+  if (plan === "pro" && billing?.promoActive) {
+    if (billing?.promo?.endsAt) {
+      const promoEndDate = billing.promo.endsAt.slice(0, 10);
+      return `Pro — free until ${promoEndDate}`;
+    }
     return "Pro (promo)";
   }
 
   let label = cap(plan);
-  if (status && status !== "active") label += ` (${status.split("_").join(" ")})`;
+  if (status && status !== "active") {
+    label += ` (${status.split("_").join(" ")})`;
+  }
   return label;
 }
 
@@ -148,16 +149,27 @@ export const AppShell = ({
   const isShellLoading = !hydrated || billingLoading || (Boolean(token) && !user);
   const badgeLabel = isShellLoading ? "Loading…" : `${planLabel} ${roleLabel}`;
   const visibleSections = useMemo(() => {
+    const csvUploadEnabled = billing?.entitlements?.csvUpload !== false;
+
     return navSections
       .map((section) => {
-        if (section.title === "Seller" && demoMode) {
+        if (section.title === "Seller") {
           return {
             ...section,
-            items: section.items.filter(
-              (item) => item.label !== "Add listing" && item.label !== "Upload listing"
-            ),
+            items: section.items.filter((item) => {
+              if (demoMode && (item.label === "Add listing" || item.label === "Upload listing")) {
+                return false;
+              }
+
+              if (!csvUploadEnabled && item.label === "Upload listing") {
+                return false;
+              }
+
+              return true;
+            }),
           };
         }
+
         return section;
       })
       .filter((section) => {
@@ -176,7 +188,7 @@ export const AppShell = ({
         }
         return true;
       });
-  }, [billingActive, demoMode, plan, userRoleResolved]);
+  }, [billing?.entitlements?.csvUpload, billingActive, demoMode, plan, userRoleResolved]);
 
 
   return (
@@ -194,6 +206,11 @@ export const AppShell = ({
           <p className="text-xs text-slate-400">
             Plan: {formatPlanLabel(billing ?? undefined)}
           </p>
+          {typeof billing?.entitlements?.maxActiveListings === "number" ? (
+            <p className="text-xs text-slate-400">
+              Listings: {billing.entitlements.maxActiveListings}
+            </p>
+          ) : null}
           {billingError && billingError !== NDA_WARNING_TEXT ? (
             <p className="mt-2 text-xs text-rose-400">{billingError}</p>
           ) : null}
