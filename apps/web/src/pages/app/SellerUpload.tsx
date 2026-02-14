@@ -1,12 +1,10 @@
-import { useMemo, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { useState } from "react";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { useAuth } from "../../lib/auth";
-import { getMe, uploadSellerCsv } from "../../lib/api";
+import { uploadSellerCsv } from "../../lib/api";
 import { ApiError } from "../../lib/api";
-import { useQuery } from "@tanstack/react-query";
 
 const REQUIRED_HEADERS = [
   "title",
@@ -25,7 +23,16 @@ const REQUIRED_HEADERS = [
   "image5",
 ] as const;
 
-const REQUIRED_FIELDS = ["title", "make", "model", "year", "state", "condition", "description"] as const;
+const REQUIRED_FIELDS = [
+  "title",
+  "make",
+  "model",
+  "year",
+  "state",
+  "condition",
+  "description",
+] as const;
+const REQUIRED_HEADERS_DISPLAY = REQUIRED_HEADERS.join(",");
 
 type UploadValidationResult = {
   rowsDetected: number;
@@ -103,49 +110,32 @@ const csvEscape = (value: unknown) => {
   return needsQuotes ? `"${escaped}"` : escaped;
 };
 
-const rowsToCsv = (rows: Array<Array<unknown>>) => rows.map((row) => row.map(csvEscape).join(",")).join("\r\n");
+const rowsToCsv = (rows: Array<Array<unknown>>) =>
+  rows.map((row) => row.map(csvEscape).join(",")).join("\r\n");
 
 export const SellerUpload = () => {
   const { token, user, isUserLoading } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [parsedRows, setParsedRows] = useState<Record<string, string>[]>([]);
-  const [validation, setValidation] = useState<UploadValidationResult | null>(null);
+  const [validation, setValidation] = useState<UploadValidationResult | null>(
+    null,
+  );
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  const meQuery = useQuery({
-    queryKey: ["me"],
-    queryFn: () => getMe(),
-    enabled: Boolean(token && user && ["seller"].includes(user.role ?? "")),
-  });
+  const rows = Array.isArray(parsedRows) ? parsedRows : [];
+  const validationErrors = validation?.errors ?? [];
+  const uploadErrors = uploadResult?.errors ?? [];
+  if (!token) return null;
 
-  if (isUserLoading) {
-    return null;
-  }
-
-  if (!token || !user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (user.role !== "seller") {
-    return <Navigate to="/app/select-role" replace />;
-  }
-
-  if (meQuery.isLoading) {
+  if (isUserLoading || !user) {
     return (
       <Card>
         <p className="text-sm text-slate-300">Loading…</p>
       </Card>
     );
   }
-
-  const csvUploadAllowed = meQuery.data?.billing?.entitlements?.csvUpload === true;
-  if (!csvUploadAllowed) {
-    return <Navigate to="/app/upgrade" replace />;
-  }
-
-  const headerDisplay = useMemo(() => REQUIRED_HEADERS.join(","), []);
 
   const downloadTemplate = () => {
     const header = [
@@ -216,7 +206,9 @@ export const SellerUpload = () => {
 
     const headerMatches =
       parsed.header.length === REQUIRED_HEADERS.length &&
-      REQUIRED_HEADERS.every((header, index) => parsed.header[index] === header);
+      REQUIRED_HEADERS.every(
+        (header, index) => parsed.header[index] === header,
+      );
 
     if (!headerMatches) {
       errors.push(`Header mismatch. Expected: ${REQUIRED_HEADERS.join(",")}`);
@@ -239,23 +231,38 @@ export const SellerUpload = () => {
       }
 
       if (row.hours && Number.isNaN(Number(row.hours))) {
-        rowErrors.push(`Row ${rowIndex + 2}: hours must be numeric when provided.`);
+        rowErrors.push(
+          `Row ${rowIndex + 2}: hours must be numeric when provided.`,
+        );
       }
 
       if (row.price && Number.isNaN(Number(row.price))) {
-        rowErrors.push(`Row ${rowIndex + 2}: price must be numeric when provided.`);
+        rowErrors.push(
+          `Row ${rowIndex + 2}: price must be numeric when provided.`,
+        );
       }
 
-      if (row.condition && !["excellent", "good", "fair", "needs_repair"].includes(String(row.condition).trim())) {
-        rowErrors.push(`Row ${rowIndex + 2}: condition must be one of excellent|good|fair|needs_repair.`);
+      if (
+        row.condition &&
+        !["excellent", "good", "fair", "needs_repair"].includes(
+          String(row.condition).trim(),
+        )
+      ) {
+        rowErrors.push(
+          `Row ${rowIndex + 2}: condition must be one of excellent|good|fair|needs_repair.`,
+        );
       }
 
-      ["image1", "image2", "image3", "image4", "image5"].forEach((imageField) => {
-        const value = String(row[imageField] ?? "").trim();
-        if (value && !isValidUrlLike(value)) {
-          rowErrors.push(`Row ${rowIndex + 2}: ${imageField} must start with http when provided.`);
-        }
-      });
+      ["image1", "image2", "image3", "image4", "image5"].forEach(
+        (imageField) => {
+          const value = String(row[imageField] ?? "").trim();
+          if (value && !isValidUrlLike(value)) {
+            rowErrors.push(
+              `Row ${rowIndex + 2}: ${imageField} must start with http when provided.`,
+            );
+          }
+        },
+      );
 
       if (rowErrors.length > 0 || !headerMatches) {
         invalidRows += 1;
@@ -274,7 +281,12 @@ export const SellerUpload = () => {
     });
   };
 
-  const canUpload = Boolean(validation && validation.validRows > 0 && validation.invalidRows === 0 && parsedRows.length > 0);
+  const canUpload = Boolean(
+    validation &&
+    validation.validRows > 0 &&
+    validation.invalidRows === 0 &&
+    rows.length > 0,
+  );
 
   const onUpload = async () => {
     if (!canUpload) return;
@@ -284,10 +296,11 @@ export const SellerUpload = () => {
     setUploadError(null);
 
     try {
-      const result = await uploadSellerCsv(parsedRows);
+      const result = await uploadSellerCsv(rows);
       setUploadResult(result);
     } catch (error) {
-      const message = error instanceof ApiError ? error.message : "Upload failed.";
+      const message =
+        error instanceof ApiError ? error.message : "Upload failed.";
       setUploadError(message);
     } finally {
       setUploading(false);
@@ -298,7 +311,9 @@ export const SellerUpload = () => {
     <div className="space-y-6">
       <Card>
         <h2 className="text-xl font-semibold">Upload inventory</h2>
-        <p className="mt-2 text-sm text-slate-400">Bulk upload listings using a CSV template.</p>
+        <p className="mt-2 text-sm text-slate-400">
+          Bulk upload listings using a CSV template.
+        </p>
       </Card>
 
       <Card>
@@ -307,14 +322,21 @@ export const SellerUpload = () => {
           <li>Download the template.</li>
           <li>Each row is one listing.</li>
           <li>Images are optional via columns image1..image5 (URLs).</li>
-          <li>Manual image upload will be supported later if not implemented today.</li>
+          <li>
+            Manual image upload will be supported later if not implemented
+            today.
+          </li>
         </ul>
       </Card>
 
       <Card>
         <h3 className="text-lg font-semibold">Required columns</h3>
-        <p className="mt-2 break-all text-sm text-slate-300">{headerDisplay}</p>
-        <p className="mt-2 text-sm text-slate-300">condition: excellent | good | fair | needs_repair</p>
+        <p className="mt-2 break-all text-sm text-slate-300">
+          {REQUIRED_HEADERS_DISPLAY}
+        </p>
+        <p className="mt-2 text-sm text-slate-300">
+          condition: excellent | good | fair | needs_repair
+        </p>
         <Button className="mt-4" onClick={downloadTemplate}>
           Download CSV template
         </Button>
@@ -345,11 +367,11 @@ export const SellerUpload = () => {
             <p>invalid rows: {validation.invalidRows}</p>
             <div className="mt-2">
               <p className="font-medium">first 10 validation errors</p>
-              {validation.errors.length === 0 ? (
+              {validationErrors.length === 0 ? (
                 <p className="mt-1 text-emerald-300">No validation errors.</p>
               ) : (
                 <ul className="mt-1 list-disc space-y-1 pl-5 text-rose-300">
-                  {validation.errors.slice(0, 10).map((error, index) => (
+                  {validationErrors.slice(0, 10).map((error, index) => (
                     <li key={`${error}-${index}`}>{error}</li>
                   ))}
                 </ul>
@@ -359,7 +381,11 @@ export const SellerUpload = () => {
         ) : null}
 
         {validation ? (
-          <Button className="mt-4" onClick={onUpload} disabled={!canUpload || uploading}>
+          <Button
+            className="mt-4"
+            onClick={onUpload}
+            disabled={!canUpload || uploading}
+          >
             {uploading ? "Uploading..." : "Upload"}
           </Button>
         ) : null}
@@ -368,9 +394,9 @@ export const SellerUpload = () => {
           <div className="mt-4 rounded-md border border-emerald-700/40 bg-emerald-950/30 p-4 text-sm text-emerald-200">
             <p>created: {uploadResult.created}</p>
             <p>failed: {uploadResult.failed}</p>
-            {uploadResult.errors.length > 0 ? (
+            {uploadErrors.length > 0 ? (
               <ul className="mt-2 list-disc pl-5 text-rose-300">
-                {uploadResult.errors.slice(0, 10).map((error, index) => (
+                {uploadErrors.slice(0, 10).map((error, index) => (
                   <li key={`${error.row}-${index}`}>
                     Row {error.row}: {error.message}
                   </li>
@@ -381,7 +407,9 @@ export const SellerUpload = () => {
         ) : null}
 
         {uploadError ? (
-          <div className="mt-4 rounded-md border border-rose-700/50 bg-rose-950/30 p-4 text-sm text-rose-200">{uploadError}</div>
+          <div className="mt-4 rounded-md border border-rose-700/50 bg-rose-950/30 p-4 text-sm text-rose-200">
+            {uploadError}
+          </div>
         ) : null}
       </Card>
     </div>
