@@ -145,7 +145,7 @@ export const AppShell = ({
   const isShellLoading = !hydrated || billingLoading || (Boolean(token) && !user);
   const badgeLabel = isShellLoading ? "Loading…" : `${planLabel} ${roleLabel}`;
   const visibleSections = useMemo(() => {
-    const csvUploadAllowed = billing?.entitlements?.csvUpload ?? false;
+    const csvUploadAllowed = billing?.entitlements?.csvUpload !== false;
 
     return navSections
       .map((section) => {
