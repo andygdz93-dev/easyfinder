@@ -9,7 +9,7 @@ import { useAuth } from "../../lib/auth";
 type UpgradeState = "idle" | "loading" | "error";
 
 export const Upgrade = () => {
-  const { setUser, user } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [billing, setBilling] = useState<Billing | null>(null);
   const [state, setState] = useState<UpgradeState>("idle");
@@ -64,17 +64,8 @@ export const Upgrade = () => {
 
     try {
       await activateProPromo();
-      const updated = await getMe();
-      setBilling(updated.billing ?? null);
-      setUser({
-        id: updated.id,
-        email: updated.email,
-        name: updated.name,
-        role: updated.role,
-        ndaAccepted: updated.ndaAccepted,
-        ndaAcceptedAt: updated.ndaAcceptedAt,
-      });
-      navigate("/app/seller/dashboard", { replace: true });
+      window.location.assign("/app/seller/dashboard");
+      return;
     } catch (error) {
       setState("error");
       setMessage(error instanceof Error ? error.message : "Unable to activate promo.");
@@ -110,39 +101,41 @@ export const Upgrade = () => {
               </p>
             </div>
           ) : null}
-          <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-4 text-sm">
-            <p className="text-xs uppercase tracking-[0.2em] text-amber-400">
-              {isSeller && isPromoActive ? "Pro (promo)" : "Pro"}
-            </p>
-            <h3 className="mt-2 text-lg font-semibold">
-              {isSeller ? "Seller growth plan" : "Buyer + seller tools"}
-            </h3>
-            <ul className="mt-3 list-disc space-y-1 pl-4 text-xs text-slate-400">
+          {!isSeller || plan === "free" ? (
+            <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-4 text-sm">
+              <p className="text-xs uppercase tracking-[0.2em] text-amber-400">
+                {isSeller && isPromoActive ? "Pro (promo)" : "Pro"}
+              </p>
+              <h3 className="mt-2 text-lg font-semibold">
+                {isSeller ? "Seller growth plan" : "Buyer + seller tools"}
+              </h3>
+              <ul className="mt-3 list-disc space-y-1 pl-4 text-xs text-slate-400">
+                {isSeller ? (
+                  <>
+                    <li>200 active listings</li>
+                    <li>CSV upload</li>
+                    <li>Seller insights</li>
+                  </>
+                ) : (
+                  <>
+                    <li>Up to 50 watchlist items</li>
+                    <li>Live listings access</li>
+                    <li>Seller insights</li>
+                  </>
+                )}
+              </ul>
               {isSeller ? (
-                <>
-                  <li>200 active listings</li>
-                  <li>CSV upload</li>
-                  <li>Seller insights</li>
-                </>
-              ) : (
-                <>
-                  <li>Up to 50 watchlist items</li>
-                  <li>Live listings access</li>
-                  <li>Seller insights</li>
-                </>
-              )}
-            </ul>
-            {isSeller ? (
-              <p className="mt-3 text-xs text-slate-400">Free for the first 6 months after launch</p>
-            ) : null}
-            <Button
-              className="mt-4 w-full"
-              disabled={state === "loading"}
-              onClick={() => (isSeller ? handleSellerProUpgrade() : handleCheckout("pro"))}
-            >
-              Upgrade to Pro
-            </Button>
-          </div>
+                <p className="mt-3 text-xs text-slate-400">Free for the first 6 months after launch</p>
+              ) : null}
+              <Button
+                className="mt-4 w-full"
+                disabled={state === "loading"}
+                onClick={() => (isSeller ? handleSellerProUpgrade() : handleCheckout("pro"))}
+              >
+                Upgrade to Pro
+              </Button>
+            </div>
+          ) : null}
           <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-4 text-sm">
             <p className="text-xs uppercase tracking-[0.2em] text-emerald-400">
               Enterprise

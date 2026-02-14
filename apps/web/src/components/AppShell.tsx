@@ -117,7 +117,7 @@ export const AppShell = ({
         ? "buyer"
         : "demo";
 
-  const planResolved = plan === "enterprise" ? "enterprise" : plan === "pro" ? "pro" : "free";
+  const planResolved = billing?.plan ?? "free";
 
   useEffect(() => {
     const root = document.documentElement;
@@ -130,7 +130,6 @@ export const AppShell = ({
     };
   }, [planResolved, userRoleResolved]);
 
-  const planLabel = formatPlanLabel(billing ?? undefined);
   const roleLabel =
     userRole === "seller"
       ? "Seller"
@@ -146,17 +145,25 @@ export const AppShell = ({
   const isShellLoading = !hydrated || billingLoading || (Boolean(token) && !user);
   const badgeLabel = isShellLoading
     ? "Loading…"
-    : billing?.promoActive === true && userRoleResolved === "seller"
-      ? "Pro Seller (promo)"
-      : `${planLabel} ${roleLabel}`;
-  const listingLimitLabel =
-    typeof billing?.entitlements?.maxActiveListings === "number"
-      ? String(billing.entitlements.maxActiveListings)
-      : plan === "enterprise"
-        ? "Unlimited"
-        : plan === "pro"
-          ? "200"
-          : "25";
+    : planResolved === "pro"
+      ? billing?.promoActive
+        ? "Pro Seller (promo)"
+        : "Pro Seller"
+      : planResolved === "enterprise"
+        ? "Enterprise Seller"
+        : "Free Seller";
+
+  let listingLimitLabel = "25";
+
+  if (billing?.plan !== "free" && billing?.entitlements?.maxActiveListings === null) {
+    listingLimitLabel = "Unlimited";
+  } else if (typeof billing?.entitlements?.maxActiveListings === "number") {
+    listingLimitLabel = String(billing.entitlements.maxActiveListings);
+  } else if (billing?.plan === "pro") {
+    listingLimitLabel = "200";
+  } else if (billing?.plan === "enterprise") {
+    listingLimitLabel = "Unlimited";
+  }
   const visibleSections = useMemo(() => {
     const csvUploadAllowed = billing?.entitlements?.csvUpload === true;
 
