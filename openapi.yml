@@ -1122,4 +1122,14 @@ components:
                     plan: { type: string, enum: [free, pro, enterprise] }
                     status: { type: string, enum: [active, past_due, canceled, incomplete] }
                     current_period_end: { type: string, format: date-time }
+                    promoActive: { type: boolean }
+                    promoEndsAt: { type: string, format: date-time, nullable: true }
+                    entitlements:
+                      type: object
+                      properties:
+                        maxActiveListings:
+                          type: integer
+                          nullable: true
+                        csvUpload: { type: boolean }
+                        marketplaceIntegrations: { type: boolean }
         requestId: { type: string }
