@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Card } from "../../components/ui/card";
-import { apiFetch } from "../../lib/api";
+import { apiFetch, getMe } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 
 type ListingLike = {
@@ -55,8 +55,16 @@ const quickLinks = [
 
 export const SellerDashboard = () => {
   const { token, user } = useAuth();
-  const billing = (user as { billing?: { entitlements?: { csvUpload?: boolean } } } | null)?.billing;
-  const csvUploadAllowed = billing?.entitlements?.csvUpload === true;
+
+
+
+  const meQuery = useQuery({
+    queryKey: ["me"],
+    queryFn: () => getMe(),
+    enabled: Boolean(token && user && (user.role === "seller" || user.role === "admin")),
+  });
+
+  const csvUploadAllowed = meQuery.data?.billing?.entitlements?.csvUpload === true;
 
   const listingsQuery = useQuery({
     queryKey: ["seller-listings"],

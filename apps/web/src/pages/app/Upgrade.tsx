@@ -74,7 +74,7 @@ export const Upgrade = () => {
         ndaAccepted: updated.ndaAccepted,
         ndaAcceptedAt: updated.ndaAcceptedAt,
       });
-      navigate(-1);
+      navigate("/app/seller/dashboard", { replace: true });
     } catch (error) {
       setState("error");
       setMessage(error instanceof Error ? error.message : "Unable to activate promo.");

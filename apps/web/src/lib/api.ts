@@ -314,6 +314,7 @@ export const createCheckoutSession = (plan: "pro" | "enterprise") =>
 export const activateProPromo = () =>
   apiRequest<{ success: boolean }>("/billing/activate-pro-promo", {
     method: "POST",
+    body: JSON.stringify({}),
   });
 
 export const createInquiry = (input: { listingId: string; message: string }) =>
