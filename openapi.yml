@@ -3,8 +3,7 @@ info:
   title: EasyFinder API
   version: 1.0.0
   description: >
-    EasyFinder is an intelligent heavy-equipment discovery and scoring platform.
-    This spec documents current endpoints and reserves planned admin/auth/seller routes.
+    EasyFinder API contract aligned to currently implemented routes in apps/api.
 servers:
   - url: https://easyfinder.fly.dev
     description: Production
@@ -13,92 +12,243 @@ servers:
 
 tags:
   - name: System
-  - name: Listings
-  - name: Watchlist
-  - name: Scoring
   - name: Auth
-  - name: Admin
+  - name: Listings
+  - name: Demo Listings
+  - name: Scoring
+  - name: Watchlist
+  - name: Inquiries
+  - name: Offers
   - name: Seller
+  - name: Admin
+  - name: Me
+  - name: NDA
+  - name: Billing
 
 paths:
+  /health:
+    get:
+      tags: [System]
+      summary: Root health check
+      responses:
+        "200":
+          description: Service status
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, demoMode, billingEnabled]
+                properties:
+                  ok: { type: boolean }
+                  demoMode: { type: boolean }
+                  billingEnabled: { type: boolean }
+
+  /ready:
+    get:
+      tags: [System]
+      summary: Readiness probe
+      responses:
+        "200":
+          description: Readiness state
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ready]
+                properties:
+                  ready: { type: boolean }
+
+  /api/cors-test:
+    get:
+      tags: [System]
+      summary: CORS test endpoint
+      responses:
+        "200":
+          description: CORS test response
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok: { type: boolean }
+
   /api/health:
     get:
       tags: [System]
-      summary: Health check
-      description: Confirms API is running and Mongo config is present.
+      summary: API health check
       responses:
         "200":
-          description: OK
+          description: Service status
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthResponse"
 
-  /api/listings:
+  /api/demo/listings:
     get:
-      tags: [Listings]
-      summary: Get scored listings
-      description: Returns equipment listings ranked by the scoring engine.
-      parameters:
-        - in: query
-          name: q
-          schema: { type: string }
-          description: Keyword search (optional)
-        - in: query
-          name: category
-          schema: { type: string }
-          description: Category filter (optional)
-        - in: query
-          name: state
-          schema: { type: string }
-          description: State filter (optional)
-        - in: query
-          name: maxPrice
-          schema: { type: number }
-          description: Price cap (optional)
-        - in: query
-          name: maxHours
-          schema: { type: number }
-          description: Hours cap (optional)
-        - in: query
-          name: operableOnly
-          schema: { type: boolean, default: false }
-          description: If true, filters out non-operable listings (optional, future)
-        - in: query
-          name: page
-          schema: { type: integer, minimum: 1, default: 1 }
-          description: Pagination (future)
-        - in: query
-          name: pageSize
-          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
-          description: Pagination (future)
+      tags: [Demo Listings]
+      summary: Get ranked demo listings
       responses:
         "200":
-          description: Array of listings
+          description: Demo listing array
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Listing"
+                $ref: "#/components/schemas/ListingsResponse"
+
+  /api/demo/listings/{id}:
+    get:
+      tags: [Demo Listings]
+      summary: Get demo listing by id
+      parameters:
+        - $ref: "#/components/parameters/ListingId"
+      responses:
+        "200":
+          description: Demo listing detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListingResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+
+  /api/listings:
+    get:
+      tags: [Listings]
+      summary: Get ranked live listings
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Live listing array
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListingsResponse"
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "402": { $ref: "#/components/responses/PaymentRequiredError" }
+        "403": { $ref: "#/components/responses/NdaRequiredError" }
+        "503":
+          $ref: "#/components/responses/DemoModeActiveError"
+    post:
+      tags: [Listings]
+      summary: Create listing (not implemented)
+      security:
+        - bearerAuth: []
+      responses:
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "403":
+          description: NDA required or writes disabled in demo mode
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "501":
+          description: Not implemented
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+    put:
+      tags: [Listings]
+      summary: Update listing (not implemented)
+      security:
+        - bearerAuth: []
+      responses:
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "403":
+          description: NDA required or writes disabled in demo mode
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "501":
+          description: Not implemented
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+    delete:
+      tags: [Listings]
+      summary: Delete listing (not implemented)
+      security:
+        - bearerAuth: []
+      responses:
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "403":
+          description: NDA required or writes disabled in demo mode
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "501":
+          description: Not implemented
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /api/listings/{id}:
+    get:
+      tags: [Listings]
+      summary: Get live listing by id
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ListingId"
+      responses:
+        "200":
+          description: Live listing detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListingResponse"
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "402": { $ref: "#/components/responses/PaymentRequiredError" }
+        "403": { $ref: "#/components/responses/NdaRequiredError" }
+        "404": { $ref: "#/components/responses/NotFoundError" }
+        "503": { $ref: "#/components/responses/DemoModeActiveError" }
 
   /api/scoring-configs:
     get:
       tags: [Scoring]
-      summary: Get active scoring configuration
+      summary: Get active scoring config
       responses:
         "200":
-          description: Current scoring policy and weights
+          description: Current scoring config
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ScoringConfig"
+                $ref: "#/components/schemas/ScoringConfigEnvelope"
+    post:
+      tags: [Scoring]
+      summary: Replace scoring config
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScoringConfigInput"
+      responses:
+        "200":
+          description: Updated scoring config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScoringConfigEnvelope"
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "402": { $ref: "#/components/responses/PaymentRequiredError" }
+        "403": { $ref: "#/components/responses/ForbiddenError" }
 
   /api/watchlist:
     get:
       tags: [Watchlist]
-      summary: Get watchlist
-      description: Returns user watchlist. Currently may be demo/stub until auth is enabled.
+      summary: Get current user's watchlist
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: Watchlist response
@@ -106,35 +256,108 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WatchlistResponse"
-        "401":
-          description: Unauthorized (future when auth required)
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "402": { $ref: "#/components/responses/PaymentRequiredError" }
+        "403": { $ref: "#/components/responses/NdaRequiredError" }
 
-  # -------- Planned endpoints (documented early for contract stability) --------
-  /api/auth/login:
+  /api/watchlist/{listingId}:
     post:
-      tags: [Auth]
-      summary: Login (planned)
-      description: Returns JWT and user profile.
+      tags: [Watchlist]
+      summary: Add listing to watchlist
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ListingIdAsWatchlist"
+      responses:
+        "200":
+          description: Watchlist item response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WatchlistItemResponse"
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "402":
+          description: Subscription or plan limit required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "403": { $ref: "#/components/responses/NdaRequiredError" }
+        "404": { $ref: "#/components/responses/NotFoundError" }
+    delete:
+      tags: [Watchlist]
+      summary: Remove listing from watchlist
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ListingIdAsWatchlist"
+      responses:
+        "200":
+          description: Watchlist remove response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RemovedResponse"
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "402": { $ref: "#/components/responses/PaymentRequiredError" }
+        "403": { $ref: "#/components/responses/NdaRequiredError" }
+        "404": { $ref: "#/components/responses/NotFoundError" }
+
+  /api/offers:
+    post:
+      tags: [Offers]
+      summary: Submit offer (not implemented)
+      security:
+        - bearerAuth: []
+      responses:
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "403":
+          description: NDA required or writes disabled in demo mode
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "501":
+          description: Not implemented
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /api/inquiries:
+    post:
+      tags: [Inquiries]
+      summary: Create inquiry
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/LoginRequest"
+              $ref: "#/components/schemas/CreateInquiryRequest"
       responses:
         "200":
-          description: Logged in
+          description: Inquiry created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthResponse"
-        "400":
-          description: Invalid credentials
+                $ref: "#/components/schemas/InquiryResponse"
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "403": { $ref: "#/components/responses/ForbiddenError" }
+        "404": { $ref: "#/components/responses/NotFoundError" }
+        "409":
+          description: Existing open inquiry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "422": { $ref: "#/components/responses/ValidationError" }
 
   /api/auth/register:
     post:
       tags: [Auth]
-      summary: Register (planned)
+      summary: Register user
       requestBody:
         required: true
         content:
@@ -149,65 +372,436 @@ paths:
               schema:
                 $ref: "#/components/schemas/AuthResponse"
         "400":
-          description: Validation error
-
-  /api/admin/ingestion/sources:
-    get:
-      tags: [Admin]
-      summary: List ingestion sources (planned)
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: Ingestion sources
+          description: Email exists or invalid reset token
           content:
             application/json:
               schema:
-                type: array
-                items: { $ref: "#/components/schemas/IngestionSource" }
-        "401": { description: Unauthorized }
-        "403": { description: Forbidden }
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "422": { $ref: "#/components/responses/ValidationError" }
 
-  /api/admin/scoring-configs:
-    put:
-      tags: [Admin]
-      summary: Update scoring config (planned)
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/ScoringConfigUpdate" }
-      responses:
-        "200":
-          description: Updated scoring config
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/ScoringConfig" }
-        "401": { description: Unauthorized }
-        "403": { description: Forbidden }
-
-  /api/seller/listings:
+  /api/auth/login:
     post:
+      tags: [Auth]
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+  /api/auth/forgot-password:
+    post:
+      tags: [Auth]
+      summary: Request password reset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        "200":
+          description: Always returns success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+  /api/auth/reset-password:
+    post:
+      tags: [Auth]
+      summary: Complete password reset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, newPassword]
+              properties:
+                token: { type: string }
+                newPassword: { type: string, minLength: 8 }
+      responses:
+        "200":
+          description: Password reset success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Get authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "404": { $ref: "#/components/responses/NotFoundError" }
+
+  /api/admin/ingest/csv:
+    post:
+      tags: [Admin]
+      summary: Ingest listings from CSV
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Ingest completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      ingested: { type: integer }
+                  requestId: { type: string }
+        "400":
+          description: Missing file
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "402": { $ref: "#/components/responses/PaymentRequiredError" }
+        "403": { $ref: "#/components/responses/ForbiddenError" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+  /api/admin/sources/sync:
+    post:
+      tags: [Admin]
+      summary: Trigger source sync
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Sync started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      status: { type: string }
+                      syncedAt: { type: string, format: date-time }
+                  requestId: { type: string }
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "402": { $ref: "#/components/responses/PaymentRequiredError" }
+        "403": { $ref: "#/components/responses/ForbiddenError" }
+
+  /api/admin/sources:
+    get:
+      tags: [Admin]
+      summary: List ingestion sources
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Source health list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      sources:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name: { type: string }
+                            status: { type: string }
+                            lastSync: { type: string, format: date-time, nullable: true }
+                  requestId: { type: string }
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "402": { $ref: "#/components/responses/PaymentRequiredError" }
+        "403": { $ref: "#/components/responses/ForbiddenError" }
+
+  /api/seller/inquiries:
+    get:
       tags: [Seller]
-      summary: Create seller listing (planned)
+      summary: List seller inquiries
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Inquiries list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Inquiry"
+                  requestId: { type: string }
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "403": { $ref: "#/components/responses/ForbiddenError" }
+
+  /api/seller/insights:
+    get:
+      tags: [Seller]
+      summary: Seller insights summary
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Seller insights
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      atRiskListings:
+                        type: array
+                        items: { $ref: "#/components/schemas/Listing" }
+                      priceBands:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            listingId: { type: string }
+                            range:
+                              type: object
+                              properties:
+                                min: { type: number }
+                                max: { type: number }
+                            state: { type: string }
+                      qualityChecklistSummary:
+                        type: object
+                        properties:
+                          total: { type: integer }
+                          missingImages: { type: integer }
+                          missingDescriptions: { type: integer }
+                  requestId: { type: string }
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "403": { $ref: "#/components/responses/ForbiddenError" }
+
+  /api/me:
+    get:
+      tags: [Me]
+      summary: Get current profile including billing
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User profile envelope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserMeResponse"
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "403": { $ref: "#/components/responses/NdaRequiredError" }
+    patch:
+      tags: [Me]
+      summary: Update account role
       security:
         - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/SellerListingCreate" }
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role:
+                  type: string
+                  enum: [buyer, seller, enterprise]
       responses:
         "200":
-          description: Created listing
+          description: Updated user
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/Listing" }
-        "401": { description: Unauthorized }
-        "403": { description: Forbidden }
-        "400": { description: Validation error }
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "403": { $ref: "#/components/responses/ForbiddenError" }
+        "404": { $ref: "#/components/responses/NotFoundError" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+  /api/nda/status:
+    get:
+      tags: [NDA]
+      summary: Get NDA acceptance state
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Acceptance status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      accepted: { type: boolean }
+                  requestId: { type: string }
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+
+  /api/nda/accept:
+    post:
+      tags: [NDA]
+      summary: Accept NDA
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accepted]
+              properties:
+                accepted:
+                  type: boolean
+                  enum: [true]
+      responses:
+        "200":
+          description: NDA accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      accepted: { type: boolean }
+                  requestId: { type: string }
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "404": { $ref: "#/components/responses/NotFoundError" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+  /api/billing/create-checkout-session:
+    post:
+      tags: [Billing]
+      summary: Create Stripe checkout session
+      security:
+        - bearerAuth: []
+      description: Route is registered only when BILLING_ENABLED is true.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plan]
+              properties:
+                plan:
+                  type: string
+                  enum: [pro, enterprise]
+      responses:
+        "200":
+          description: Checkout session URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      url:
+                        type: string
+                        format: uri
+                        nullable: true
+                  requestId: { type: string }
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "404": { $ref: "#/components/responses/NotFoundError" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+  /api/billing/webhook:
+    post:
+      tags: [Billing]
+      summary: Stripe webhook receiver
+      description: Route is registered only when BILLING_ENABLED is true.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Event acknowledged
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "400":
+          description: Missing signature, raw body, or invalid signature
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        "500":
+          description: Event recording or processing failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
 
 components:
   securitySchemes:
@@ -216,114 +810,186 @@ components:
       scheme: bearer
       bearerFormat: JWT
 
+  parameters:
+    ListingId:
+      in: path
+      name: id
+      required: true
+      schema: { type: string }
+    ListingIdAsWatchlist:
+      in: path
+      name: listingId
+      required: true
+      schema: { type: string }
+
+  responses:
+    UnauthorizedError:
+      description: Authentication required.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    ForbiddenError:
+      description: Forbidden.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    NotFoundError:
+      description: Resource not found.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    ValidationError:
+      description: Validation failed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    PaymentRequiredError:
+      description: Active subscription required.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    NdaRequiredError:
+      description: NDA must be accepted.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    DemoModeActiveError:
+      description: Live listings unavailable in demo mode.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+
   schemas:
+    ErrorEnvelope:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            requestId: { type: string }
+        requestId: { type: string }
+
     HealthResponse:
       type: object
-      required: [ok, mongoConfigured]
       properties:
-        ok: { type: boolean, example: true }
-        mongoConfigured: { type: boolean, example: true }
+        data:
+          type: object
+          properties:
+            ok: { type: boolean }
+            demoMode: { type: boolean }
+            billingEnabled: { type: boolean }
+        requestId: { type: string }
 
     Listing:
       type: object
-      required: [id, title, category, state, source, operable, totalScore, score]
+      required: [id, title, category, state, source, operable]
       properties:
-        id: { type: string, example: "listing_123" }
-        title: { type: string, example: "2018 CAT 320 Excavator" }
-        category: { type: string, example: "excavator" }
-        price: { type: number, nullable: true, example: 125000 }
-        hours: { type: number, nullable: true, example: 4200 }
-        year: { type: integer, nullable: true, example: 2018 }
-        condition: { type: number, nullable: true, example: 4.2 }
-        make: { type: string, nullable: true, example: "Caterpillar" }
-        model: { type: string, nullable: true, example: "320" }
-        state: { type: string, example: "CA" }
-        operable: { type: boolean, example: true }
-        is_operable: { type: boolean, nullable: true, example: true }
-        source: { type: string, example: "partner_dealer" }
-        url: { type: string, nullable: true, example: "https://example.com/listing/123" }
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        category: { type: string }
+        state: { type: string }
+        price: { type: number, nullable: true }
+        hours: { type: number, nullable: true }
+        year: { type: integer, nullable: true }
+        condition: { type: number, nullable: true }
+        operable: { type: boolean }
+        source: { type: string }
         images:
           type: array
           items: { type: string }
-          example: ["https://example.com/img1.jpg"]
-
-        totalScore: { type: number, example: 84 }
+        imageUrl: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        totalScore: { type: number }
         score:
           $ref: "#/components/schemas/ScoreBreakdown"
-        flags:
-          type: array
-          items: { type: string }
-          example: []
 
     ScoreBreakdown:
       type: object
-      required: [total, breakdown, reasons, confidence, disqualified]
       properties:
-        total: { type: number, example: 84 }
+        total: { type: number }
         breakdown:
           type: object
-          required: [price, hours, year, location, condition, completeness]
           properties:
-            price: { type: number, example: 88 }
-            hours: { type: number, example: 74 }
-            year: { type: number, example: 82 }
-            location: { type: number, example: 65 }
-            condition: { type: number, example: 76 }
-            completeness: { type: number, example: 90 }
+            price: { type: number }
+            hours: { type: number }
+            year: { type: number }
+            location: { type: number }
+            condition: { type: number }
+            completeness: { type: number }
         reasons:
           type: array
           items: { type: string }
-          example:
-            - "Price score 88 based on $125000."
-            - "Preferred state bonus for CA."
-        confidence: { type: number, example: 0.9 }
-        disqualified: { type: boolean, example: false }
+        confidence: { type: number }
+        disqualified: { type: boolean }
+
+    ListingsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/Listing" }
+        requestId: { type: string }
+
+    ListingResponse:
+      type: object
+      properties:
+        data: { $ref: "#/components/schemas/Listing" }
+        requestId: { type: string }
 
     WatchlistResponse:
       type: object
       properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/WatchlistItem"
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/WatchlistItem"
+        requestId: { type: string }
+
+    WatchlistItemResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            item:
+              $ref: "#/components/schemas/WatchlistItem"
+        requestId: { type: string }
 
     WatchlistItem:
       type: object
-      required: [listingId]
       properties:
-        listingId: { type: string, example: "listing_123" }
-        addedAt: { type: string, format: date-time, nullable: true }
+        id: { type: string }
+        userId: { type: string }
+        listingId: { type: string }
+        createdAt: { type: string, format: date-time }
 
-    ScoringConfig:
+    RemovedResponse:
       type: object
-      required: [weights, preferredStates, minHours, maxHours, minPrice, maxPrice, minYear, maxYear, minCondition, maxCondition]
       properties:
-        weights:
+        data:
           type: object
-          required: [price, hours, year, location, condition, completeness]
           properties:
-            price: { type: number, example: 0.25 }
-            hours: { type: number, example: 0.2 }
-            year: { type: number, example: 0.2 }
-            location: { type: number, example: 0.15 }
-            condition: { type: number, example: 0.1 }
-            completeness: { type: number, example: 0.1 }
-        preferredStates:
-          type: array
-          items: { type: string }
-          example: ["CA", "AZ", "TX", "IA"]
-        minPrice: { type: number, nullable: true, example: 0 }
-        maxPrice: { type: number, nullable: true, example: 250000 }
-        minHours: { type: number, nullable: true, example: 0 }
-        maxHours: { type: number, nullable: true, example: 8000 }
-        minYear: { type: number, nullable: true, example: 2000 }
-        maxYear: { type: number, nullable: true, example: 2025 }
-        minCondition: { type: number, nullable: true, example: 1 }
-        maxCondition: { type: number, nullable: true, example: 5 }
+            removed: { type: boolean }
+        requestId: { type: string }
 
-    ScoringConfigUpdate:
+    ScoringConfigInput:
       type: object
+      required: [name, weights, preferredStates, minHours, maxHours, minPrice, maxPrice, minYear, maxYear, minCondition, maxCondition]
       properties:
+        name: { type: string }
         weights:
           type: object
           properties:
@@ -345,70 +1011,113 @@ components:
         minCondition: { type: number }
         maxCondition: { type: number }
 
-    LoginRequest:
+    ScoringConfigEnvelope:
       type: object
-      required: [email, password]
       properties:
-        email: { type: string, format: email }
-        password: { type: string, format: password }
+        data:
+          type: object
+          properties:
+            config:
+              allOf:
+                - $ref: "#/components/schemas/ScoringConfigInput"
+                - type: object
+                  properties:
+                    id: { type: string }
+                    active: { type: boolean }
+        requestId: { type: string }
 
     RegisterRequest:
       type: object
       required: [email, password]
       properties:
         email: { type: string, format: email }
-        password: { type: string, format: password }
-        role:
-          type: string
-          enum: [buyer, seller]
-          example: buyer
+        password: { type: string, minLength: 8 }
+        name: { type: string }
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8 }
 
     AuthResponse:
       type: object
-      required: [token, user]
       properties:
-        token: { type: string, example: "eyJhbGciOi..." }
-        user:
-          $ref: "#/components/schemas/User"
+        data:
+          type: object
+          properties:
+            token: { type: string }
+            user: { $ref: "#/components/schemas/User" }
+        requestId: { type: string }
+
+    UserResponse:
+      type: object
+      properties:
+        data: { $ref: "#/components/schemas/User" }
+        requestId: { type: string }
 
     User:
       type: object
-      required: [id, email, role]
       properties:
         id: { type: string }
         email: { type: string, format: email }
+        name: { type: string }
         role:
           type: string
-          enum: [demo, buyer, seller, admin]
+          nullable: true
+          enum: [demo, buyer, seller, admin, enterprise, null]
 
-    IngestionSource:
+    SuccessResponse:
       type: object
-      required: [id, name, type, status]
       properties:
-        id: { type: string, example: "source_ironplanet" }
-        name: { type: string, example: "IronPlanet" }
-        type:
-          type: string
-          enum: [dealer_feed, marketplace_api, csv_import, manual]
-        status:
-          type: string
-          enum: [active, paused, error]
-        lastSyncAt: { type: string, format: date-time, nullable: true }
+        data:
+          type: object
+          properties:
+            success: { type: boolean }
+        requestId: { type: string }
 
-    SellerListingCreate:
+    Inquiry:
       type: object
-      required: [title, category, state, is_operable]
       properties:
-        title: { type: string }
-        category: { type: string }
-        price: { type: number }
-        hours: { type: number }
-        year: { type: integer }
-        make: { type: string }
-        model: { type: string }
-        state: { type: string }
-        is_operable: { type: boolean }
-        description: { type: string }
-        images:
-          type: array
-          items: { type: string }
+        id: { type: string }
+        listingId: { type: string }
+        buyerName: { type: string }
+        buyerEmail: { type: string, format: email }
+        message: { type: string }
+        status: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    CreateInquiryRequest:
+      type: object
+      required: [listingId, message]
+      properties:
+        listingId: { type: string }
+        message: { type: string, minLength: 1, maxLength: 2000 }
+
+    InquiryResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Inquiry"
+        requestId: { type: string }
+
+    UserMeResponse:
+      type: object
+      properties:
+        data:
+          allOf:
+            - $ref: "#/components/schemas/User"
+            - type: object
+              properties:
+                ndaAccepted: { type: boolean }
+                ndaAcceptedAt: { type: string, format: date-time, nullable: true }
+                ndaVersion: { type: string, nullable: true }
+                billing:
+                  type: object
+                  properties:
+                    stripe_customer_id: { type: string, nullable: true }
+                    stripe_subscription_id: { type: string, nullable: true }
+                    plan: { type: string, enum: [free, pro, enterprise] }
+                    status: { type: string, enum: [active, past_due, canceled, incomplete] }
+                    current_period_end: { type: string, format: date-time }
