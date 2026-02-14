@@ -44,7 +44,7 @@ const resolveBillingPlan = (fallbackPlan: "free" | "pro" | "enterprise" = "free"
     return env.BILLING_STUB_PLAN;
   }
 
-  return env.BILLING_ENABLED ? fallbackPlan : "free";
+  return fallbackPlan;
 };
 
 const withSellerEntitlements = (billing: {
@@ -54,7 +54,11 @@ const withSellerEntitlements = (billing: {
   status: "active" | "past_due" | "canceled" | "incomplete";
   current_period_end: string;
 }, role: "buyer" | "seller" | "enterprise" | "admin" | null) => {
-  const entitlements = getSellerEntitlements({ plan: billing.plan, role });
+  const entitlements = getSellerEntitlements({
+    plan: billing.plan,
+    role,
+    now: new Date(),
+  });
 
   return {
     ...billing,
