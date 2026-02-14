@@ -1,4 +1,11 @@
-import { Navigate, Outlet, Route, Routes, useLocation, useParams } from "react-router-dom";
+import {
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+  useLocation,
+  useParams,
+} from "react-router-dom";
 import { RequireAuth } from "./components/RequireAuth";
 import { RequireEnterprise } from "./components/RequireEnterprise";
 import { RequireLiveNda } from "./components/RequireLiveNda";
@@ -29,12 +36,12 @@ import { NdaProvider } from "./lib/nda";
 import { useAuth } from "./lib/auth";
 import { SelectRole } from "./pages/app/SelectRole";
 import { Billing } from "./pages/app/Billing";
+import RequireSellerUploadAccess from "./components/RequireSellerUploadAccess";
 
 const LegacyListingRedirect = () => {
   const { id } = useParams();
   return <Navigate to={`/app/listings/${id ?? ""}`} replace />;
 };
-
 
 const DashboardRedirect = () => {
   const { user } = useAuth();
@@ -78,7 +85,13 @@ const RequireRoles = ({
   }
 
   if (!user || !allowed.includes(user.role as (typeof allowed)[number])) {
-    return <Navigate to={roleRedirectPath(user?.role)} replace state={{ from: location.pathname }} />;
+    return (
+      <Navigate
+        to={roleRedirectPath(user?.role)}
+        replace
+        state={{ from: location.pathname }}
+      />
+    );
   }
 
   return <>{children ?? <Outlet />}</>;
@@ -97,7 +110,13 @@ const RequireRoleSelection = ({ children }: { children?: React.ReactNode }) => {
   }
 
   if (user && user.role === null && location.pathname !== "/app/select-role") {
-    return <Navigate to="/app/select-role" replace state={{ from: location.pathname }} />;
+    return (
+      <Navigate
+        to="/app/select-role"
+        replace
+        state={{ from: location.pathname }}
+      />
+    );
   }
 
   return <>{children ?? <Outlet />}</>;
@@ -113,12 +132,24 @@ export default function App() {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/app/login" element={<Login />} />
       <Route path="/app/register" element={<Register />} />
-      <Route path="/listings" element={<Navigate to="/app/listings" replace />} />
+      <Route
+        path="/listings"
+        element={<Navigate to="/app/listings" replace />}
+      />
       <Route path="/listings/:id" element={<LegacyListingRedirect />} />
-      <Route path="/watchlist" element={<Navigate to="/app/watchlist" replace />} />
-      <Route path="/admin/sources" element={<Navigate to="/app/admin/sources" replace />} />
+      <Route
+        path="/watchlist"
+        element={<Navigate to="/app/watchlist" replace />}
+      />
+      <Route
+        path="/admin/sources"
+        element={<Navigate to="/app/admin/sources" replace />}
+      />
       <Route path="/scoring" element={<Navigate to="/app/scoring" replace />} />
-      <Route path="/seller" element={<Navigate to="/app/seller/listings" replace />} />
+      <Route
+        path="/seller"
+        element={<Navigate to="/app/seller/listings" replace />}
+      />
       <Route path="/upgrade" element={<Navigate to="/app/upgrade" replace />} />
       <Route path="/nda" element={<Navigate to="/app/nda" replace />} />
 
@@ -167,13 +198,23 @@ export default function App() {
                 </RequireRoles>
               }
             >
-              <Route path="seller" element={<Navigate to="seller/listings" replace />} />
+              <Route
+                path="seller"
+                element={<Navigate to="seller/listings" replace />}
+              />
               <Route path="seller/dashboard" element={<SellerDashboard />} />
               <Route path="seller/listings" element={<SellerListings />} />
               <Route path="seller/inquiries" element={<SellerInquiries />} />
               <Route path="seller/pipeline" element={<SellerPipeline />} />
               <Route path="seller/add" element={<SellerAdd />} />
-              <Route path="seller/upload" element={<SellerUpload />} />
+              <Route
+                path="seller/upload"
+                element={
+                  <RequireSellerUploadAccess>
+                    <SellerUpload />
+                  </RequireSellerUploadAccess>
+                }
+              />
             </Route>
             <Route
               path="settings"
@@ -199,8 +240,14 @@ export default function App() {
       >
         <Route index element={<Navigate to="tour" replace />} />
         <Route path="listings" element={<Navigate to="/demo/tour" replace />} />
-        <Route path="listings/:id" element={<Navigate to="/demo/tour" replace />} />
-        <Route path="watchlist" element={<Navigate to="/demo/tour" replace />} />
+        <Route
+          path="listings/:id"
+          element={<Navigate to="/demo/tour" replace />}
+        />
+        <Route
+          path="watchlist"
+          element={<Navigate to="/demo/tour" replace />}
+        />
         <Route path="tour" element={<DemoTour />} />
       </Route>
 

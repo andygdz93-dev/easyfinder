@@ -19,7 +19,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Unhandled app error", error, errorInfo);
+    console.error("ErrorBoundary caught:", error, errorInfo);
   }
 
   render() {
@@ -28,7 +28,9 @@ export class ErrorBoundary extends Component<Props, State> {
         <div className="mx-auto w-full max-w-3xl px-4 py-10 text-slate-100">
           <div className="rounded-2xl border border-rose-500/50 bg-rose-950/40 p-5">
             <h1 className="text-lg font-semibold">Something went wrong</h1>
-            <p className="mt-2 text-sm text-rose-100">{this.state.error.message}</p>
+            <p className="mt-2 text-sm text-rose-100">
+              {this.state.error.message}
+            </p>
             <Link
               to="/"
               className="mt-4 inline-flex rounded-md bg-slate-100 px-3 py-2 text-sm font-medium text-slate-900"
