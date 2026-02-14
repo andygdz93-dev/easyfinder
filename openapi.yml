@@ -645,6 +645,8 @@ paths:
                 $ref: "#/components/schemas/UserMeResponse"
         "401": { $ref: "#/components/responses/UnauthorizedError" }
         "403": { $ref: "#/components/responses/NdaRequiredError" }
+
+  /api/me/role:
     patch:
       tags: [Me]
       summary: Update account role
@@ -875,7 +877,6 @@ components:
           properties:
             code: { type: string }
             message: { type: string }
-            requestId: { type: string }
         requestId: { type: string }
 
     HealthResponse:
@@ -1066,7 +1067,7 @@ components:
         role:
           type: string
           nullable: true
-          enum: [demo, buyer, seller, admin, enterprise, null]
+          enum: [demo, buyer, seller, admin, enterprise]
 
     SuccessResponse:
       type: object
@@ -1121,3 +1122,4 @@ components:
                     plan: { type: string, enum: [free, pro, enterprise] }
                     status: { type: string, enum: [active, past_due, canceled, incomplete] }
                     current_period_end: { type: string, format: date-time }
+        requestId: { type: string }
