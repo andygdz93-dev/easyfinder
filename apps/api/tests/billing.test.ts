@@ -66,6 +66,57 @@ if (process.env.BILLING_ENABLED === "true") {
       });
     });
 
+
+    describe("Activate Pro promo", () => {
+      it("upgrades seller to pro when promo is active", async () => {
+        const loginRes = await supertest(app.server)
+          .post("/api/auth/login")
+          .send({ email: "seller@easyfinder.ai", password: "SellerPass123!" });
+        const token = loginRes.body.data.token;
+
+        const col = getUsersCollection();
+        await col.updateOne(
+          { emailLower: "seller@easyfinder.ai" },
+          {
+            $set: {
+              billing: {
+                plan: "free",
+                status: "canceled",
+                current_period_end: new Date(0),
+              },
+            },
+          }
+        );
+
+        const res = await supertest(app.server)
+          .post("/api/billing/activate-pro-promo")
+          .set("Authorization", `Bearer ${token}`)
+          .send({});
+
+        expect(res.status).toBe(200);
+        expect(res.body.data.success).toBe(true);
+
+        const updated = await col.findOne({ emailLower: "seller@easyfinder.ai" });
+        expect(updated?.billing?.plan).toBe("pro");
+        expect(updated?.billing?.status).toBe("active");
+      });
+
+      it("rejects non-seller users", async () => {
+        const loginRes = await supertest(app.server)
+          .post("/api/auth/login")
+          .send({ email: "buyer@easyfinder.ai", password: "BuyerPass123!" });
+        const token = loginRes.body.data.token;
+
+        const res = await supertest(app.server)
+          .post("/api/billing/activate-pro-promo")
+          .set("Authorization", `Bearer ${token}`)
+          .send({});
+
+        expect(res.status).toBe(403);
+        expect(res.body.error.code).toBe("FORBIDDEN");
+      });
+    });
+
     describe("Stripe webhooks", () => {
       it("rejects invalid signatures", async () => {
         const res = await supertest(app.server)

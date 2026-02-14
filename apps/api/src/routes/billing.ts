@@ -18,6 +18,7 @@ import { writeAuditLog } from "../audit.js";
 import { config } from "../config.js";
 import { getCollection } from "../db.js";
 import { env } from "../env.js";
+import { getSellerEntitlements } from "../entitlements.js";
 
 type StripeWebhookEventRecord = {
   stripe_event_id: string;
@@ -200,6 +201,54 @@ export default async function billingRoutes(app: FastifyInstance) {
     encoding: "utf8",
     runFirst: true,
   });
+
+  app.post(
+    "/activate-pro-promo",
+    { preHandler: app.authenticate },
+    async (request, reply) => {
+      const userId = request.user?.id;
+      if (!userId || !ObjectId.isValid(userId)) {
+        return fail(request, reply, "NOT_FOUND", "User not found.", 404);
+      }
+
+      const users = getUsersCollection();
+      const user = await users.findOne({ _id: new ObjectId(userId) });
+      if (!user) {
+        return fail(request, reply, "NOT_FOUND", "User not found.", 404);
+      }
+
+      if (user.role !== "seller") {
+        return fail(request, reply, "FORBIDDEN", "Seller role required.", 403);
+      }
+
+      const entitlements = getSellerEntitlements({ plan: "pro", role: user.role });
+      if (!entitlements.promoActive) {
+        return fail(request, reply, "promo_inactive", "Launch promo is inactive.", 403);
+      }
+
+      const existingBilling = normalizeBilling(user.billing ?? defaultBilling());
+      const nextBilling: BillingInfo = {
+        ...existingBilling,
+        plan: "pro",
+        status: "active",
+        current_period_end: entitlements.promoEndsAt
+          ? new Date(entitlements.promoEndsAt)
+          : existingBilling.current_period_end,
+      };
+
+      await users.updateOne(
+        { _id: user._id },
+        {
+          $set: {
+            billing: nextBilling,
+            updatedAt: new Date(),
+          },
+        }
+      );
+
+      return ok(request, { success: true });
+    }
+  );
 
   app.post(
     "/create-checkout-session",
