@@ -17,9 +17,15 @@ importers:
       eslint:
         specifier: ^9.9.1
         version: 9.39.2(jiti@1.21.7)
+      openapi-typescript:
+        specifier: 7.6.1
+        version: 7.6.1(typescript@5.9.3)
       only-allow:
         specifier: ^1.2.1
         version: 1.2.2
+      swagger-cli:
+        specifier: 4.0.4
+        version: 4.0.4
       turbo:
         specifier: ^2.7.5
         version: 2.7.5
