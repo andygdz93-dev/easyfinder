@@ -17,11 +17,7 @@ function formatPlanLabel(billing?: Billing) {
 
   if (plan === "free") return "Free";
 
-  if (plan === "pro" && billing?.promoActive) {
-    if (billing?.promo?.endsAt) {
-      const promoEndDate = billing.promo.endsAt.slice(0, 10);
-      return `Pro — free until ${promoEndDate}`;
-    }
+  if (plan === "pro" && billing?.promoActive === true) {
     return "Pro (promo)";
   }
 
@@ -149,7 +145,7 @@ export const AppShell = ({
   const isShellLoading = !hydrated || billingLoading || (Boolean(token) && !user);
   const badgeLabel = isShellLoading ? "Loading…" : `${planLabel} ${roleLabel}`;
   const visibleSections = useMemo(() => {
-    const csvUploadEnabled = billing?.entitlements?.csvUpload !== false;
+    const csvUploadAllowed = billing?.entitlements?.csvUpload ?? false;
 
     return navSections
       .map((section) => {
@@ -161,7 +157,7 @@ export const AppShell = ({
                 return false;
               }
 
-              if (!csvUploadEnabled && item.label === "Upload listing") {
+              if (!csvUploadAllowed && item.label === "Upload listing") {
                 return false;
               }
 
