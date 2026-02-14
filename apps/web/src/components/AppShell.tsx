@@ -129,7 +129,7 @@ export const AppShell = ({
     };
   }, [planResolved, userRoleResolved]);
 
-  const planLabel = plan === "free" ? "Free" : plan === "pro" ? "Pro" : "Enterprise";
+  const planLabel = formatPlanLabel(billing ?? undefined);
   const roleLabel =
     userRole === "seller"
       ? "Seller"
@@ -145,7 +145,7 @@ export const AppShell = ({
   const isShellLoading = !hydrated || billingLoading || (Boolean(token) && !user);
   const badgeLabel = isShellLoading ? "Loading…" : `${planLabel} ${roleLabel}`;
   const visibleSections = useMemo(() => {
-    const csvUploadAllowed = billing?.entitlements?.csvUpload !== false;
+    const csvUploadAllowed = billing?.entitlements?.csvUpload === true;
 
     return navSections
       .map((section) => {
@@ -202,9 +202,11 @@ export const AppShell = ({
           <p className="text-xs text-slate-400">
             Plan: {formatPlanLabel(billing ?? undefined)}
           </p>
-          {typeof billing?.entitlements?.maxActiveListings === "number" ? (
+          {userRoleResolved === "seller" ? (
             <p className="text-xs text-slate-400">
-              Listings: {billing.entitlements.maxActiveListings}
+              Listings: {typeof billing?.entitlements?.maxActiveListings === "number"
+                ? billing.entitlements.maxActiveListings
+                : "Unlimited"}
             </p>
           ) : null}
           {billingError && billingError !== NDA_WARNING_TEXT ? (
