@@ -55,6 +55,8 @@ const quickLinks = [
 
 export const SellerDashboard = () => {
   const { token, user } = useAuth();
+  const billing = (user as { billing?: { entitlements?: { csvUpload?: boolean } } } | null)?.billing;
+  const csvUploadAllowed = billing?.entitlements?.csvUpload !== false;
 
   const listingsQuery = useQuery({
     queryKey: ["seller-listings"],
@@ -157,7 +159,9 @@ export const SellerDashboard = () => {
       <Card className="rounded-xl bg-slate-800/70">
         <h3 className="text-lg font-semibold text-slate-100">Quick actions</h3>
         <div className="mt-4 flex flex-wrap gap-3">
-          {quickLinks.map((item) => (
+          {quickLinks
+            .filter((item) => csvUploadAllowed || item.label !== "Upload CSV")
+            .map((item) => (
             <Link
               key={item.to}
               to={item.to}
@@ -165,7 +169,7 @@ export const SellerDashboard = () => {
             >
               {item.label}
             </Link>
-          ))}
+            ))}
         </div>
       </Card>
 
