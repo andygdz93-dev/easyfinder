@@ -32,9 +32,6 @@ export const Login = () => {
     <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
       <Card className="w-full max-w-md">
         <h2 className="text-xl font-semibold">Sign in</h2>
-        <p className="mt-2 text-sm text-slate-400">
-          Use demo accounts from the README or your own credentials.
-        </p>
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           <Input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
           <Input
