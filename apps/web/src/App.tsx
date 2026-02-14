@@ -162,7 +162,7 @@ export default function App() {
             <Route path="admin/sources" element={<AdminSources />} />
             <Route
               element={
-                <RequireRoles allowed={["seller", "enterprise", "admin"]}>
+                <RequireRoles allowed={["seller"]}>
                   <Outlet />
                 </RequireRoles>
               }
