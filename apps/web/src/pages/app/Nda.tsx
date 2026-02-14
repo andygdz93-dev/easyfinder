@@ -19,15 +19,28 @@ using the platform.`;
 export const Nda = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setUser } = useAuth();
+  const { setUser, user } = useAuth();
   const [isChecked, setIsChecked] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const fallbackPath = useMemo(() => {
+    if (user?.role === "seller" || user?.role === "enterprise") {
+      return "/app/seller/dashboard";
+    }
+    return "/app/listings";
+  }, [user?.role]);
+
   const nextPath = useMemo(() => {
     const params = new URLSearchParams(location.search);
-    return params.get("next") ?? "/app";
-  }, [location.search]);
+    const next = params.get("next");
+    if (!next) {
+      return fallbackPath;
+    }
+
+    const isValidInApp = next.startsWith("/app/") && !next.startsWith("//") && !next.includes("://");
+    return isValidInApp ? next : fallbackPath;
+  }, [fallbackPath, location.search]);
 
   const handleContinue = async () => {
     setIsSubmitting(true);
