@@ -148,12 +148,19 @@ export const buildServer = () => {
 
   // Rate limiting
   app.register(rateLimit, {
+    global: true,
     timeWindow: "1 minute",
     max: (request: FastifyRequest) => {
       const role = getRoleFromRequest(request as any);
       if (role === "seller") return 240;
       if (role === "buyer") return 120;
       return 30;
+    },
+    addHeaders: {
+      "x-ratelimit-limit": true,
+      "x-ratelimit-remaining": true,
+      "x-ratelimit-reset": true,
+      "retry-after": true,
     },
   });
 
@@ -191,6 +198,19 @@ export const buildServer = () => {
   // Central error handler
   app.setErrorHandler((error: any, request, reply) => {
     request.log.error(error);
+
+    if (error?.statusCode === 429) {
+      const retryAfter =
+        typeof error?.headers?.["retry-after"] === "string" ? error.headers["retry-after"] : "60";
+      reply.header("Retry-After", retryAfter);
+      return reply.status(429).send({
+        error: {
+          code: "RATE_LIMITED",
+          message: `Rate limit exceeded. Try again in ${retryAfter}s.`,
+        },
+        requestId: request.requestId,
+      });
+    }
 
     const isZod = error instanceof ZodError;
     const status = error.statusCode ?? (isZod ? 400 : 500);

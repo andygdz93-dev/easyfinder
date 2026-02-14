@@ -52,13 +52,15 @@ export class ApiError extends Error {
   requestId?: string;
   status?: number;
   code?: string;
+  retryAfter?: number;
 
-  constructor(message: string, requestId?: string, status?: number, code?: string) {
+  constructor(message: string, requestId?: string, status?: number, code?: string, retryAfter?: number) {
     super(message);
     this.name = "ApiError";
     this.requestId = requestId;
     this.status = status;
     this.code = code;
+    this.retryAfter = retryAfter;
   }
 }
 
@@ -195,7 +197,15 @@ const apiRequest = async <T>(
 
   if (!res.ok) {
     const message = payload?.error?.message ?? "Request failed";
-    throw new ApiError(message, payload?.requestId, res.status, payload?.error?.code);
+    const retryAfterHeader = res.headers.get("retry-after");
+    const retryAfter = retryAfterHeader ? Number.parseInt(retryAfterHeader, 10) : undefined;
+    throw new ApiError(
+      message,
+      payload?.requestId,
+      res.status,
+      payload?.error?.code,
+      Number.isFinite(retryAfter) ? retryAfter : undefined
+    );
   }
 
   if (!payload || payload.data === undefined) {
