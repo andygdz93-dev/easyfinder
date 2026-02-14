@@ -7,14 +7,6 @@ import { requireNDA } from "../middleware/requireNDA.js";
 import { config } from "../config.js";
 import { disableWritesInDemo } from "../middleware/disableWritesInDemo.js";
 import { audit } from "../lib/audit.js";
-import { getUsersCollection } from "../users.js";
-import { defaultBilling, normalizeBilling } from "../billing.js";
-import { getSellerEntitlements } from "../entitlements.js";
-import { ObjectId } from "mongodb";
-
-
-const getActiveListingCountForSeller = (sellerId: string) =>
-  listings.filter((listing) => listing.source === `seller:${sellerId}`).length;
 
 export default async function listingsRoutes(app: FastifyInstance) {
   /**
@@ -91,34 +83,6 @@ export default async function listingsRoutes(app: FastifyInstance) {
   };
 
   app.post("/", writeHandlers, async (request, reply) => {
-    if (request.user.role === "seller" || request.user.role === "enterprise") {
-      if (ObjectId.isValid(request.user.id)) {
-        const user = await getUsersCollection().findOne({ _id: new ObjectId(request.user.id) });
-
-        if (user) {
-          const billing = normalizeBilling(user.billing ?? defaultBilling());
-          const entitlements = getSellerEntitlements({
-            plan: billing.plan,
-            role: user.role,
-          });
-
-          if (typeof entitlements.maxActiveListings === "number") {
-            const activeListingCount = getActiveListingCountForSeller(request.user.id);
-
-            if (activeListingCount >= entitlements.maxActiveListings) {
-              return fail(
-                request,
-                reply,
-                "plan_limit_reached",
-                "Active listing limit reached for your plan.",
-                403
-              );
-            }
-          }
-        }
-      }
-    }
-
     audit("LISTING_CREATED", {
       userId: request.user.id,
       ip: request.ip,
