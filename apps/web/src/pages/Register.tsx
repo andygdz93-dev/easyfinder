@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
-import { apiFetch } from "../lib/api";
+import { ApiError, apiFetch } from "../lib/api";
 import { useAuth } from "../lib/auth";
 
 export const Register = () => {
@@ -11,11 +11,28 @@ export const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [blockedForSeconds, setBlockedForSeconds] = useState(0);
   const navigate = useNavigate();
   const { setSession } = useAuth();
 
+  useEffect(() => {
+    if (blockedForSeconds <= 0) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      setBlockedForSeconds((seconds) => Math.max(0, seconds - 1));
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [blockedForSeconds]);
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (blockedForSeconds > 0) {
+      return;
+    }
+
     setError(null);
     try {
       const data = await apiFetch<{ token: string; user: any }>("/api/auth/register", {
@@ -25,6 +42,12 @@ export const Register = () => {
       setSession(data.token, data.user);
       navigate("/app/dashboard", { replace: true });
     } catch (err) {
+      if (err instanceof ApiError && err.status === 429) {
+        const retryAfter = err.retryAfter ?? 60;
+        setBlockedForSeconds(retryAfter);
+        setError(`Too many attempts. Try again in ${retryAfter}s.`);
+        return;
+      }
       setError((err as Error).message);
     }
   };
@@ -43,8 +66,8 @@ export const Register = () => {
             onChange={(e) => setPassword(e.target.value)}
           />
           {error ? <p className="text-xs text-red-400">{error}</p> : null}
-          <Button className="w-full" type="submit">
-            Create account
+          <Button className="w-full" type="submit" disabled={blockedForSeconds > 0}>
+            {blockedForSeconds > 0 ? `Create account (${blockedForSeconds}s)` : "Create account"}
           </Button>
         </form>
         <p className="mt-4 text-xs text-slate-400">
