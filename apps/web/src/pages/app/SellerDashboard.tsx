@@ -56,7 +56,7 @@ const quickLinks = [
 export const SellerDashboard = () => {
   const { token, user } = useAuth();
   const billing = (user as { billing?: { entitlements?: { csvUpload?: boolean } } } | null)?.billing;
-  const csvUploadAllowed = billing?.entitlements?.csvUpload !== false;
+  const csvUploadAllowed = billing?.entitlements?.csvUpload === true;
 
   const listingsQuery = useQuery({
     queryKey: ["seller-listings"],
