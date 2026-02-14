@@ -327,6 +327,15 @@ export const activateProPromo = () =>
     body: JSON.stringify({}),
   });
 
+
+export const uploadSellerCsv = (rows: unknown[]) =>
+  apiRequest<{ created: number; failed: number; errors: Array<{ row: number; message: string }> }>(
+    "/seller/upload",
+    {
+      method: "POST",
+      body: JSON.stringify({ rows }),
+    }
+  );
 export const createInquiry = (input: { listingId: string; message: string }) =>
   apiFetch<InquiryDto>("/inquiries", {
     method: "POST",
