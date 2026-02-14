@@ -52,7 +52,14 @@ export default async function authRoutes(app: FastifyInstance) {
   const usersCollection = () => getUsersCollection();
   const passwordResetTokensCollection = () => getPasswordResetTokensCollection();
 
-  app.post("/register", async (request, reply) => {
+  app.post("/register", {
+    config: {
+      rateLimit: {
+        max: 20,
+        timeWindow: "1 minute",
+      },
+    },
+  }, async (request, reply) => {
     const col = usersCollection();
     const payload = registerSchema.parse(request.body);
     const emailLower = payload.email.toLowerCase();
@@ -99,7 +106,14 @@ export default async function authRoutes(app: FastifyInstance) {
     });
   });
 
-  app.post("/login", async (request, reply) => {
+  app.post("/login", {
+    config: {
+      rateLimit: {
+        max: 30,
+        timeWindow: "1 minute",
+      },
+    },
+  }, async (request, reply) => {
     const col = usersCollection();
     const payload = loginSchema.parse(request.body);
     const emailLower = payload.email.toLowerCase();
