@@ -54,6 +54,36 @@ const DashboardRedirect = () => {
   return <Navigate to="/app/listings" replace />;
 };
 
+const roleRedirectPath = (role: string | null | undefined) => {
+  if (role === "seller") return "/app/seller/dashboard";
+  return "/app/listings";
+};
+
+const RequireRoles = ({
+  allowed,
+  children,
+}: {
+  allowed: Array<"buyer" | "seller" | "enterprise" | "admin">;
+  children?: React.ReactNode;
+}) => {
+  const { user, isUserLoading } = useAuth();
+  const location = useLocation();
+
+  if (isUserLoading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center text-sm text-slate-400">
+        Checking access...
+      </div>
+    );
+  }
+
+  if (!user || !allowed.includes(user.role as (typeof allowed)[number])) {
+    return <Navigate to={roleRedirectPath(user?.role)} replace state={{ from: location.pathname }} />;
+  }
+
+  return <>{children ?? <Outlet />}</>;
+};
+
 const RequireRoleSelection = ({ children }: { children?: React.ReactNode }) => {
   const { user, isUserLoading } = useAuth();
   const location = useLocation();
@@ -116,19 +146,35 @@ export default function App() {
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="billing" element={<Billing />} />
             <Route path="dashboard" element={<DashboardRedirect />} />
-            <Route path="listings" element={<Listings />} />
-            <Route path="listings/:id" element={<ListingDetail />} />
-            <Route path="watchlist" element={<Watchlist />} />
+            <Route
+              element={
+                <RequireRoles allowed={["buyer", "enterprise", "admin"]}>
+                  <Outlet />
+                </RequireRoles>
+              }
+            >
+              <Route path="listings" element={<Listings />} />
+              <Route path="listings/:id" element={<ListingDetail />} />
+              <Route path="watchlist" element={<Watchlist />} />
+              <Route path="scoring" element={<ScoringConfigs />} />
+              <Route path="offers" element={<Offers />} />
+            </Route>
             <Route path="admin/sources" element={<AdminSources />} />
-            <Route path="scoring" element={<ScoringConfigs />} />
-            <Route path="offers" element={<Offers />} />
-            <Route path="seller" element={<Navigate to="seller/listings" replace />} />
-            <Route path="seller/dashboard" element={<SellerDashboard />} />
-            <Route path="seller/listings" element={<SellerListings />} />
-            <Route path="seller/inquiries" element={<SellerInquiries />} />
-            <Route path="seller/pipeline" element={<SellerPipeline />} />
-            <Route path="seller/add" element={<SellerAdd />} />
-            <Route path="seller/upload" element={<SellerUpload />} />
+            <Route
+              element={
+                <RequireRoles allowed={["seller", "enterprise", "admin"]}>
+                  <Outlet />
+                </RequireRoles>
+              }
+            >
+              <Route path="seller" element={<Navigate to="seller/listings" replace />} />
+              <Route path="seller/dashboard" element={<SellerDashboard />} />
+              <Route path="seller/listings" element={<SellerListings />} />
+              <Route path="seller/inquiries" element={<SellerInquiries />} />
+              <Route path="seller/pipeline" element={<SellerPipeline />} />
+              <Route path="seller/add" element={<SellerAdd />} />
+              <Route path="seller/upload" element={<SellerUpload />} />
+            </Route>
             <Route
               path="settings"
               element={
