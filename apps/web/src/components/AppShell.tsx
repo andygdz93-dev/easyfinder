@@ -27,7 +27,7 @@ function formatPlanLabel(billing?: {
   }
 
   let label = cap(plan);
-  if (status && status !== "active") label += ` (${status.replaceAll("_", " ")})`;
+  if (status && status !== "active") label += ` (${status.split("_").join(" ")})`;
   return label;
 }
 
