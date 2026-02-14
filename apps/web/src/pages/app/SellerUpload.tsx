@@ -4,7 +4,8 @@ import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { useAuth } from "../../lib/auth";
-import { getMe } from "../../lib/api";
+import { getMe, uploadSellerCsv } from "../../lib/api";
+import { ApiError } from "../../lib/api";
 import { useQuery } from "@tanstack/react-query";
 
 const REQUIRED_HEADERS = [
@@ -31,6 +32,12 @@ type UploadValidationResult = {
   validRows: number;
   invalidRows: number;
   errors: string[];
+};
+
+type UploadResult = {
+  created: number;
+  failed: number;
+  errors: Array<{ row: number; message: string }>;
 };
 
 const isValidUrlLike = (value: string) => value.startsWith("http");
@@ -101,12 +108,16 @@ const rowsToCsv = (rows: Array<Array<unknown>>) => rows.map((row) => row.map(csv
 export const SellerUpload = () => {
   const { token, user, isUserLoading } = useAuth();
   const [file, setFile] = useState<File | null>(null);
+  const [parsedRows, setParsedRows] = useState<Record<string, string>[]>([]);
   const [validation, setValidation] = useState<UploadValidationResult | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const meQuery = useQuery({
     queryKey: ["me"],
     queryFn: () => getMe(),
-    enabled: Boolean(token && user && ["seller", "enterprise", "admin"].includes(user.role ?? "")),
+    enabled: Boolean(token && user && ["seller"].includes(user.role ?? "")),
   });
 
   if (isUserLoading) {
@@ -117,8 +128,8 @@ export const SellerUpload = () => {
     return <Navigate to="/login" replace />;
   }
 
-  if (!["seller", "enterprise", "admin"].includes(user.role ?? "")) {
-    return <Navigate to="/app" replace />;
+  if (user.role !== "seller") {
+    return <Navigate to="/app/select-role" replace />;
   }
 
   if (meQuery.isLoading) {
@@ -129,8 +140,8 @@ export const SellerUpload = () => {
     );
   }
 
-  const plan = meQuery.data?.billing?.plan ?? "free";
-  if (!["pro", "enterprise"].includes(plan)) {
+  const csvUploadAllowed = meQuery.data?.billing?.entitlements?.csvUpload === true;
+  if (!csvUploadAllowed) {
     return <Navigate to="/app/upgrade" replace />;
   }
 
@@ -155,27 +166,24 @@ export const SellerUpload = () => {
     ];
 
     const sample = [
-      "2019 CAT 320 Excavator",
+      "Excavator 320",
       "Caterpillar",
       "320",
-      2019,
-      4200,
-      125000,
+      "2020",
+      "1800",
+      "178000",
       "good",
       "CA",
-      "Well maintained, ready to work",
-      "https://example.com/img1.jpg",
+      "Well maintained",
+      "",
       "",
       "",
       "",
       "",
     ];
 
-    const csv = rowsToCsv([header, sample]);
-
-    // Excel-friendly: UTF-8 BOM + CRLF
-    const bom = "\uFEFF";
-    const blob = new Blob([bom + csv + "\r\n"], { type: "text/csv;charset=utf-8;" });
+    const csv = `\uFEFF${rowsToCsv([header, sample])}\r\n`;
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
 
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -188,7 +196,11 @@ export const SellerUpload = () => {
   };
 
   const validateCsv = async () => {
+    setUploadResult(null);
+    setUploadError(null);
+
     if (!file) {
+      setParsedRows([]);
       setValidation({
         rowsDetected: 0,
         validRows: 0,
@@ -253,12 +265,33 @@ export const SellerUpload = () => {
       }
     });
 
+    setParsedRows(headerMatches ? parsed.rows : []);
     setValidation({
       rowsDetected: parsed.rows.length,
       validRows,
       invalidRows,
       errors,
     });
+  };
+
+  const canUpload = Boolean(validation && validation.validRows > 0 && validation.invalidRows === 0 && parsedRows.length > 0);
+
+  const onUpload = async () => {
+    if (!canUpload) return;
+
+    setUploading(true);
+    setUploadResult(null);
+    setUploadError(null);
+
+    try {
+      const result = await uploadSellerCsv(parsedRows);
+      setUploadResult(result);
+    } catch (error) {
+      const message = error instanceof ApiError ? error.message : "Upload failed.";
+      setUploadError(message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -297,6 +330,9 @@ export const SellerUpload = () => {
               const nextFile = event.target.files?.[0] ?? null;
               setFile(nextFile);
               setValidation(null);
+              setParsedRows([]);
+              setUploadResult(null);
+              setUploadError(null);
             }}
           />
           <Button onClick={validateCsv}>Validate CSV</Button>
@@ -322,10 +358,30 @@ export const SellerUpload = () => {
           </div>
         ) : null}
 
-        {validation && validation.rowsDetected > 0 && validation.invalidRows === 0 ? (
-          <Button className="mt-4" disabled>
-            Upload (coming soon)
+        {validation ? (
+          <Button className="mt-4" onClick={onUpload} disabled={!canUpload || uploading}>
+            {uploading ? "Uploading..." : "Upload"}
           </Button>
+        ) : null}
+
+        {uploadResult ? (
+          <div className="mt-4 rounded-md border border-emerald-700/40 bg-emerald-950/30 p-4 text-sm text-emerald-200">
+            <p>created: {uploadResult.created}</p>
+            <p>failed: {uploadResult.failed}</p>
+            {uploadResult.errors.length > 0 ? (
+              <ul className="mt-2 list-disc pl-5 text-rose-300">
+                {uploadResult.errors.slice(0, 10).map((error, index) => (
+                  <li key={`${error.row}-${index}`}>
+                    Row {error.row}: {error.message}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        ) : null}
+
+        {uploadError ? (
+          <div className="mt-4 rounded-md border border-rose-700/50 bg-rose-950/30 p-4 text-sm text-rose-200">{uploadError}</div>
         ) : null}
       </Card>
     </div>
