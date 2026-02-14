@@ -2,14 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
-import { createCheckoutSession, getMe } from "../../lib/api";
+import { activateProPromo, createCheckoutSession, getMe } from "../../lib/api";
 import { Billing, isBillingActive } from "../../lib/billing";
 import { useAuth } from "../../lib/auth";
 
 type UpgradeState = "idle" | "loading" | "error";
 
 export const Upgrade = () => {
-  const { user } = useAuth();
+  const { setUser, user } = useAuth();
   const navigate = useNavigate();
   const [billing, setBilling] = useState<Billing | null>(null);
   const [state, setState] = useState<UpgradeState>("idle");
@@ -58,8 +58,29 @@ export const Upgrade = () => {
   const isSeller = user?.role === "seller";
   const isPromoActive = billing?.promoActive === true;
 
-  const handleSellerProUpgrade = () => {
-    setMessage("Upgrading to Pro...");
+  const handleSellerProUpgrade = async () => {
+    setState("loading");
+    setMessage(null);
+
+    try {
+      await activateProPromo();
+      const updated = await getMe();
+      setBilling(updated.billing ?? null);
+      setUser({
+        id: updated.id,
+        email: updated.email,
+        name: updated.name,
+        role: updated.role,
+        ndaAccepted: updated.ndaAccepted,
+        ndaAcceptedAt: updated.ndaAcceptedAt,
+      });
+      navigate(-1);
+    } catch (error) {
+      setState("error");
+      setMessage(error instanceof Error ? error.message : "Unable to activate promo.");
+    } finally {
+      setState("idle");
+    }
   };
 
   return (

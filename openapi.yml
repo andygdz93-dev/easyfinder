@@ -730,6 +730,42 @@ paths:
         "404": { $ref: "#/components/responses/NotFoundError" }
         "422": { $ref: "#/components/responses/ValidationError" }
 
+  /api/billing/activate-pro-promo:
+    post:
+      tags: [Billing]
+      summary: Activate seller Pro launch promo
+      security:
+        - bearerAuth: []
+      description: Route is registered only when BILLING_ENABLED is true.
+      responses:
+        "200":
+          description: Promo activated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      success: { type: boolean }
+                  requestId: { type: string }
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "403":
+          description: Forbidden (non-seller role or promo inactive)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code: { type: string, enum: [FORBIDDEN, promo_inactive] }
+                      message: { type: string }
+                  requestId: { type: string }
+        "404": { $ref: "#/components/responses/NotFoundError" }
+
   /api/billing/create-checkout-session:
     post:
       tags: [Billing]
