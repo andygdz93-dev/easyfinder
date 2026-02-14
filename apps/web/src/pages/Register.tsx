@@ -23,7 +23,7 @@ export const Register = () => {
         body: JSON.stringify({ email, password, name }),
       });
       setSession(data.token, data.user);
-      navigate("/app/listings");
+      navigate("/app/dashboard", { replace: true });
     } catch (err) {
       setError((err as Error).message);
     }
