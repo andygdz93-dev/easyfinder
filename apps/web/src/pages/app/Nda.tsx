@@ -49,6 +49,10 @@ export const Nda = () => {
       await acceptNda();
       const updated = await getMe();
       setUser(updated);
+      if (updated.role === "seller") {
+        navigate("/app/seller/dashboard", { replace: true });
+        return;
+      }
       navigate(nextPath, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to accept NDA.");
