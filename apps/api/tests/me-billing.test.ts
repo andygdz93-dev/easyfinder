@@ -75,4 +75,64 @@ describe("/api/me billing plan", () => {
       await app.close();
     }
   });
+
+
+  it("allows seller promo activation even when billing is disabled", async () => {
+    const app = await buildServerWithEnv({ BILLING_ENABLED: "false" });
+    try {
+      const loginRes = await supertest(app.server)
+        .post("/api/auth/login")
+        .send({ email: "seller@easyfinder.ai", password: "SellerPass123!" });
+      const token = loginRes.body?.data?.token as string;
+
+      const promoRes = await supertest(app.server)
+        .post("/api/billing/activate-pro-promo")
+        .set("Authorization", `Bearer ${token}`)
+        .send({});
+
+      expect(promoRes.status).toBe(200);
+      expect(promoRes.body.data.success).toBe(true);
+
+      await supertest(app.server)
+        .post("/api/nda/accept")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ accepted: true });
+
+      const meRes = await supertest(app.server)
+        .get("/api/me")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(meRes.status).toBe(200);
+      expect(meRes.body.data.billing.plan).toBe("pro");
+      expect(meRes.body.data.billing.entitlements.maxActiveListings).toBe(200);
+      expect(meRes.body.data.billing.entitlements.csvUpload).toBe(true);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("makes promo activation idempotent for existing pro sellers", async () => {
+    const app = await buildServerWithEnv({ BILLING_ENABLED: "false" });
+    try {
+      const loginRes = await supertest(app.server)
+        .post("/api/auth/login")
+        .send({ email: "seller@easyfinder.ai", password: "SellerPass123!" });
+      const token = loginRes.body?.data?.token as string;
+
+      const first = await supertest(app.server)
+        .post("/api/billing/activate-pro-promo")
+        .set("Authorization", `Bearer ${token}`)
+        .send({});
+      const second = await supertest(app.server)
+        .post("/api/billing/activate-pro-promo")
+        .set("Authorization", `Bearer ${token}`)
+        .send({});
+
+      expect(first.status).toBe(200);
+      expect(second.status).toBe(200);
+      expect(second.body.data.success).toBe(true);
+    } finally {
+      await app.close();
+    }
+  });
 });

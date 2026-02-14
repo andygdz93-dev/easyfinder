@@ -221,12 +221,20 @@ export default async function billingRoutes(app: FastifyInstance) {
         return fail(request, reply, "FORBIDDEN", "Seller role required.", 403);
       }
 
-      const entitlements = getSellerEntitlements({ plan: "pro", role: user.role });
+      const entitlements = getSellerEntitlements({
+        plan: "pro",
+        role: user.role,
+        now: new Date(),
+      });
       if (!entitlements.promoActive) {
         return fail(request, reply, "promo_inactive", "Launch promo is inactive.", 403);
       }
 
       const existingBilling = normalizeBilling(user.billing ?? defaultBilling());
+      if (existingBilling.plan === "pro" || existingBilling.plan === "enterprise") {
+        return ok(request, { success: true });
+      }
+
       const nextBilling: BillingInfo = {
         ...existingBilling,
         plan: "pro",
@@ -254,6 +262,16 @@ export default async function billingRoutes(app: FastifyInstance) {
     "/create-checkout-session",
     { preHandler: app.authenticate },
     async (request, reply) => {
+      if (!env.BILLING_ENABLED) {
+        return fail(
+          request,
+          reply,
+          "billing_disabled",
+          "Billing is not enabled.",
+          503
+        );
+      }
+
       const payload = createCheckoutSchema.parse(request.body);
       const userId = request.user?.id;
       if (!userId || !ObjectId.isValid(userId)) {
@@ -330,6 +348,16 @@ export default async function billingRoutes(app: FastifyInstance) {
     "/webhook",
     { config: { rawBody: true } },
     async (request, reply) => {
+      if (!env.BILLING_ENABLED) {
+        return fail(
+          request,
+          reply,
+          "billing_disabled",
+          "Billing is not enabled.",
+          503
+        );
+      }
+
       const sig = Array.isArray(request.headers["stripe-signature"])
         ? request.headers["stripe-signature"][0]
         : request.headers["stripe-signature"];
