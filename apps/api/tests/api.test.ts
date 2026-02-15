@@ -82,6 +82,43 @@ describe("API", () => {
     expect(loginRes.body.data.user).toBeTruthy();
   });
 
+  it("does not rate limit auth and nda routes in non-production", async () => {
+    const email = `ratelimit-${Date.now()}@easyfinder.ai`;
+    const registerRes = await supertest(app.server)
+      .post("/api/auth/register")
+      .send({ email, password: "TestPass123!", name: "Rate Limit" });
+
+    expect(registerRes.status).toBe(200);
+
+    const loginStatuses: number[] = [];
+    let token = "";
+
+    for (let i = 0; i < 25; i += 1) {
+      const loginRes = await supertest(app.server)
+        .post("/api/auth/login")
+        .send({ email, password: "TestPass123!" });
+
+      loginStatuses.push(loginRes.status);
+      if (i === 0) {
+        token = loginRes.body.data.token;
+      }
+    }
+
+    expect(loginStatuses.every((status) => status !== 429)).toBe(true);
+
+    const ndaStatuses: number[] = [];
+    for (let i = 0; i < 25; i += 1) {
+      const ndaRes = await supertest(app.server)
+        .post("/api/nda/accept")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ accepted: true });
+      ndaStatuses.push(ndaRes.status);
+    }
+
+    expect(ndaStatuses.every((status) => status !== 429)).toBe(true);
+  });
+
+
   it("requires auth for /api/me", async () => {
     const res = await supertest(app.server).get("/api/me");
     expect(res.status).toBe(401);

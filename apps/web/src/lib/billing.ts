@@ -19,7 +19,12 @@ export type Billing = {
 export const canUseSellerCsvUpload = (
   role?: string | null,
   plan?: BillingPlan | null,
-) => role === "seller" && (plan === "pro" || plan === "enterprise");
+  entitlementCsvUpload?: boolean,
+) => {
+  if (role !== "seller") return false;
+  if (entitlementCsvUpload === true) return true;
+  return plan === "pro" || plan === "enterprise";
+};
 
 export const isBillingActive = (billing?: Billing | null) => {
   if (!billing) return false;

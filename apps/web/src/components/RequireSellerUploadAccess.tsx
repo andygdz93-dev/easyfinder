@@ -53,7 +53,11 @@ export default function RequireSellerUploadAccess({
   const roleOk = user.role === "seller";
   if (!roleOk) return <Navigate to="/app/select-role" replace />;
 
-  const csvUploadAllowed = canUseSellerCsvUpload(user.role, billing?.plan);
+  const csvUploadAllowed = canUseSellerCsvUpload(
+    user.role,
+    billing?.plan,
+    billing?.entitlements?.csvUpload
+  );
 
   if (!csvUploadAllowed) return <Navigate to="/app/upgrade" replace />;
 
