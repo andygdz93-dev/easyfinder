@@ -22,10 +22,9 @@ export const connectToDatabase = async () => {
         await db.collection("users").createIndex({ "billing.stripe_customer_id": 1 });
         await db.collection("listings").createIndex({ status: 1, isPublished: 1 });
         await db.collection("listings").createIndex({ source: 1, updatedAt: -1 });
-        await db.collection("listings").createIndex(
-          { source: 1, sourceExternalId: 1 },
-          { unique: true, partialFilterExpression: { sourceExternalId: { $exists: true } } }
-        );
+        await db
+          .collection("listings")
+          .createIndex({ source: 1, sourceExternalId: 1 }, { unique: true, sparse: true });
         await db.collection("password_reset_tokens").createIndex({ token: 1 }, { unique: true });
         await db
           .collection("password_reset_tokens")
