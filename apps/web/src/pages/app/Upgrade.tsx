@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { activateProPromo, createCheckoutSession, getMe } from "../../lib/api";
@@ -10,7 +9,6 @@ type UpgradeState = "idle" | "loading" | "error";
 
 export const Upgrade = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [billing, setBilling] = useState<Billing | null>(null);
   const [state, setState] = useState<UpgradeState>("idle");
   const [message, setMessage] = useState<string | null>(null);
@@ -57,6 +55,9 @@ export const Upgrade = () => {
     : "n/a";
   const isSeller = user?.role === "seller";
   const isPromoActive = billing?.promoActive === true;
+  const isSellerOnProPromo = isSeller && plan === "pro" && (billing?.isPromo === true || isPromoActive);
+  const showSellerPromoActivation = isSeller && plan === "free";
+  const showProCard = !isSeller || showSellerPromoActivation;
 
   const handleSellerProUpgrade = async () => {
     setState("loading");
@@ -101,7 +102,7 @@ export const Upgrade = () => {
               </p>
             </div>
           ) : null}
-          {!isSeller || plan === "free" ? (
+          {showProCard ? (
             <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-4 text-sm">
               <p className="text-xs uppercase tracking-[0.2em] text-amber-400">
                 {isSeller && isPromoActive ? "Pro (promo)" : "Pro"}
@@ -132,7 +133,7 @@ export const Upgrade = () => {
                 disabled={state === "loading"}
                 onClick={() => (isSeller ? handleSellerProUpgrade() : handleCheckout("pro"))}
               >
-                Upgrade to Pro
+                {isSeller ? "Activate Pro (promo)" : "Upgrade to Pro"}
               </Button>
             </div>
           ) : null}
@@ -160,14 +161,17 @@ export const Upgrade = () => {
               className="mt-4 w-full"
               variant="outline"
               disabled={state === "loading"}
-              onClick={() =>
-                isSeller ? navigate("/app/billing") : handleCheckout("enterprise")
-              }
+              onClick={() => handleCheckout("enterprise")}
             >
-              {isSeller ? "Go to billing" : "Upgrade to Enterprise"}
+              Upgrade to Enterprise
             </Button>
           </div>
         </div>
+        {isSellerOnProPromo ? (
+          <p className="mt-4 text-xs text-emerald-300">
+            Pro (promo) is active. You can upgrade to Enterprise anytime.
+          </p>
+        ) : null}
         {message ? <p className="mt-4 text-sm text-rose-400">{message}</p> : null}
       </Card>
     </div>
