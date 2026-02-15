@@ -45,13 +45,23 @@ const conditionScoreByLabel: Record<string, number> = {
 
 const requiredFields = ["title", "make", "model", "year", "state", "condition", "description"] as const;
 
+type SellerImportListing = (typeof listings)[number] & {
+  id: string;
+  status: string;
+  isPublished: boolean;
+  publishedAt: string;
+  updatedAt: string;
+  make: string;
+  model: string;
+};
+
 const toStringValue = (value: unknown) => String(value ?? "").trim();
 
 const createSellerListingFromRow = (
   sellerId: string,
   row: Record<string, unknown>,
   rowNumber: number
-): { listing?: (typeof listings)[number]; error?: { row: number; message: string } } => {
+): { listing?: SellerImportListing; error?: { row: number; message: string } } => {
   for (const field of requiredFields) {
     if (!toStringValue(row[field])) {
       return { error: { row: rowNumber, message: `${field} is required.` } };
@@ -102,31 +112,31 @@ const createSellerListingFromRow = (
   const now = new Date().toISOString();
   const listingId = new ObjectId().toHexString();
 
-  return {
-    listing: {
-      id: listingId,
-      title: toStringValue(row.title),
-      description: toStringValue(row.description),
-      state: toStringValue(row.state),
-      price,
-      hours,
-      operable: true,
-      is_operable: true,
-      year,
-      condition,
-      category: toStringValue(row.make) || "equipment",
-      imageUrl: images[0],
-      images,
-      source: `seller:${sellerId}`,
-      status: "active",
-      isPublished: true,
-      publishedAt: now,
-      createdAt: now,
-      updatedAt: now,
-      make: toStringValue(row.make),
-      model: toStringValue(row.model),
-    } as (typeof listings)[number],
+  const listing: SellerImportListing = {
+    id: listingId,
+    title: toStringValue(row.title),
+    description: toStringValue(row.description),
+    state: toStringValue(row.state),
+    price,
+    hours,
+    operable: true,
+    is_operable: true,
+    year,
+    condition,
+    category: toStringValue(row.make) || "equipment",
+    imageUrl: images[0],
+    images,
+    source: `seller:${sellerId}`,
+    status: "active",
+    isPublished: true,
+    publishedAt: now,
+    createdAt: now,
+    updatedAt: now,
+    make: toStringValue(row.make),
+    model: toStringValue(row.model),
   };
+
+  return { listing };
 };
 
 const toInquiryDto = (inquiry: InquiryDocument) => ({
@@ -260,7 +270,7 @@ export default async function sellerRoutes(app: FastifyInstance) {
 
       if (result.listing) {
         listings.push(result.listing);
-        createdIds.push(result.listing.id!);
+        createdIds.push(result.listing.id);
         created += 1;
       }
     });
