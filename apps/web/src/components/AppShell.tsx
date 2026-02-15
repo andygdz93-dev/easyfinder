@@ -28,6 +28,31 @@ function formatPlanLabel(billing?: Billing) {
   return label;
 }
 
+function resolveShellMode(pathname: string): "buyer" | "seller" {
+  return pathname.startsWith("/app/seller") ? "seller" : "buyer";
+}
+
+function formatPlanBadgeLabel(
+  plan: Billing["plan"] | "free",
+  mode: "buyer" | "seller",
+  promoActive?: boolean
+) {
+  const modeLabel = mode === "buyer" ? "Buyer" : "Seller";
+
+  if (plan === "pro") {
+    if (mode === "seller" && promoActive) {
+      return "Pro Seller (promo)";
+    }
+    return `Pro ${modeLabel}`;
+  }
+
+  if (plan === "enterprise") {
+    return `Enterprise ${modeLabel}`;
+  }
+
+  return `Free ${modeLabel}`;
+}
+
 const navSections = [
   {
     title: "Buyer",
@@ -143,15 +168,10 @@ export const AppShell = ({
               ? "Unselected"
               : "Buyer";
   const isShellLoading = !hydrated || billingLoading || (Boolean(token) && !user);
+  const shellMode = resolveShellMode(location.pathname);
   const badgeLabel = isShellLoading
     ? "Loading…"
-    : planResolved === "pro"
-      ? billing?.promoActive
-        ? "Pro Seller (promo)"
-        : "Pro Seller"
-      : planResolved === "enterprise"
-        ? "Enterprise Seller"
-        : "Free Seller";
+    : formatPlanBadgeLabel(planResolved, shellMode, billing?.promoActive);
 
   let listingLimitLabel = "25";
 
