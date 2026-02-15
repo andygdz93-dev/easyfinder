@@ -104,6 +104,7 @@ describe("/api/me billing plan", () => {
 
       expect(meRes.status).toBe(200);
       expect(meRes.body.data.billing.plan).toBe("pro");
+      expect(meRes.body.data.billing.isPromo).toBe(true);
       expect(meRes.body.data.billing.entitlements.maxActiveListings).toBe(200);
       expect(meRes.body.data.billing.entitlements.csvUpload).toBe(true);
     } finally {

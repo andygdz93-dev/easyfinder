@@ -2,13 +2,19 @@ import type Stripe from "stripe";
 import { env } from "./env.js";
 
 export type BillingPlan = "free" | "pro" | "enterprise";
-export type BillingStatus = "active" | "past_due" | "canceled" | "incomplete";
+export type BillingStatus =
+  | "active"
+  | "past_due"
+  | "canceled"
+  | "incomplete"
+  | "inactive";
 
 export type BillingInfo = {
   stripe_customer_id?: string;
   stripe_subscription_id?: string;
   plan: BillingPlan;
   status: BillingStatus;
+  isPromo?: boolean;
   current_period_end: Date;
 };
 
@@ -19,7 +25,8 @@ export const priceIdByPlan = {
 
 export const defaultBilling = (): BillingInfo => ({
   plan: "free",
-  status: "canceled",
+  status: "inactive",
+  isPromo: false,
   current_period_end: new Date(0),
 });
 
@@ -88,6 +95,7 @@ export const billingFromSubscription = (
   stripe_subscription_id: subscription.id,
   plan: planOverride ?? planFromSubscription(subscription),
   status: statusOverride ?? mapStripeStatus(subscription.status),
+  isPromo: false,
   current_period_end: subscription.current_period_end
     ? new Date(subscription.current_period_end * 1000)
     : new Date(0),
@@ -98,5 +106,6 @@ export const serializeBilling = (billing: BillingInfo) => ({
   stripe_subscription_id: billing.stripe_subscription_id,
   plan: billing.plan,
   status: billing.status,
+  isPromo: Boolean(billing.isPromo),
   current_period_end: billing.current_period_end.toISOString(),
 });

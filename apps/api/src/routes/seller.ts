@@ -4,6 +4,7 @@ import { z } from "zod";
 import { listings } from "../store.js";
 import { fail, ok } from "../response.js";
 import { requireNDA } from "../middleware/requireNDA.js";
+import { requirePlan } from "../middleware/requirePlan.js";
 import { disableWritesInDemo } from "../middleware/disableWritesInDemo.js";
 import { getInquiriesCollection, InquiryDocument } from "../inquiries.js";
 import { defaultBilling, normalizeBilling } from "../billing.js";
@@ -222,10 +223,6 @@ export default async function sellerRoutes(app: FastifyInstance) {
       now: new Date(),
     });
 
-    if (!entitlements.csvUpload) {
-      return fail(request, reply, "FORBIDDEN", "CSV upload requires a Pro or Enterprise seller plan.", 403);
-    }
-
     const existingSellerListings = listings.filter((listing) => listing.source === `seller:${request.user.id}`).length;
     if (
       entitlements.maxActiveListings !== null &&
@@ -267,10 +264,10 @@ export default async function sellerRoutes(app: FastifyInstance) {
   app.post(
     "/listings/import",
     {
-      preHandler: [app.authenticate, requireNDA, disableWritesInDemo],
+      preHandler: [app.authenticate, requireNDA, requirePlan(["pro", "enterprise"]), disableWritesInDemo],
     },
     createImportHandler
   );
 
-  app.post("/upload", { preHandler: [app.authenticate, requireNDA, disableWritesInDemo] }, createImportHandler);
+  app.post("/upload", { preHandler: [app.authenticate, requireNDA, requirePlan(["pro", "enterprise"]), disableWritesInDemo] }, createImportHandler);
 }
