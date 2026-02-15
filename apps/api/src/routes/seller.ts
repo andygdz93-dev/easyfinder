@@ -204,7 +204,7 @@ export default async function sellerRoutes(app: FastifyInstance) {
 
   const createImportHandler = async (request: any, reply: any) => {
     if (!request.user?.id) {
-      return fail(request, reply, "UNAUTHORIZED", "Missing user id", 401);
+      return fail(request, reply, "UNAUTHORIZED", "Missing user id.", 401);
     }
 
     const userId = request.user.id;
@@ -260,9 +260,7 @@ export default async function sellerRoutes(app: FastifyInstance) {
 
       if (result.listing) {
         listings.push(result.listing);
-        if (result.listing.id) {
-          createdIds.push(result.listing.id);
-        }
+        createdIds.push(result.listing.id!);
         created += 1;
       }
     });
