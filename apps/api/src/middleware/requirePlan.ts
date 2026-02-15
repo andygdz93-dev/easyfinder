@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { ObjectId } from "mongodb";
 import { BillingPlan, isBillingActive, normalizeBilling } from "../billing.js";
+import { env } from "../env.js";
 import { fail } from "../response.js";
 import { getUsersCollection } from "../users.js";
 
@@ -20,6 +21,17 @@ export const requirePlan =
 
     const billing = normalizeBilling(user.billing);
     request.billing = billing;
+    const effectivePlan = env.BILLING_STUB_PLAN ?? billing.plan;
+
+    if (!env.BILLING_ENABLED) {
+      if (!allowedPlans.includes(effectivePlan)) {
+        return reply.code(403).send({
+          error: "upgrade_required",
+        });
+      }
+
+      return;
+    }
 
     const isSellerPromoActive =
       billing.plan === "pro" &&
@@ -27,7 +39,7 @@ export const requirePlan =
 
     const active = isBillingActive(billing) || isSellerPromoActive;
 
-    if (!allowedPlans.includes(billing.plan) || !active) {
+    if (!allowedPlans.includes(effectivePlan) || !active) {
       return reply.code(403).send({
         error: "upgrade_required",
       });
