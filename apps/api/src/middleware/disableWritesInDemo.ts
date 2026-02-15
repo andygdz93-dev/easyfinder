@@ -5,8 +5,11 @@ export async function disableWritesInDemo(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
-  // Tests need write access to validate upload and mutation flows end-to-end.
-  if (process.env.NODE_ENV === "test") {
+  // Tests need explicit opt-in for write access to validate upload and mutation flows.
+  if (
+    process.env.NODE_ENV === "test" &&
+    process.env.ALLOW_DEMO_WRITES_IN_TESTS === "true"
+  ) {
     return;
   }
 

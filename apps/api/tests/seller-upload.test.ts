@@ -9,6 +9,7 @@ const buildServer = async (): Promise<FastifyInstance> => {
   process.env.VERCEL_PREVIEW_PATTERN = "1";
   process.env.EMAIL_ENABLED = "false";
   process.env.BILLING_ENABLED = "false";
+  process.env.ALLOW_DEMO_WRITES_IN_TESTS = "true";
 
   const serverModule = await import("../src/server.js");
   const app = serverModule.buildServer();
