@@ -35,6 +35,19 @@ const activatePromo = async (app: FastifyInstance, token: string) => {
     .send({});
 
   expect(promoRes.status).toBe(200);
+
+  await supertest(app.server)
+    .post("/api/nda/accept")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ accepted: true });
+
+  const meRes = await supertest(app.server)
+    .get("/api/me")
+    .set("Authorization", `Bearer ${token}`);
+
+  expect(meRes.status).toBe(200);
+  expect(meRes.body.data.billing.plan).toBe("pro");
+  expect(meRes.body.data.billing.isPromo).toBe(true);
 };
 
 const buildRow = (index: number) => ({

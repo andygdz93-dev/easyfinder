@@ -247,10 +247,6 @@ export default async function billingRoutes(app: FastifyInstance) {
       }
 
       const existingBilling = normalizeBilling(user.billing ?? defaultBilling());
-      if (existingBilling.plan === "pro" || existingBilling.plan === "enterprise") {
-        return ok(request, { success: true });
-      }
-
       const nextBilling: BillingInfo = {
         ...existingBilling,
         plan: "pro",
@@ -259,7 +255,7 @@ export default async function billingRoutes(app: FastifyInstance) {
         current_period_end: null,
       };
 
-      await users.updateOne(
+      const updateResult = await users.updateOne(
         { _id: user._id },
         {
           $set: {
@@ -268,6 +264,16 @@ export default async function billingRoutes(app: FastifyInstance) {
           },
         }
       );
+
+      if (updateResult.matchedCount !== 1) {
+        return fail(request, reply, "promo_not_applied", "Promo could not be applied.", 409);
+      }
+
+      const updatedUser = await users.findOne({ _id: user._id });
+      const updatedBilling = normalizeBilling(updatedUser?.billing ?? defaultBilling());
+      if (updatedBilling.plan !== "pro" || updatedBilling.isPromo !== true) {
+        return fail(request, reply, "promo_not_applied", "Promo could not be applied.", 409);
+      }
 
       return ok(request, { success: true });
     }
