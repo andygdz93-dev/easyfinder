@@ -117,6 +117,10 @@ describe("/api/seller/upload", () => {
 
       expect(uploadRes.status).toBe(200);
       expect(uploadRes.body.data.created).toBe(1);
+      expect(Array.isArray(uploadRes.body.data.createdIds)).toBe(true);
+      expect(uploadRes.body.data.createdIds.length).toBe(1);
+      expect(Array.isArray(uploadRes.body.data.liveListingIds)).toBe(true);
+      expect(uploadRes.body.data.liveListingIds).toEqual(uploadRes.body.data.createdIds);
 
       const sellerListingsRes = await supertest(app.server)
         .get("/api/seller/listings")
@@ -134,6 +138,7 @@ describe("/api/seller/upload", () => {
         .set("Authorization", `Bearer ${buyerToken}`);
 
       expect(buyerListingsRes.status).toBe(200);
+      expect(buyerListingsRes.headers["cache-control"]).toBe("no-store");
       expect(Array.isArray(buyerListingsRes.body.data)).toBe(true);
       expect(
         buyerListingsRes.body.data.some(
