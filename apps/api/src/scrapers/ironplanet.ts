@@ -1,14 +1,22 @@
 import * as cheerio from "cheerio";
+import { randomUUID } from "crypto";
 import pLimit from "p-limit";
+import { getListingsCollection } from "../listings.js";
 
 export type IronPlanetScrapedListing = {
+  id: string;
+  status: "active";
+  isPublished: true;
   source: "ironplanet";
   sourceId: string;
+  sourceExternalId?: string;
   url: string;
   title: string;
   price?: string;
   location?: string;
   images: string[];
+  createdAt: string;
+  updatedAt: string;
 };
 
 const BASE_URL = "https://www.ironplanet.com";
@@ -103,14 +111,23 @@ export async function scrapeIronPlanetSearch(searchUrl: string): Promise<IronPla
           const title = firstText(detail$, ["h1", "main h1", "title"]);
           if (!title) return null;
 
+          const sourceExternalId = extractSourceId(url);
+          const now = new Date().toISOString();
+
           return {
+            id: randomUUID(),
+            status: "active",
+            isPublished: true,
             source: "ironplanet",
-            sourceId: extractSourceId(url),
+            sourceId: sourceExternalId,
+            sourceExternalId,
             url,
             title,
             price: findPrice(detail$),
             location: findLocation(detail$),
             images: findImages(detail$),
+            createdAt: now,
+            updatedAt: now,
           };
         } catch {
           return null;
@@ -119,5 +136,28 @@ export async function scrapeIronPlanetSearch(searchUrl: string): Promise<IronPla
     )
   );
 
-  return listings.filter((listing: IronPlanetScrapedListing | null): listing is IronPlanetScrapedListing => listing !== null);
+  const scrapedListings = listings.filter(
+    (listing: IronPlanetScrapedListing | null): listing is IronPlanetScrapedListing => listing !== null
+  );
+
+  const listingsCollection = getListingsCollection();
+  const existingListings = await listingsCollection.findLiveListings();
+  const existingExternalIds = new Set(
+    existingListings
+      .filter((listing) => listing.source === "ironplanet" && typeof listing.sourceExternalId === "string")
+      .map((listing) => listing.sourceExternalId)
+  );
+
+  const seenExternalIds = new Set<string>();
+  const newListings = scrapedListings.filter((listing) => {
+    if (!listing.sourceExternalId) return true;
+    if (existingExternalIds.has(listing.sourceExternalId)) return false;
+    if (seenExternalIds.has(listing.sourceExternalId)) return false;
+    seenExternalIds.add(listing.sourceExternalId);
+    return true;
+  });
+
+  await listingsCollection.insertMany(newListings);
+
+  return scrapedListings;
 }
