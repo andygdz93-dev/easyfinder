@@ -88,7 +88,8 @@ describe("/api/seller/upload", () => {
         .set("Authorization", `Bearer ${token}`)
         .send({ rows: [buildRow(1)] });
 
-      expect(res.status).toBe(402);
+      expect(res.status).toBe(403);
+      expect(res.body.error).toBe("upgrade_required");
     } finally {
       await app.close();
     }
