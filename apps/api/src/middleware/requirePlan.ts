@@ -5,6 +5,11 @@ import { env } from "../env.js";
 import { fail } from "../response.js";
 import { getUsersCollection } from "../users.js";
 
+const billingEnabled =
+  env.BILLING_ENABLED === true ||
+  String(env.BILLING_ENABLED) === "true" ||
+  String(env.BILLING_ENABLED) === "1";
+
 export const requirePlan =
   (allowedPlans: BillingPlan[]) =>
   async (request: FastifyRequest, reply: FastifyReply) => {
@@ -23,7 +28,7 @@ export const requirePlan =
     request.billing = billing;
     const effectivePlan = env.BILLING_STUB_PLAN ?? billing.plan;
 
-    if (!env.BILLING_ENABLED) {
+    if (!billingEnabled) {
       if (!allowedPlans.includes(effectivePlan)) {
         return reply.code(403).send({
           error: "upgrade_required",
