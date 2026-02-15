@@ -100,10 +100,11 @@ const createSellerListingFromRow = (
 
   const images = [...providedImages, ...fallbackImages].slice(0, 5);
   const now = new Date().toISOString();
+  const listingId = new ObjectId().toHexString();
 
   return {
     listing: {
-      id: new ObjectId().toHexString(),
+      id: listingId,
       title: toStringValue(row.title),
       description: toStringValue(row.description),
       state: toStringValue(row.state),
@@ -118,6 +119,7 @@ const createSellerListingFromRow = (
       images,
       source: `seller:${sellerId}`,
       status: "active",
+      isPublished: true,
       publishedAt: now,
       createdAt: now,
       updatedAt: now,
@@ -239,6 +241,7 @@ export default async function sellerRoutes(app: FastifyInstance) {
     }
 
     const errors: Array<{ row: number; message: string }> = [];
+    const createdIds: string[] = [];
     let created = 0;
 
     payload.data.rows.forEach((row, index) => {
@@ -251,14 +254,25 @@ export default async function sellerRoutes(app: FastifyInstance) {
 
       if (result.listing) {
         listings.push(result.listing);
+        createdIds.push(result.listing.id);
         created += 1;
       }
+    });
+
+    const liveListingIds = createdIds.filter((id) => {
+      const listing = listings.find((candidate) => candidate.id === id) as
+        | ((typeof listings)[number] & { status?: string; isPublished?: boolean })
+        | undefined;
+      if (!listing) return false;
+      return String(listing.status ?? "").toLowerCase() === "active" && listing.isPublished !== false;
     });
 
     return ok(request, {
       created,
       failed: errors.length,
       errors,
+      createdIds,
+      liveListingIds,
     });
   };
 
