@@ -45,7 +45,8 @@ export const Register = () => {
       if (err instanceof ApiError && err.status === 429) {
         const retryAfter = err.retryAfter ?? 60;
         setBlockedForSeconds(retryAfter);
-        setError(`Too many attempts. Try again in ${retryAfter}s.`);
+        const serverMessage = err.message || "Rate limit exceeded.";
+        setError(`${serverMessage} Too many attempts. Wait 60s and try again.`);
         return;
       }
       setError((err as Error).message);
