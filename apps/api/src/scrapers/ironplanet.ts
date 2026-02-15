@@ -7,11 +7,14 @@ import { getListingsCollection, type ListingDocument } from "../listings.js";
 
 const BASE_URL = "https://www.ironplanet.com";
 const FALLBACK_IMAGE_URL = "https://placehold.co/600x400?text=IronPlanet";
+const SAMPLE_LISTINGS_LIMIT = 10;
 
 export type IronPlanetScrapeSummary = {
   scraped: number;
   upserted: number;
   modified: number;
+  matched: number;
+  sampleListings: ListingDocument[];
 };
 
 type IronPlanetScrapedListing = ListingDocument & {
@@ -35,7 +38,10 @@ const hashUrl = (url: string): string => createHash("sha256").update(url).digest
 const extractSourceExternalId = (url: string): string => {
   try {
     const parsed = new URL(url);
-    const fromQuery = parsed.searchParams.get("itemid") ?? parsed.searchParams.get("id") ?? parsed.searchParams.get("listingId");
+    const fromQuery =
+      parsed.searchParams.get("itemid") ??
+      parsed.searchParams.get("id") ??
+      parsed.searchParams.get("listingId");
     if (fromQuery) return fromQuery;
 
     const parts = parsed.pathname.split("/").filter(Boolean);
@@ -60,12 +66,23 @@ const firstText = ($: CheerioAPI, selectors: string[]): string => {
   return "";
 };
 
-const findPrice = ($: CheerioAPI): number => {
+const findNumberInText = (text: string): number | undefined => {
+  const normalized = Number(text.replaceAll(",", ""));
+  return Number.isFinite(normalized) ? normalized : undefined;
+};
+
+const findPrice = ($: CheerioAPI): number | undefined => {
   const text = $("body").text();
   const match = text.match(/\$\s?([\d,.]+(?:\.\d{2})?)/);
-  if (!match?.[1]) return 0;
-  const normalized = Number(match[1].replaceAll(",", ""));
-  return Number.isFinite(normalized) ? normalized : 0;
+  if (!match?.[1]) return undefined;
+  return findNumberInText(match[1]);
+};
+
+const findHours = ($: CheerioAPI): number | undefined => {
+  const text = $("body").text();
+  const match = text.match(/([\d,]+(?:\.\d+)?)\s*(?:hours?|hrs?)\b/i);
+  if (!match?.[1]) return undefined;
+  return findNumberInText(match[1]);
 };
 
 const findState = ($: CheerioAPI): string => {
@@ -83,7 +100,26 @@ const findState = ($: CheerioAPI): string => {
     if (stateMatch?.[1]) return stateMatch[1];
   }
 
-  return "N/A";
+  return "";
+};
+
+const inferYearFromTitle = (title: string): number | undefined => {
+  const match = title.match(/\b(19\d{2}|20\d{2})\b/);
+  return match ? Number(match[1]) : undefined;
+};
+
+const inferMakeAndModel = (title: string): { make?: string; model?: string } => {
+  const parts = title.split(/\s+/).filter(Boolean);
+  if (!parts.length) return {};
+
+  const offset = /^\d{4}$/.test(parts[0] ?? "") ? 1 : 0;
+  const make = parts[offset];
+  const model = parts[offset + 1];
+
+  return {
+    make: make && make.length > 1 ? make : undefined,
+    model: model && model.length > 0 ? model : undefined,
+  };
 };
 
 const findImages = ($: CheerioAPI): string[] => {
@@ -129,15 +165,19 @@ const buildListingDocument = (
   if (!title) return null;
 
   const normalizedImages = normalizeImages(findImages(detail$));
-  const imageUrl = normalizedImages[0] ?? FALLBACK_IMAGE_URL;
+  const imageUrl = normalizedImages[0] && normalizedImages[0].trim().length > 0 ? normalizedImages[0] : FALLBACK_IMAGE_URL;
+  const { make, model } = inferMakeAndModel(title);
 
   return {
     id: `ironplanet:${sourceExternalId}`,
     title,
-    description: `Scraped from IronPlanet: ${title}`,
+    description: firstText(detail$, ["meta[name='description']", "main p", ".description"]) || "",
     state: findState(detail$),
-    price: findPrice(detail$),
-    hours: 0,
+    price: findPrice(detail$) ?? 0,
+    hours: findHours(detail$) ?? 0,
+    year: inferYearFromTitle(title),
+    make,
+    model,
     operable: true,
     is_operable: true,
     category: "other",
@@ -155,9 +195,9 @@ const buildListingDocument = (
 
 const persistIronPlanetListings = async (
   listings: IronPlanetScrapedListing[]
-): Promise<{ upserted: number; modified: number }> => {
+): Promise<{ upserted: number; modified: number; matched: number }> => {
   if (!listings.length) {
-    return { upserted: 0, modified: 0 };
+    return { upserted: 0, modified: 0, matched: 0 };
   }
 
   const listingsCollection = getListingsCollection();
@@ -165,7 +205,6 @@ const persistIronPlanetListings = async (
 };
 
 export async function scrapeIronPlanetSearch(searchUrl: string): Promise<IronPlanetScrapeSummary> {
-
   const response = await fetch(searchUrl);
   if (!response.ok) {
     throw new Error(`Failed to fetch search page: ${response.status}`);
@@ -209,11 +248,13 @@ export async function scrapeIronPlanetSearch(searchUrl: string): Promise<IronPla
     (listing: IronPlanetScrapedListing | null): listing is IronPlanetScrapedListing => listing !== null
   );
 
-  const { upserted, modified } = await persistIronPlanetListings(scrapedListings);
+  const { upserted, modified, matched } = await persistIronPlanetListings(scrapedListings);
 
   return {
     scraped: scrapedListings.length,
     upserted,
     modified,
+    matched,
+    sampleListings: scrapedListings.slice(0, SAMPLE_LISTINGS_LIMIT),
   };
 }
