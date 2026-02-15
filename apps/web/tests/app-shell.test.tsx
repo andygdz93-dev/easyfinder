@@ -73,3 +73,122 @@ describe("AppShell NDA warning", () => {
     expect(warning).toHaveLength(1);
   });
 });
+
+
+describe("AppShell seller upload navigation", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    localStorage.clear();
+    localStorage.setItem(
+      AUTH_SESSION_STORAGE_KEY,
+      JSON.stringify({
+        token: "jwt-seller",
+      })
+    );
+    setRuntimeHealthMock({ demoMode: false, billingEnabled: false });
+  });
+
+  const renderSellerShell = () =>
+    render(
+      <AuthProvider>
+        <RuntimeProvider>
+          <MemoryRouter>
+            <AppShell>
+              <div>seller content</div>
+            </AppShell>
+          </MemoryRouter>
+        </RuntimeProvider>
+      </AuthProvider>
+    );
+
+  it("shows Upload listing for pro sellers", async () => {
+    setTestFetchHandler(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith("/api/auth/me")) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              id: "seller-1",
+              email: "seller@easyfinder.ai",
+              name: "Seller",
+              role: "seller",
+              ndaAccepted: true,
+              ndaAcceptedAt: null,
+            },
+          }),
+        } as Response;
+      }
+
+      if (url.endsWith("/api/me")) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              billing: {
+                plan: "pro",
+                status: "active",
+                current_period_end: "2099-01-01T00:00:00.000Z",
+                entitlements: {
+                  csvUpload: true,
+                },
+              },
+            },
+          }),
+        } as Response;
+      }
+
+      return { ok: true, json: async () => ({ data: {} }) } as Response;
+    });
+
+    renderSellerShell();
+
+    expect(await screen.findByRole("link", { name: "Upload listing" })).toBeInTheDocument();
+  });
+
+  it("hides Upload listing for free sellers", async () => {
+    setTestFetchHandler(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith("/api/auth/me")) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              id: "seller-2",
+              email: "seller-free@easyfinder.ai",
+              name: "Seller Free",
+              role: "seller",
+              ndaAccepted: true,
+              ndaAcceptedAt: null,
+            },
+          }),
+        } as Response;
+      }
+
+      if (url.endsWith("/api/me")) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              billing: {
+                plan: "free",
+                status: "inactive",
+                current_period_end: "1970-01-01T00:00:00.000Z",
+                entitlements: {
+                  csvUpload: false,
+                },
+              },
+            },
+          }),
+        } as Response;
+      }
+
+      return { ok: true, json: async () => ({ data: {} }) } as Response;
+    });
+
+    renderSellerShell();
+
+    expect(await screen.findByText("seller-free@easyfinder.ai")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Upload listing" })).not.toBeInTheDocument();
+  });
+});
