@@ -21,7 +21,13 @@ export const requirePlan =
     const billing = normalizeBilling(user.billing);
     request.billing = billing;
 
-    if (!allowedPlans.includes(billing.plan) || !isBillingActive(billing)) {
+    const isSellerPromoActive =
+      billing.plan === "pro" &&
+      billing.isPromo === true;
+
+    const active = isBillingActive(billing) || isSellerPromoActive;
+
+    if (!allowedPlans.includes(billing.plan) || !active) {
       return fail(
         request,
         reply,

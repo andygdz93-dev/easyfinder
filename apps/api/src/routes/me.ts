@@ -27,7 +27,7 @@ const toUserDto = (user: {
     plan: "free" | "pro" | "enterprise";
     status: "active" | "past_due" | "canceled" | "incomplete" | "inactive";
     isPromo?: boolean;
-    current_period_end: Date;
+    current_period_end: Date | null;
   };
 }) => ({
   id: user._id.toHexString(),
@@ -54,7 +54,7 @@ const withSellerEntitlements = (billing: {
   plan: "free" | "pro" | "enterprise";
   status: "active" | "past_due" | "canceled" | "incomplete" | "inactive";
   isPromo?: boolean;
-  current_period_end: string;
+  current_period_end: string | null;
 }, role: "buyer" | "seller" | "enterprise" | "admin" | null) => {
   if (role === "buyer") {
     return {
