@@ -32,7 +32,7 @@ type UsersCollection = {
   updateOne: (
     query: UserQuery,
     update: { $set: Partial<UserDocument> }
-  ) => Promise<{ matchedCount: number }>;
+  ) => Promise<{ matchedCount: number; modifiedCount: number }>;
 };
 
 const testUsers = new Map<string, UserDocument>();
@@ -79,7 +79,10 @@ export const getUsersCollection = (): UsersCollection => {
       },
       updateOne: async (query, update) => {
         const result = await collection.updateOne(query, update);
-        return { matchedCount: result.matchedCount };
+        return {
+          matchedCount: result.matchedCount,
+          modifiedCount: result.modifiedCount,
+        };
       },
     };
   } catch (error) {
@@ -138,14 +141,38 @@ export const getUsersCollection = (): UsersCollection => {
           return null;
         })();
 
-        if (!existing) return { matchedCount: 0 };
+        if (!existing) return { matchedCount: 0, modifiedCount: 0 };
+
         const next: UserDocument = {
           ...existing,
-          ...update.$set,
-          updatedAt: new Date(),
+          billing: existing.billing ? { ...existing.billing } : existing.billing,
         };
+        let modifiedCount = 0;
+
+        for (const [path, value] of Object.entries(update.$set)) {
+          const keys = path.split(".");
+          let target: Record<string, unknown> = next as unknown as Record<string, unknown>;
+          for (let i = 0; i < keys.length - 1; i += 1) {
+            const key = keys[i] as string;
+            const current = target[key];
+            if (!current || typeof current !== "object") {
+              target[key] = {};
+            }
+            target = target[key] as Record<string, unknown>;
+          }
+          const leafKey = keys[keys.length - 1] as string;
+          if (target[leafKey] !== value) {
+            target[leafKey] = value;
+            modifiedCount = 1;
+          }
+        }
+
+        if (modifiedCount === 1) {
+          next.updatedAt = new Date();
+        }
+
         testUsers.set(next.emailLower, next);
-        return { matchedCount: 1 };
+        return { matchedCount: 1, modifiedCount };
       },
     };
   }
