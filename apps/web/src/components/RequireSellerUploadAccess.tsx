@@ -54,9 +54,9 @@ export default function RequireSellerUploadAccess({
   if (!roleOk) return <Navigate to="/app/select-role" replace />;
 
   const active = isBillingActive(billing);
-  const csvAllowed = billing?.entitlements?.csvUpload === true;
+  const csvUploadAllowed = billing?.plan === "pro" || billing?.plan === "enterprise";
 
-  if (!(active && csvAllowed)) return <Navigate to="/app/upgrade" replace />;
+  if (!(active && csvUploadAllowed)) return <Navigate to="/app/upgrade" replace />;
 
   return <>{children}</>;
 }
