@@ -146,6 +146,16 @@ describe("/api/seller/upload", () => {
             listing.title === "2019 CAT 320 Excavator" && listing.status === "active"
         )
       ).toBe(true);
+
+      const listingId = uploadRes.body.data.createdIds[0] as string;
+      const buyerListingDetailRes = await supertest(app.server)
+        .get(`/api/listings/${listingId}`)
+        .set("Authorization", `Bearer ${buyerToken}`);
+
+      expect(buyerListingDetailRes.status).toBe(200);
+      expect(buyerListingDetailRes.headers["cache-control"]).toBe("no-store");
+      expect(buyerListingDetailRes.body.data.id).toBe(listingId);
+      expect(buyerListingDetailRes.body.data.status).toBe("active");
     } finally {
       await app.close();
     }

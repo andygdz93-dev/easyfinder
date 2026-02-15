@@ -1,18 +1,11 @@
 import type { FastifyInstance } from "fastify";
 import { defaultScoringConfig, scoreListing } from "@easyfinderai/shared";
 import { fail, ok } from "../response.js";
-import { listings } from "../store.js";
+import { getListingsCollection } from "../listings.js";
 import { requireNDA } from "../middleware/requireNDA.js";
 import { config } from "../config.js";
 import { disableWritesInDemo } from "../middleware/disableWritesInDemo.js";
 import { audit } from "../lib/audit.js";
-
-const isLiveListing = (listing: Record<string, unknown>) => {
-  const status = typeof listing.status === "string" ? listing.status.toLowerCase() : "active";
-  const isPublished = listing.isPublished;
-
-  return status === "active" && isPublished !== false;
-};
 
 export default async function listingsRoutes(app: FastifyInstance) {
   /**
@@ -32,7 +25,7 @@ export default async function listingsRoutes(app: FastifyInstance) {
 
     reply.header("Cache-Control", "no-store");
 
-    const activeListings = listings.filter((listing) => isLiveListing(listing as Record<string, unknown>));
+    const activeListings = await getListingsCollection().findLiveListings();
 
     const scored = activeListings.map((listing) => {
       const score = scoreListing(listing, defaultScoringConfig);
@@ -74,7 +67,7 @@ export default async function listingsRoutes(app: FastifyInstance) {
 
     reply.header("Cache-Control", "no-store");
 
-    const listing = listings.find((l) => l.id === id && isLiveListing(l as Record<string, unknown>));
+    const listing = await getListingsCollection().findLiveListingById(id);
 
     if (!listing) {
       return fail(request, reply, "NOT_FOUND", "Listing not found", 404);

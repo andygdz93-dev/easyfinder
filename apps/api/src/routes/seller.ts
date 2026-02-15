@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { ObjectId } from "mongodb";
 import { z } from "zod";
 import { listings } from "../store.js";
+import { getListingsCollection } from "../listings.js";
 import { fail, ok } from "../response.js";
 import { requireNDA } from "../middleware/requireNDA.js";
 import { requirePlan } from "../middleware/requirePlan.js";
@@ -155,14 +156,7 @@ export default async function sellerRoutes(app: FastifyInstance) {
       return fail(request, reply, "FORBIDDEN", "Seller access only.", 403);
     }
 
-    const sellerSource = `seller:${request.user.id}`;
-    const sellerListings = listings
-      .filter((listing) => listing.source === sellerSource)
-      .sort(
-        (a, b) =>
-          new Date((b as any).updatedAt ?? b.createdAt).getTime() -
-          new Date((a as any).updatedAt ?? a.createdAt).getTime()
-      );
+    const sellerListings = await getListingsCollection().findSellerListings(request.user.id);
 
     return ok(request, sellerListings);
   });
@@ -242,7 +236,7 @@ export default async function sellerRoutes(app: FastifyInstance) {
       now: new Date(),
     });
 
-    const existingSellerListings = listings.filter((listing) => listing.source === `seller:${userId}`).length;
+    const existingSellerListings = await getListingsCollection().countSellerListings(userId);
     if (
       entitlements.maxActiveListings !== null &&
       existingSellerListings + payload.data.rows.length > entitlements.maxActiveListings
@@ -258,7 +252,7 @@ export default async function sellerRoutes(app: FastifyInstance) {
 
     const errors: Array<{ row: number; message: string }> = [];
     const createdIds: string[] = [];
-    let created = 0;
+    const createdListings: SellerImportListing[] = [];
 
     payload.data.rows.forEach((row, index) => {
       const rowNumber = index + 2;
@@ -269,22 +263,19 @@ export default async function sellerRoutes(app: FastifyInstance) {
       }
 
       if (result.listing) {
-        listings.push(result.listing);
+        createdListings.push(result.listing);
         createdIds.push(result.listing.id);
-        created += 1;
       }
     });
 
-    const liveListingIds = createdIds.filter((id) => {
-      const listing = listings.find((candidate) => candidate.id === id) as
-        | ((typeof listings)[number] & { status?: string; isPublished?: boolean })
-        | undefined;
-      if (!listing) return false;
-      return String(listing.status ?? "").toLowerCase() === "active" && listing.isPublished !== false;
-    });
+    await getListingsCollection().insertMany(createdListings);
+
+    const liveListingIds = createdListings
+      .filter((listing) => String(listing.status ?? "").toLowerCase() === "active" && listing.isPublished !== false)
+      .map((listing) => listing.id);
 
     return ok(request, {
-      created,
+      created: createdListings.length,
       failed: errors.length,
       errors,
       createdIds,
