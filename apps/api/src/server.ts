@@ -259,6 +259,7 @@ export const buildServer = () => {
   app.register(sellerRoutes, { prefix: "/api/seller" });
   app.register(meRoutes, { prefix: "/api/me" });
   app.register(ndaRoutes, { prefix: "/api/nda" });
+  // Always mount billing routes so promo activation is available in all environments.
   app.register(billingRoutes, { prefix: "/api/billing" });
 
   return app;

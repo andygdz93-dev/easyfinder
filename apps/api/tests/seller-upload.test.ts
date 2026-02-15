@@ -29,10 +29,12 @@ const acceptNda = async (app: FastifyInstance, token: string) => {
 };
 
 const activatePromo = async (app: FastifyInstance, token: string) => {
-  await supertest(app.server)
+  const promoRes = await supertest(app.server)
     .post("/api/billing/activate-pro-promo")
     .set("Authorization", `Bearer ${token}`)
     .send({});
+
+  expect(promoRes.status).toBe(200);
 };
 
 const buildRow = (index: number) => ({
