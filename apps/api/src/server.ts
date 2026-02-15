@@ -24,6 +24,7 @@ import inquiriesRoutes from "./routes/inquiries.js";
 import { ZodError } from "zod";
 import { env } from "./env.js";
 import meRoutes from "./routes/me.js";
+import ironPlanetScraperRoutes from "./routes/scrapers.ironplanet.js";
 
 const normalizeRole = (role: unknown): UserRole => {
   if (
@@ -258,6 +259,7 @@ export const buildServer = () => {
   app.register(adminRoutes, { prefix: "/api/admin" });
   app.register(sellerRoutes, { prefix: "/api/seller" });
   app.register(meRoutes, { prefix: "/api/me" });
+  app.register(ironPlanetScraperRoutes);
   app.register(ndaRoutes, { prefix: "/api/nda" });
   // Always mount billing routes so promo activation is available in all environments.
   app.register(billingRoutes, { prefix: "/api/billing" });
