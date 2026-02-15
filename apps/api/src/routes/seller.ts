@@ -203,6 +203,12 @@ export default async function sellerRoutes(app: FastifyInstance) {
   });
 
   const createImportHandler = async (request: any, reply: any) => {
+    if (!request.user?.id) {
+      return fail(request, reply, "UNAUTHORIZED", "Missing user id", 401);
+    }
+
+    const userId = request.user.id;
+
     if (!uploadRoleAllowed.has(request.user.role)) {
       return fail(request, reply, "FORBIDDEN", "Seller access only.", 403);
     }
@@ -212,11 +218,11 @@ export default async function sellerRoutes(app: FastifyInstance) {
       return fail(request, reply, "BAD_REQUEST", "rows must be a non-empty array.", 400);
     }
 
-    if (!ObjectId.isValid(request.user.id)) {
+    if (!ObjectId.isValid(userId)) {
       return fail(request, reply, "UNAUTHORIZED", "Authentication required.", 401);
     }
 
-    const user = await getUsersCollection().findOne({ _id: new ObjectId(request.user.id) });
+    const user = await getUsersCollection().findOne({ _id: new ObjectId(userId) });
     const billing = normalizeBilling(user?.billing ?? defaultBilling());
     const plan = env.BILLING_STUB_PLAN ?? billing.plan;
 
@@ -226,7 +232,7 @@ export default async function sellerRoutes(app: FastifyInstance) {
       now: new Date(),
     });
 
-    const existingSellerListings = listings.filter((listing) => listing.source === `seller:${request.user.id}`).length;
+    const existingSellerListings = listings.filter((listing) => listing.source === `seller:${userId}`).length;
     if (
       entitlements.maxActiveListings !== null &&
       existingSellerListings + payload.data.rows.length > entitlements.maxActiveListings
@@ -246,7 +252,7 @@ export default async function sellerRoutes(app: FastifyInstance) {
 
     payload.data.rows.forEach((row, index) => {
       const rowNumber = index + 2;
-      const result = createSellerListingFromRow(request.user.id, row, rowNumber);
+      const result = createSellerListingFromRow(userId, row, rowNumber);
       if (result.error) {
         errors.push(result.error);
         return;
@@ -254,7 +260,9 @@ export default async function sellerRoutes(app: FastifyInstance) {
 
       if (result.listing) {
         listings.push(result.listing);
-        createdIds.push(result.listing.id);
+        if (result.listing.id) {
+          createdIds.push(result.listing.id);
+        }
         created += 1;
       }
     });
