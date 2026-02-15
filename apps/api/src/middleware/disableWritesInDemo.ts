@@ -17,7 +17,7 @@ export async function disableWritesInDemo(
     return reply.status(403).send({
       error: {
         code: "DEMO_WRITE_DISABLED",
-        message: "Creating or modifying data is disabled in demo mode.",
+        message: "Writes are disabled while DEMO_MODE=true. Set DEMO_MODE=false to enable persistence.",
         requestId: request.requestId,
       },
     });
