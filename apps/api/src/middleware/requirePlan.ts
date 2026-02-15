@@ -28,12 +28,8 @@ export const requirePlan =
     const active = isBillingActive(billing) || isSellerPromoActive;
 
     if (!allowedPlans.includes(billing.plan) || !active) {
-      return fail(
-        request,
-        reply,
-        "PAYMENT_REQUIRED",
-        "Active subscription required.",
-        402
-      );
+      return reply.code(403).send({
+        error: "upgrade_required",
+      });
     }
   };
