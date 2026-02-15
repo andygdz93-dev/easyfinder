@@ -171,6 +171,24 @@ pnpm --filter @easyfinderai/web dev
 
 Vercel note: set `VITE_API_BASE_URL` as the host-only API origin (e.g. `https://easyfinder.fly.dev`) without `/api`.
 
+## Production build and deployment safety checklist
+
+For monorepo safety and deterministic production builds, use this checklist before shipping structural changes:
+
+- Import shared code only from `@easyfinderai/shared` (never `packages/shared/src/*`).
+- If shared types change, rebuild shared first and then rebuild/typecheck consumers:
+  - `pnpm --filter @easyfinderai/shared build`
+  - `pnpm --filter @easyfinderai/api typecheck`
+  - `pnpm --filter @easyfinderai/web typecheck`
+- Keep Docker build order deterministic: install dependencies, remove stale shared artifacts, build shared, build API, then produce runtime bundle.
+- Preserve Fly runtime assumptions unless explicitly changing infrastructure:
+  - API listens on port `8080`
+  - health endpoint remains available
+  - app process runs `node dist/index.js`
+- Run workspace-level verification before deploy:
+  - `pnpm -w typecheck`
+  - `pnpm -w build`
+
 
 **⚙️ Tech Stack**
 
