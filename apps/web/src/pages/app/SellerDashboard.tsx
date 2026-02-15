@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Card } from "../../components/ui/card";
 import { apiFetch, getMe } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
+import { canUseSellerCsvUpload } from "../../lib/billing";
 
 type ListingLike = {
   id?: string | number;
@@ -64,8 +65,7 @@ export const SellerDashboard = () => {
     enabled: Boolean(token && user && (user.role === "seller" || user.role === "admin")),
   });
 
-  const csvUploadAllowed =
-    meQuery.data?.billing?.plan === "pro" || meQuery.data?.billing?.plan === "enterprise";
+  const csvUploadAllowed = canUseSellerCsvUpload(user?.role, meQuery.data?.billing?.plan);
 
   const listingsQuery = useQuery({
     queryKey: ["seller-listings"],

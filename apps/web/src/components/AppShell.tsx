@@ -3,7 +3,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useAuth } from "../lib/auth";
 import { getMe } from "../lib/api";
-import { Billing } from "../lib/billing";
+import { Billing, canUseSellerCsvUpload } from "../lib/billing";
 import { useRuntime } from "../lib/runtime";
 import DemoBanner from "./DemoBanner";
 
@@ -165,7 +165,7 @@ export const AppShell = ({
     listingLimitLabel = "Unlimited";
   }
   const visibleSections = useMemo(() => {
-    const csvUploadAllowed = billing?.plan === "pro" || billing?.plan === "enterprise";
+    const csvUploadAllowed = canUseSellerCsvUpload(userRoleResolved, billing?.plan);
 
     return navSections
       .map((section) => {
