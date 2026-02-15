@@ -99,6 +99,8 @@ if (process.env.BILLING_ENABLED === "true") {
         const updated = await col.findOne({ emailLower: "seller@easyfinder.ai" });
         expect(updated?.billing?.plan).toBe("pro");
         expect(updated?.billing?.status).toBe("active");
+        expect(updated?.billing?.isPromo).toBe(true);
+        expect(updated?.billing?.current_period_end).toBeNull();
       });
 
       it("rejects non-seller users", async () => {

@@ -15,7 +15,7 @@ export type BillingInfo = {
   plan: BillingPlan;
   status: BillingStatus;
   isPromo?: boolean;
-  current_period_end: Date;
+  current_period_end: Date | null;
 };
 
 export const priceIdByPlan = {
@@ -36,11 +36,13 @@ export const normalizeBilling = (
   const fallback = defaultBilling();
   if (!billing) return fallback;
   const currentPeriodEnd =
-    billing.current_period_end instanceof Date
-      ? billing.current_period_end
-      : billing.current_period_end
-        ? new Date(billing.current_period_end)
-        : fallback.current_period_end;
+    billing.current_period_end === null
+      ? null
+      : billing.current_period_end instanceof Date
+        ? billing.current_period_end
+        : billing.current_period_end
+          ? new Date(billing.current_period_end)
+          : fallback.current_period_end;
   return {
     ...fallback,
     ...billing,
@@ -49,7 +51,9 @@ export const normalizeBilling = (
 };
 
 export const isBillingActive = (billing: BillingInfo) =>
-  billing.status === "active" && billing.current_period_end.getTime() > Date.now();
+  billing.status === "active" &&
+  billing.current_period_end !== null &&
+  billing.current_period_end.getTime() > Date.now();
 
 export const planFromPriceId = (priceId?: string | null): BillingPlan => {
   if (!priceId) return "free";
@@ -107,5 +111,7 @@ export const serializeBilling = (billing: BillingInfo) => ({
   plan: billing.plan,
   status: billing.status,
   isPromo: Boolean(billing.isPromo),
-  current_period_end: billing.current_period_end.toISOString(),
+  current_period_end: billing.current_period_end
+    ? billing.current_period_end.toISOString()
+    : null,
 });

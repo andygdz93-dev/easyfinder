@@ -256,9 +256,7 @@ export default async function billingRoutes(app: FastifyInstance) {
         plan: "pro",
         status: "active",
         isPromo: true,
-        current_period_end: entitlements.promoEndsAt
-          ? new Date(entitlements.promoEndsAt)
-          : existingBilling.current_period_end,
+        current_period_end: null,
       };
 
       await users.updateOne(
