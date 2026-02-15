@@ -88,11 +88,11 @@ describe("AppShell seller upload navigation", () => {
     setRuntimeHealthMock({ demoMode: false, billingEnabled: false });
   });
 
-  const renderSellerShell = () =>
+  const renderSellerShell = (initialEntries: string[] = ["/app/seller/dashboard"]) =>
     render(
       <AuthProvider>
         <RuntimeProvider>
-          <MemoryRouter>
+          <MemoryRouter initialEntries={initialEntries}>
             <AppShell>
               <div>seller content</div>
             </AppShell>
@@ -100,6 +100,49 @@ describe("AppShell seller upload navigation", () => {
         </RuntimeProvider>
       </AuthProvider>
     );
+
+
+  it("renders buyer badge labels in buyer routes", async () => {
+    setTestFetchHandler(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith("/api/auth/me")) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              id: "buyer-1",
+              email: "buyer@easyfinder.ai",
+              name: "Buyer",
+              role: "buyer",
+              ndaAccepted: true,
+              ndaAcceptedAt: null,
+            },
+          }),
+        } as Response;
+      }
+
+      if (url.endsWith("/api/me")) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              billing: {
+                plan: "free",
+                status: "active",
+                current_period_end: "2099-01-01T00:00:00.000Z",
+              },
+            },
+          }),
+        } as Response;
+      }
+
+      return { ok: true, json: async () => ({ data: {} }) } as Response;
+    });
+
+    renderSellerShell(["/app/listings"]);
+
+    expect(await screen.findByText("Free Buyer")).toBeInTheDocument();
+  });
 
   it("shows Upload listing for pro sellers", async () => {
     setTestFetchHandler(async (input: RequestInfo | URL) => {
@@ -144,6 +187,7 @@ describe("AppShell seller upload navigation", () => {
     renderSellerShell();
 
     expect(await screen.findByRole("link", { name: "Upload listing" })).toBeInTheDocument();
+    expect(await screen.findByText("Pro Seller")).toBeInTheDocument();
   });
 
   it("hides Upload listing for free sellers", async () => {
