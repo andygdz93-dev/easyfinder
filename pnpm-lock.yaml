@@ -106,6 +106,9 @@ importers:
       '@types/supertest':
         specifier: ^6.0.2
         version: 6.0.3
+      domhandler:
+        specifier: ^5.0.3
+        version: 5.0.3
       eslint:
         specifier: ^9.9.1
         version: 9.39.2(jiti@1.21.7)
