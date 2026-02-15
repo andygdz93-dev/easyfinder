@@ -165,7 +165,11 @@ export const AppShell = ({
     listingLimitLabel = "Unlimited";
   }
   const visibleSections = useMemo(() => {
-    const csvUploadAllowed = canUseSellerCsvUpload(userRoleResolved, billing?.plan);
+    const csvUploadAllowed = canUseSellerCsvUpload(
+      userRoleResolved,
+      billing?.plan,
+      billing?.entitlements?.csvUpload
+    );
 
     return navSections
       .map((section) => {
