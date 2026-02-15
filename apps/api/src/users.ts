@@ -31,7 +31,7 @@ type UsersCollection = {
   insertOne: (doc: UserDocument) => Promise<void>;
   updateOne: (
     query: UserQuery,
-    update: { $set: Partial<UserDocument> }
+    update: { $set: Record<string, unknown> }
   ) => Promise<{ matchedCount: number; modifiedCount: number }>;
 };
 

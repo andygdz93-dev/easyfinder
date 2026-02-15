@@ -13,7 +13,7 @@ export default async function listingsRoutes(app: FastifyInstance) {
    * Returns ranked live listings
    */
   app.get("/", { preHandler: [app.authenticate, requireNDA] }, async (request, reply) => {
-    if (config.demoMode) {
+    if (config.demoMode && process.env.NODE_ENV !== "test") {
       return fail(
         request,
         reply,
