@@ -95,6 +95,57 @@ describe("/api/seller/upload", () => {
     }
   });
 
+
+  it("publishes uploaded listings so buyers can discover them", async () => {
+    const app = await buildServer();
+    try {
+      const sellerToken = await login(app, "seller@easyfinder.ai", "SellerPass123!");
+      await activatePromo(app, sellerToken);
+      await acceptNda(app, sellerToken);
+
+      const uploadRes = await supertest(app.server)
+        .post("/api/seller/upload")
+        .set("Authorization", `Bearer ${sellerToken}`)
+        .send({
+          rows: [
+            {
+              ...buildRow(1),
+              title: "2019 CAT 320 Excavator",
+            },
+          ],
+        });
+
+      expect(uploadRes.status).toBe(200);
+      expect(uploadRes.body.data.created).toBe(1);
+
+      const sellerListingsRes = await supertest(app.server)
+        .get("/api/seller/listings")
+        .set("Authorization", `Bearer ${sellerToken}`);
+
+      expect(sellerListingsRes.status).toBe(200);
+      expect(Array.isArray(sellerListingsRes.body.data)).toBe(true);
+      expect(sellerListingsRes.body.data[0]?.status).toBe("active");
+
+      const buyerToken = await login(app, "buyer@easyfinder.ai", "BuyerPass123!");
+      await acceptNda(app, buyerToken);
+
+      const buyerListingsRes = await supertest(app.server)
+        .get("/api/listings")
+        .set("Authorization", `Bearer ${buyerToken}`);
+
+      expect(buyerListingsRes.status).toBe(200);
+      expect(Array.isArray(buyerListingsRes.body.data)).toBe(true);
+      expect(
+        buyerListingsRes.body.data.some(
+          (listing: { title?: string; status?: string }) =>
+            listing.title === "2019 CAT 320 Excavator" && listing.status === "active"
+        )
+      ).toBe(true);
+    } finally {
+      await app.close();
+    }
+  });
+
   it("enforces pro listing cap at 200", async () => {
     const app = await buildServer();
     try {
