@@ -151,10 +151,15 @@ export const buildServer = () => {
     global: true,
     timeWindow: "1 minute",
     max: (request: FastifyRequest) => {
+      const path = (request as any).routerPath ?? request.url;
+      if (path?.startsWith("/api/auth/register") || path?.startsWith("/api/auth/login")) {
+        return 120;
+      }
+
       const role = getRoleFromRequest(request as any);
       if (role === "seller") return 240;
       if (role === "buyer") return 120;
-      return 30;
+      return 60;
     },
     addHeaders: {
       "x-ratelimit-limit": true,

@@ -55,7 +55,7 @@ export default async function authRoutes(app: FastifyInstance) {
   app.post("/register", {
     config: {
       rateLimit: {
-        max: 20,
+        max: 60,
         timeWindow: "1 minute",
       },
     },
@@ -109,7 +109,7 @@ export default async function authRoutes(app: FastifyInstance) {
   app.post("/login", {
     config: {
       rateLimit: {
-        max: 30,
+        max: 80,
         timeWindow: "1 minute",
       },
     },

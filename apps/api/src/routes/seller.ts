@@ -1,10 +1,10 @@
 import { FastifyInstance } from "fastify";
 import { ObjectId } from "mongodb";
-import { nanoid } from "nanoid";
 import { z } from "zod";
 import { listings } from "../store.js";
 import { fail, ok } from "../response.js";
 import { requireNDA } from "../middleware/requireNDA.js";
+import { disableWritesInDemo } from "../middleware/disableWritesInDemo.js";
 import { getInquiriesCollection, InquiryDocument } from "../inquiries.js";
 import { defaultBilling, normalizeBilling } from "../billing.js";
 import { getUsersCollection } from "../users.js";
@@ -12,10 +12,27 @@ import { getSellerEntitlements } from "../entitlements.js";
 import { env } from "../env.js";
 
 const sellerOnly = new Set(["seller", "admin"]);
-const uploadRoleAllowed = new Set(["seller", "enterprise"]);
+const uploadRoleAllowed = new Set(["seller", "enterprise", "admin"]);
 
-const uploadSchema = z.object({
-  rows: z.array(z.record(z.string(), z.unknown())).min(1),
+const importRowSchema = z.object({
+  title: z.string().trim().min(1),
+  make: z.string().trim().min(1),
+  model: z.string().trim().min(1),
+  year: z.union([z.string(), z.number()]).optional(),
+  hours: z.union([z.string(), z.number()]).optional(),
+  price: z.union([z.string(), z.number()]).optional(),
+  condition: z.string().trim().min(1),
+  state: z.string().trim().min(1),
+  description: z.string().trim().min(1),
+  image1: z.string().optional(),
+  image2: z.string().optional(),
+  image3: z.string().optional(),
+  image4: z.string().optional(),
+  image5: z.string().optional(),
+});
+
+const listingsImportSchema = z.object({
+  rows: z.array(importRowSchema).min(1),
 });
 
 const conditionScoreByLabel: Record<string, number> = {
@@ -29,6 +46,85 @@ const requiredFields = ["title", "make", "model", "year", "state", "condition", 
 
 const toStringValue = (value: unknown) => String(value ?? "").trim();
 
+const createSellerListingFromRow = (
+  sellerId: string,
+  row: Record<string, unknown>,
+  rowNumber: number
+): { listing?: (typeof listings)[number]; error?: { row: number; message: string } } => {
+  for (const field of requiredFields) {
+    if (!toStringValue(row[field])) {
+      return { error: { row: rowNumber, message: `${field} is required.` } };
+    }
+  }
+
+  const year = Number.parseInt(toStringValue(row.year), 10);
+  if (!Number.isInteger(year)) {
+    return { error: { row: rowNumber, message: "year must be an integer." } };
+  }
+
+  const hoursRaw = toStringValue(row.hours);
+  const priceRaw = toStringValue(row.price);
+  const hours = hoursRaw ? Number(hoursRaw) : 0;
+  const price = priceRaw ? Number(priceRaw) : 0;
+  if (Number.isNaN(hours)) {
+    return { error: { row: rowNumber, message: "hours must be numeric when provided." } };
+  }
+  if (Number.isNaN(price)) {
+    return { error: { row: rowNumber, message: "price must be numeric when provided." } };
+  }
+
+  const conditionLabel = toStringValue(row.condition);
+  const condition = conditionScoreByLabel[conditionLabel];
+  if (!condition) {
+    return {
+      error: {
+        row: rowNumber,
+        message: "condition must be one of excellent|good|fair|needs_repair.",
+      },
+    };
+  }
+
+  const imageFields = ["image1", "image2", "image3", "image4", "image5"] as const;
+  const providedImages = imageFields
+    .map((key) => toStringValue(row[key]))
+    .filter((value) => value.length > 0);
+
+  const fallbackImages = [
+    "/demo-images/placeholder-1.jpg",
+    "/demo-images/placeholder-2.jpg",
+    "/demo-images/placeholder-3.jpg",
+    "/demo-images/placeholder-4.jpg",
+    "/demo-images/placeholder-5.jpg",
+  ];
+
+  const images = [...providedImages, ...fallbackImages].slice(0, 5);
+  const now = new Date().toISOString();
+
+  return {
+    listing: {
+      id: new ObjectId().toHexString(),
+      title: toStringValue(row.title),
+      description: toStringValue(row.description),
+      state: toStringValue(row.state),
+      price,
+      hours,
+      operable: true,
+      is_operable: true,
+      year,
+      condition,
+      category: toStringValue(row.make) || "equipment",
+      imageUrl: images[0],
+      images,
+      source: `seller:${sellerId}`,
+      status: "draft",
+      createdAt: now,
+      updatedAt: now,
+      make: toStringValue(row.make),
+      model: toStringValue(row.model),
+    } as (typeof listings)[number],
+  };
+};
+
 const toInquiryDto = (inquiry: InquiryDocument) => ({
   id: inquiry._id.toHexString(),
   listingId: inquiry.listingId,
@@ -40,6 +136,23 @@ const toInquiryDto = (inquiry: InquiryDocument) => ({
 });
 
 export default async function sellerRoutes(app: FastifyInstance) {
+  app.get("/listings", { preHandler: [app.authenticate, requireNDA] }, async (request, reply) => {
+    if (!uploadRoleAllowed.has(request.user.role)) {
+      return fail(request, reply, "FORBIDDEN", "Seller access only.", 403);
+    }
+
+    const sellerSource = `seller:${request.user.id}`;
+    const sellerListings = listings
+      .filter((listing) => listing.source === sellerSource)
+      .sort(
+        (a, b) =>
+          new Date((b as any).updatedAt ?? b.createdAt).getTime() -
+          new Date((a as any).updatedAt ?? a.createdAt).getTime()
+      );
+
+    return ok(request, sellerListings);
+  });
+
   app.get("/inquiries", { preHandler: app.authenticate }, async (request, reply) => {
     if (!sellerOnly.has(request.user.role)) {
       return fail(request, reply, "FORBIDDEN", "Seller access only.", 403);
@@ -85,12 +198,12 @@ export default async function sellerRoutes(app: FastifyInstance) {
     });
   });
 
-  app.post("/upload", { preHandler: [app.authenticate, requireNDA] }, async (request, reply) => {
+  const createImportHandler = async (request: any, reply: any) => {
     if (!uploadRoleAllowed.has(request.user.role)) {
       return fail(request, reply, "FORBIDDEN", "Seller access only.", 403);
     }
 
-    const payload = uploadSchema.safeParse(request.body);
+    const payload = listingsImportSchema.safeParse(request.body);
     if (!payload.success) {
       return fail(request, reply, "BAD_REQUEST", "rows must be a non-empty array.", 400);
     }
@@ -132,73 +245,16 @@ export default async function sellerRoutes(app: FastifyInstance) {
 
     payload.data.rows.forEach((row, index) => {
       const rowNumber = index + 2;
-
-      for (const field of requiredFields) {
-        if (!toStringValue(row[field])) {
-          errors.push({ row: rowNumber, message: `${field} is required.` });
-          return;
-        }
-      }
-
-      const year = Number.parseInt(toStringValue(row.year), 10);
-      if (!Number.isInteger(year)) {
-        errors.push({ row: rowNumber, message: "year must be an integer." });
+      const result = createSellerListingFromRow(request.user.id, row, rowNumber);
+      if (result.error) {
+        errors.push(result.error);
         return;
       }
 
-      const hoursRaw = toStringValue(row.hours);
-      const priceRaw = toStringValue(row.price);
-      const hours = hoursRaw ? Number(hoursRaw) : 0;
-      const price = priceRaw ? Number(priceRaw) : 0;
-      if (Number.isNaN(hours)) {
-        errors.push({ row: rowNumber, message: "hours must be numeric when provided." });
-        return;
+      if (result.listing) {
+        listings.push(result.listing);
+        created += 1;
       }
-      if (Number.isNaN(price)) {
-        errors.push({ row: rowNumber, message: "price must be numeric when provided." });
-        return;
-      }
-
-      const conditionLabel = toStringValue(row.condition);
-      const condition = conditionScoreByLabel[conditionLabel];
-      if (!condition) {
-        errors.push({ row: rowNumber, message: "condition must be one of excellent|good|fair|needs_repair." });
-        return;
-      }
-
-      const imageFields = ["image1", "image2", "image3", "image4", "image5"] as const;
-      const providedImages = imageFields
-        .map((key) => toStringValue(row[key]))
-        .filter((value) => value.length > 0);
-
-      const fallbackImages = [
-        "/demo-images/placeholder-1.jpg",
-        "/demo-images/placeholder-2.jpg",
-        "/demo-images/placeholder-3.jpg",
-        "/demo-images/placeholder-4.jpg",
-        "/demo-images/placeholder-5.jpg",
-      ];
-
-      const images = [...providedImages, ...fallbackImages].slice(0, 5);
-
-      listings.push({
-        id: `seller-${nanoid(10)}`,
-        title: toStringValue(row.title),
-        description: toStringValue(row.description),
-        state: toStringValue(row.state),
-        price,
-        hours,
-        operable: true,
-        is_operable: true,
-        year,
-        condition,
-        category: toStringValue(row.make) || "equipment",
-        imageUrl: images[0],
-        images,
-        source: `seller:${request.user.id}`,
-        createdAt: new Date().toISOString(),
-      });
-      created += 1;
     });
 
     return ok(request, {
@@ -206,5 +262,15 @@ export default async function sellerRoutes(app: FastifyInstance) {
       failed: errors.length,
       errors,
     });
-  });
+  };
+
+  app.post(
+    "/listings/import",
+    {
+      preHandler: [app.authenticate, requireNDA, disableWritesInDemo],
+    },
+    createImportHandler
+  );
+
+  app.post("/upload", { preHandler: [app.authenticate, requireNDA, disableWritesInDemo] }, createImportHandler);
 }
