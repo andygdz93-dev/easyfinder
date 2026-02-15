@@ -1,5 +1,6 @@
 import * as cheerio from "cheerio";
-import type { CheerioAPI, Element } from "cheerio";
+import type { CheerioAPI } from "cheerio";
+import type { AnyNode } from "domhandler";
 import pLimit from "p-limit";
 import { getCollection } from "../db.js";
 import { getListingsCollection, type ListingDocument } from "../listings.js";
@@ -63,7 +64,7 @@ const findState = ($: CheerioAPI): string => {
   const labels = ["State", "Location", "Item Location"];
   for (const label of labels) {
     const node = $("*:contains('" + label + "')")
-      .filter((_i: number, el: Element) => $(el).text().trim() === label)
+      .filter((_i: number, el: AnyNode) => $(el).text().trim() === label)
       .first();
 
     if (!node.length) continue;
@@ -79,7 +80,7 @@ const findState = ($: CheerioAPI): string => {
 
 const findImages = ($: CheerioAPI): string[] => {
   const images = new Set<string>();
-  $("img").each((_i: number, el: Element) => {
+  $("img").each((_i: number, el: AnyNode) => {
     const raw = $(el).attr("src") || $(el).attr("data-src");
     if (!raw) return;
     const absolute = toAbsoluteUrl(raw);
@@ -215,7 +216,7 @@ export async function scrapeIronPlanetSearch(searchUrl: string): Promise<IronPla
   const $ = cheerio.load(html);
 
   const listingUrls = new Set<string>();
-  $("a[href]").each((_i: number, el: Element) => {
+  $("a[href]").each((_i: number, el: AnyNode) => {
     const href = $(el).attr("href");
     if (!href) return;
     const absolute = toAbsoluteUrl(href);
