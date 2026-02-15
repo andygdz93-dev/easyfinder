@@ -26,9 +26,15 @@ const isLiveListing = (listing: ListingDocument) => {
   return status === "active" && listing.isPublished !== false;
 };
 
+const toTime = (value?: string) => {
+  if (!value) return 0;
+  const t = Date.parse(value);
+  return Number.isNaN(t) ? 0 : t;
+};
+
 const sortByUpdatedAtDesc = (a: ListingDocument, b: ListingDocument) => {
-  const aTime = new Date(a.updatedAt ?? a.createdAt).getTime();
-  const bTime = new Date(b.updatedAt ?? b.createdAt).getTime();
+  const aTime = toTime(a.updatedAt ?? a.createdAt);
+  const bTime = toTime(b.updatedAt ?? b.createdAt);
   return bTime - aTime;
 };
 
