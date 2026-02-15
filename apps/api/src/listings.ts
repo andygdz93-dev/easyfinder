@@ -7,6 +7,8 @@ export type ListingDocument = Listing & {
   isPublished?: boolean;
   publishedAt?: string;
   updatedAt?: string;
+  sourceExternalId?: string;
+  sourceUrl?: string;
   make?: string;
   model?: string;
 };
