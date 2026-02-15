@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+import type { CheerioAPI, Element } from "cheerio";
 import pLimit from "p-limit";
 import { getCollection } from "../db.js";
 import { getListingsCollection, type ListingDocument } from "../listings.js";
@@ -42,7 +43,7 @@ const extractSourceExternalId = (url: string): string => {
 
 const isListingUrl = (url: string): boolean => /\/for-sale\//i.test(url);
 
-const firstText = ($: cheerio.CheerioAPI, selectors: string[]): string => {
+const firstText = ($: CheerioAPI, selectors: string[]): string => {
   for (const selector of selectors) {
     const value = $(selector).first().text().trim();
     if (value) return value;
@@ -50,7 +51,7 @@ const firstText = ($: cheerio.CheerioAPI, selectors: string[]): string => {
   return "";
 };
 
-const findPrice = ($: cheerio.CheerioAPI): number => {
+const findPrice = ($: CheerioAPI): number => {
   const text = $("body").text();
   const match = text.match(/\$\s?([\d,.]+(?:\.\d{2})?)/);
   if (!match?.[1]) return 0;
@@ -58,11 +59,11 @@ const findPrice = ($: cheerio.CheerioAPI): number => {
   return Number.isFinite(normalized) ? normalized : 0;
 };
 
-const findState = ($: cheerio.CheerioAPI): string => {
+const findState = ($: CheerioAPI): string => {
   const labels = ["State", "Location", "Item Location"];
   for (const label of labels) {
     const node = $("*:contains('" + label + "')")
-      .filter((_i: number, el: unknown) => $(el).text().trim() === label)
+      .filter((_i: number, el: Element) => $(el).text().trim() === label)
       .first();
 
     if (!node.length) continue;
@@ -76,9 +77,9 @@ const findState = ($: cheerio.CheerioAPI): string => {
   return "N/A";
 };
 
-const findImages = ($: cheerio.CheerioAPI): string[] => {
+const findImages = ($: CheerioAPI): string[] => {
   const images = new Set<string>();
-  $("img").each((_i: number, el: unknown) => {
+  $("img").each((_i: number, el: Element) => {
     const raw = $(el).attr("src") || $(el).attr("data-src");
     if (!raw) return;
     const absolute = toAbsoluteUrl(raw);
@@ -167,7 +168,8 @@ const persistIronPlanetListings = async (listings: IronPlanetScrapedListing[]): 
   );
 
   const newListings: ListingDocument[] = [];
-  const updates = listings.map((listing) => {
+  type ListingUpdatePromise = ReturnType<typeof listingsDbCollection.updateOne>;
+  const updates: Array<ListingUpdatePromise | null> = listings.map((listing) => {
     const existingListing = existingByExternalId.get(listing.sourceExternalId);
     if (!existingListing) {
       newListings.push(listing);
@@ -198,7 +200,8 @@ const persistIronPlanetListings = async (listings: IronPlanetScrapedListing[]): 
     );
   });
 
-  await Promise.all(updates.filter((update): update is Promise<unknown> => update !== null));
+  const pendingUpdates = updates.filter((update): update is ListingUpdatePromise => update !== null);
+  await Promise.all(pendingUpdates);
   await listingsCollection.insertMany(newListings);
 };
 
@@ -212,7 +215,7 @@ export async function scrapeIronPlanetSearch(searchUrl: string): Promise<IronPla
   const $ = cheerio.load(html);
 
   const listingUrls = new Set<string>();
-  $("a[href]").each((_i: number, el: unknown) => {
+  $("a[href]").each((_i: number, el: Element) => {
     const href = $(el).attr("href");
     if (!href) return;
     const absolute = toAbsoluteUrl(href);
