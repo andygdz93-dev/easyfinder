@@ -7,7 +7,7 @@ import { getUsersCollection } from "../users.js";
 import { requireNDA } from "../middleware/requireNDA.js";
 import { fail, ok } from "../response.js";
 import { env } from "../env.js";
-import { getSellerEntitlements } from "../entitlements.js";
+import { getBuyerEntitlements, getSellerEntitlements } from "../entitlements.js";
 
 const roleUpdateSchema = z.object({
   role: z.enum(["buyer", "seller", "enterprise"]),
@@ -25,7 +25,8 @@ const toUserDto = (user: {
     stripe_customer_id?: string;
     stripe_subscription_id?: string;
     plan: "free" | "pro" | "enterprise";
-    status: "active" | "past_due" | "canceled" | "incomplete";
+    status: "active" | "past_due" | "canceled" | "incomplete" | "inactive";
+    isPromo?: boolean;
     current_period_end: Date;
   };
 }) => ({
@@ -51,9 +52,21 @@ const withSellerEntitlements = (billing: {
   stripe_customer_id?: string;
   stripe_subscription_id?: string;
   plan: "free" | "pro" | "enterprise";
-  status: "active" | "past_due" | "canceled" | "incomplete";
+  status: "active" | "past_due" | "canceled" | "incomplete" | "inactive";
+  isPromo?: boolean;
   current_period_end: string;
 }, role: "buyer" | "seller" | "enterprise" | "admin" | null) => {
+  if (role === "buyer") {
+    return {
+      ...billing,
+      promoActive: false,
+      promoEndsAt: null,
+      entitlements: {
+        ...getBuyerEntitlements({ plan: billing.plan }),
+      },
+    };
+  }
+
   const entitlements = getSellerEntitlements({
     plan: billing.plan,
     role,

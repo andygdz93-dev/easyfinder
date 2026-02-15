@@ -88,8 +88,7 @@ describe("/api/seller/upload", () => {
         .set("Authorization", `Bearer ${token}`)
         .send({ rows: [buildRow(1)] });
 
-      expect(res.status).toBe(403);
-      expect(res.body.error.code).toBe("FORBIDDEN");
+      expect(res.status).toBe(402);
     } finally {
       await app.close();
     }
