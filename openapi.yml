@@ -1,9 +1,11 @@
 openapi: 3.0.3
 info:
   title: EasyFinder API
-  version: 1.0.0
+  version: 1.1.0
   description: >
     EasyFinder API contract aligned to currently implemented routes in apps/api.
+    Updated to include IronPlanet scraping ingestion and correct NDA/Auth behaviors.
+
 servers:
   - url: https://easyfinder.fly.dev
     description: Production
@@ -24,6 +26,7 @@ tags:
   - name: Me
   - name: NDA
   - name: Billing
+  - name: Scrapers
 
 paths:
   /health:
@@ -129,8 +132,7 @@ paths:
         "401": { $ref: "#/components/responses/UnauthorizedError" }
         "402": { $ref: "#/components/responses/PaymentRequiredError" }
         "403": { $ref: "#/components/responses/NdaRequiredError" }
-        "503":
-          $ref: "#/components/responses/DemoModeActiveError"
+        "503": { $ref: "#/components/responses/DemoModeActiveError" }
     post:
       tags: [Listings]
       summary: Create listing (not implemented)
@@ -142,14 +144,12 @@ paths:
           description: NDA required or writes disabled in demo mode
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorEnvelope"
+              schema: { $ref: "#/components/schemas/ErrorEnvelope" }
         "501":
           description: Not implemented
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorEnvelope"
+              schema: { $ref: "#/components/schemas/ErrorEnvelope" }
     put:
       tags: [Listings]
       summary: Update listing (not implemented)
@@ -161,14 +161,12 @@ paths:
           description: NDA required or writes disabled in demo mode
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorEnvelope"
+              schema: { $ref: "#/components/schemas/ErrorEnvelope" }
         "501":
           description: Not implemented
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorEnvelope"
+              schema: { $ref: "#/components/schemas/ErrorEnvelope" }
     delete:
       tags: [Listings]
       summary: Delete listing (not implemented)
@@ -180,14 +178,12 @@ paths:
           description: NDA required or writes disabled in demo mode
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorEnvelope"
+              schema: { $ref: "#/components/schemas/ErrorEnvelope" }
         "501":
           description: Not implemented
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorEnvelope"
+              schema: { $ref: "#/components/schemas/ErrorEnvelope" }
 
   /api/listings/{id}:
     get:
@@ -209,6 +205,43 @@ paths:
         "403": { $ref: "#/components/responses/NdaRequiredError" }
         "404": { $ref: "#/components/responses/NotFoundError" }
         "503": { $ref: "#/components/responses/DemoModeActiveError" }
+
+  /api/scrape/ironplanet:
+    get:
+      tags: [Scrapers]
+      summary: Scrape IronPlanet search results and upsert into live listings
+      description: >
+        Scrapes an IronPlanet search results page (url query param), extracts listings,
+        and upserts them into MongoDB. Writes are blocked when DEMO_MODE is enabled.
+      parameters:
+        - in: query
+          name: url
+          required: true
+          schema:
+            type: string
+          description: URL-encoded IronPlanet search URL to scrape.
+      responses:
+        "200":
+          description: Scrape + upsert summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScrapeIronPlanetResponse"
+        "400":
+          description: Invalid request (missing/invalid url)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+        "403":
+          description: Writes disabled in demo mode
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+        "500":
+          description: Scrape failure
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorEnvelope" }
 
   /api/scoring-configs:
     get:
@@ -515,7 +548,9 @@ paths:
   /api/admin/sources/sync:
     post:
       tags: [Admin]
-      summary: Trigger source sync
+      summary: Trigger source sync (not guaranteed implemented)
+      description: >
+        Present in some specs; ensure route exists in apps/api before relying on it.
       security:
         - bearerAuth: []
       responses:
@@ -535,11 +570,19 @@ paths:
         "401": { $ref: "#/components/responses/UnauthorizedError" }
         "402": { $ref: "#/components/responses/PaymentRequiredError" }
         "403": { $ref: "#/components/responses/ForbiddenError" }
+        "501":
+          description: Not implemented
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
 
   /api/admin/sources:
     get:
       tags: [Admin]
-      summary: List ingestion sources
+      summary: List ingestion sources (not guaranteed implemented)
+      description: >
+        Present in some specs; ensure route exists in apps/api before relying on it.
       security:
         - bearerAuth: []
       responses:
@@ -565,6 +608,12 @@ paths:
         "401": { $ref: "#/components/responses/UnauthorizedError" }
         "402": { $ref: "#/components/responses/PaymentRequiredError" }
         "403": { $ref: "#/components/responses/ForbiddenError" }
+        "501":
+          description: Not implemented
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
 
   /api/seller/inquiries:
     get:
@@ -865,44 +914,37 @@ components:
       description: Authentication required.
       content:
         application/json:
-          schema:
-            $ref: "#/components/schemas/ErrorEnvelope"
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
     ForbiddenError:
       description: Forbidden.
       content:
         application/json:
-          schema:
-            $ref: "#/components/schemas/ErrorEnvelope"
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
     NotFoundError:
       description: Resource not found.
       content:
         application/json:
-          schema:
-            $ref: "#/components/schemas/ErrorEnvelope"
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
     ValidationError:
       description: Validation failed.
       content:
         application/json:
-          schema:
-            $ref: "#/components/schemas/ErrorEnvelope"
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
     PaymentRequiredError:
       description: Active subscription required.
       content:
         application/json:
-          schema:
-            $ref: "#/components/schemas/ErrorEnvelope"
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
     NdaRequiredError:
       description: NDA must be accepted.
       content:
         application/json:
-          schema:
-            $ref: "#/components/schemas/ErrorEnvelope"
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
     DemoModeActiveError:
       description: Live listings unavailable in demo mode.
       content:
         application/json:
-          schema:
-            $ref: "#/components/schemas/ErrorEnvelope"
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
 
   schemas:
     ErrorEnvelope:
@@ -1024,7 +1066,8 @@ components:
 
     ScoringConfigInput:
       type: object
-      required: [name, weights, preferredStates, minHours, maxHours, minPrice, maxPrice, minYear, maxYear, minCondition, maxCondition]
+      required:
+        [name, weights, preferredStates, minHours, maxHours, minPrice, maxPrice, minYear, maxYear, minCondition, maxCondition]
       properties:
         name: { type: string }
         weights:
@@ -1163,9 +1206,24 @@ components:
                     entitlements:
                       type: object
                       properties:
-                        maxActiveListings:
-                          type: integer
-                          nullable: true
+                        maxActiveListings: { type: integer, nullable: true }
                         csvUpload: { type: boolean }
                         marketplaceIntegrations: { type: boolean }
+
+    ScrapeIronPlanetResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          required: [scraped, upserted, modified, matched]
+          properties:
+            scraped: { type: integer }
+            upserted: { type: integer }
+            modified: { type: integer }
+            matched: { type: integer }
+            sampleListings:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
         requestId: { type: string }
