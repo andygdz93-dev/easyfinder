@@ -7,6 +7,13 @@ import { config } from "../config.js";
 import { disableWritesInDemo } from "../middleware/disableWritesInDemo.js";
 import { audit } from "../lib/audit.js";
 
+const isLiveListing = (listing: Record<string, unknown>) => {
+  const status = typeof listing.status === "string" ? listing.status.toLowerCase() : "active";
+  const isPublished = listing.isPublished;
+
+  return status === "active" && isPublished !== false;
+};
+
 export default async function listingsRoutes(app: FastifyInstance) {
   /**
    * GET /api/listings
@@ -23,7 +30,9 @@ export default async function listingsRoutes(app: FastifyInstance) {
       );
     }
 
-    const activeListings = listings.filter((listing) => ((listing as any).status ?? "active") === "active");
+    reply.header("Cache-Control", "no-store");
+
+    const activeListings = listings.filter((listing) => isLiveListing(listing as Record<string, unknown>));
 
     const scored = activeListings.map((listing) => {
       const score = scoreListing(listing, defaultScoringConfig);
@@ -63,7 +72,9 @@ export default async function listingsRoutes(app: FastifyInstance) {
       );
     }
 
-    const listing = listings.find((l) => l.id === id && (((l as any).status ?? "active") === "active"));
+    reply.header("Cache-Control", "no-store");
+
+    const listing = listings.find((l) => l.id === id && isLiveListing(l as Record<string, unknown>));
 
     if (!listing) {
       return fail(request, reply, "NOT_FOUND", "Listing not found", 404);
