@@ -246,26 +246,17 @@ export default async function billingRoutes(app: FastifyInstance) {
         return fail(request, reply, "promo_inactive", "Launch promo is inactive.", 403);
       }
 
-      const existingBilling = normalizeBilling(user.billing ?? defaultBilling());
-      const nextBilling: BillingInfo = {
-        ...existingBilling,
-        plan: "pro",
-        status: "active",
-        isPromo: true,
-        current_period_end: null,
-      };
-
       const updateResult = await users.updateOne(
-        { _id: user._id },
+        { _id: new ObjectId(userId) },
         {
           $set: {
-            billing: nextBilling,
-            updatedAt: new Date(),
+            "billing.plan": "pro",
+            "billing.isPromo": true,
           },
         }
       );
 
-      if (updateResult.matchedCount !== 1) {
+      if (updateResult.modifiedCount !== 1) {
         return fail(request, reply, "promo_not_applied", "Promo could not be applied.", 409);
       }
 
