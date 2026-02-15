@@ -200,8 +200,13 @@ const persistIronPlanetListings = async (
     return { upserted: 0, modified: 0, matched: 0 };
   }
 
+  const listingsForUpsert = listings.map((listing) => {
+    const { createdAt: _createdAt, ...setDoc } = listing;
+    return setDoc;
+  });
+
   const listingsCollection = getListingsCollection();
-  return listingsCollection.upsertManyBySourceExternalId("ironplanet", listings);
+  return listingsCollection.upsertManyBySourceExternalId("ironplanet", listingsForUpsert);
 };
 
 export async function scrapeIronPlanetSearch(searchUrl: string): Promise<IronPlanetScrapeSummary> {
