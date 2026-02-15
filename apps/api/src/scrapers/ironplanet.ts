@@ -201,7 +201,12 @@ const persistIronPlanetListings = async (
   }
 
   const listingsForUpsert = listings.map((listing) => {
-    const { createdAt: _createdAt, isPublished: _isPublished, status: _status, ...setDoc } = listing;
+    const { createdAt, isPublished, status, ...setDoc } = listing;
+    // intentionally dropping createdAt/isPublished/status (handled by upsert logic)
+    void createdAt;
+    void isPublished;
+    void status;
+
     return setDoc;
   });
 
