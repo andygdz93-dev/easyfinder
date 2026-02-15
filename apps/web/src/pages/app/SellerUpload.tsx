@@ -108,6 +108,8 @@ const parseCsv = (csvText: string) => {
   return { header, rows };
 };
 
+const quoteCsvValue = (value: string) => `"${String(value).replace(/"/g, '""')}"`;
+
 export const SellerUpload = () => {
   const { token, user, isUserLoading } = useAuth();
   const navigate = useNavigate();
@@ -143,7 +145,11 @@ export const SellerUpload = () => {
 
   const plan = meQuery.data?.billing?.plan ?? "free";
   const role = user?.role ?? null;
-  const canUseCsvUpload = canUseSellerCsvUpload(role, plan);
+  const canUseCsvUpload = canUseSellerCsvUpload(
+    role,
+    plan,
+    meQuery.data?.billing?.entitlements?.csvUpload
+  );
 
   if (!canUseCsvUpload) {
     return <Navigate to="/app/upgrade" replace />;
@@ -166,7 +172,9 @@ export const SellerUpload = () => {
       "image3",
       "image4",
       "image5",
-    ].join(",");
+    ]
+      .map(quoteCsvValue)
+      .join(",");
 
     const sample = [
       "Example title",
@@ -184,11 +192,11 @@ export const SellerUpload = () => {
       "",
       "",
     ]
-      .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+      .map(quoteCsvValue)
       .join(",");
 
     const csv = BOM + header + "\r\n" + sample + "\r\n";
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob([csv], { type: "text/csv; charset=utf-8" });
 
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

@@ -147,27 +147,29 @@ export const buildServer = () => {
   });
 
   // Rate limiting
-  app.register(rateLimit, {
-    global: true,
-    timeWindow: "1 minute",
-    max: (request: FastifyRequest) => {
-      const path = (request as any).routerPath ?? request.url;
-      if (path?.startsWith("/api/auth/register") || path?.startsWith("/api/auth/login")) {
-        return 120;
-      }
+  if (env.NODE_ENV === "production") {
+    app.register(rateLimit, {
+      global: true,
+      timeWindow: "1 minute",
+      max: (request: FastifyRequest) => {
+        const path = (request as any).routerPath ?? request.url;
+        if (path?.startsWith("/api/auth/register") || path?.startsWith("/api/auth/login")) {
+          return 120;
+        }
 
-      const role = getRoleFromRequest(request as any);
-      if (role === "seller") return 240;
-      if (role === "buyer") return 120;
-      return 60;
-    },
-    addHeaders: {
-      "x-ratelimit-limit": true,
-      "x-ratelimit-remaining": true,
-      "x-ratelimit-reset": true,
-      "retry-after": true,
-    },
-  });
+        const role = getRoleFromRequest(request as any);
+        if (role === "seller") return 240;
+        if (role === "buyer") return 120;
+        return 60;
+      },
+      addHeaders: {
+        "x-ratelimit-limit": true,
+        "x-ratelimit-remaining": true,
+        "x-ratelimit-reset": true,
+        "retry-after": true,
+      },
+    });
+  }
 
   // File uploads
   app.register(multipart, {
