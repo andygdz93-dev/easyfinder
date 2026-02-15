@@ -15,6 +15,11 @@ export type ListingDocument = Listing & {
 
 type ListingsCollection = {
   insertMany: (listings: ListingDocument[]) => Promise<void>;
+  findBySourceAndExternalIds: (source: string, ids: string[]) => Promise<ListingDocument[]>;
+  upsertManyBySourceExternalId: (
+    source: string,
+    listings: ListingDocument[]
+  ) => Promise<{ upserted: number; modified: number }>;
   findLiveListings: () => Promise<ListingDocument[]>;
   findLiveListingById: (id: string) => Promise<ListingDocument | null>;
   findSellerListings: (sellerId: string) => Promise<ListingDocument[]>;
@@ -48,6 +53,51 @@ export const getListingsCollection = (): ListingsCollection => {
         if (!listings.length) return;
         await collection.insertMany(listings);
       },
+      findBySourceAndExternalIds: async (source, ids) => {
+        if (!ids.length) return [];
+        return collection.find({ source, sourceExternalId: { $in: ids } }).toArray();
+      },
+      upsertManyBySourceExternalId: async (source, listings) => {
+        if (!listings.length) {
+          return { upserted: 0, modified: 0 };
+        }
+
+        const now = new Date().toISOString();
+        const operations = listings
+          .filter((listing) => typeof listing.sourceExternalId === "string" && listing.sourceExternalId.length > 0)
+          .map((listing) => {
+            const sourceExternalId = listing.sourceExternalId as string;
+            return {
+              updateOne: {
+                filter: { source, sourceExternalId },
+                update: {
+                  $set: {
+                    ...listing,
+                    source,
+                    sourceExternalId,
+                    status: listing.status ?? "active",
+                    isPublished: listing.isPublished ?? true,
+                    updatedAt: now,
+                  },
+                  $setOnInsert: {
+                    createdAt: listing.createdAt ?? now,
+                  },
+                },
+                upsert: true,
+              },
+            };
+          });
+
+        if (!operations.length) {
+          return { upserted: 0, modified: 0 };
+        }
+
+        const result = await collection.bulkWrite(operations, { ordered: false });
+        return {
+          upserted: result.upsertedCount,
+          modified: result.modifiedCount,
+        };
+      },
       findLiveListings: async () =>
         collection
           .find({ status: "active", isPublished: { $ne: false } })
@@ -71,6 +121,54 @@ export const getListingsCollection = (): ListingsCollection => {
     return {
       insertMany: async (listings) => {
         testListings.push(...listings);
+      },
+      findBySourceAndExternalIds: async (source, ids) => {
+        if (!ids.length) return [];
+        const lookup = new Set(ids);
+        return testListings.filter(
+          (listing) =>
+            listing.source === source &&
+            typeof listing.sourceExternalId === "string" &&
+            lookup.has(listing.sourceExternalId)
+        );
+      },
+      upsertManyBySourceExternalId: async (source, listings) => {
+        let upserted = 0;
+        let modified = 0;
+        const now = new Date().toISOString();
+
+        for (const listing of listings) {
+          const sourceExternalId = listing.sourceExternalId;
+          if (!sourceExternalId) continue;
+
+          const idx = testListings.findIndex(
+            (entry) => entry.source === source && entry.sourceExternalId === sourceExternalId
+          );
+
+          const normalized: ListingDocument = {
+            ...listing,
+            source,
+            sourceExternalId,
+            status: listing.status ?? "active",
+            isPublished: listing.isPublished ?? true,
+            updatedAt: now,
+          };
+
+          if (idx === -1) {
+            testListings.push({ ...normalized, createdAt: listing.createdAt ?? now });
+            upserted += 1;
+          } else {
+            const existingCreatedAt = testListings[idx]?.createdAt;
+            testListings[idx] = {
+              ...testListings[idx],
+              ...normalized,
+              createdAt: existingCreatedAt ?? listing.createdAt ?? now,
+            };
+            modified += 1;
+          }
+        }
+
+        return { upserted, modified };
       },
       findLiveListings: async () => testListings.filter(isLiveListing).sort(sortByUpdatedAtDesc),
       findLiveListingById: async (id) => testListings.find((listing) => listing.id === id && isLiveListing(listing)) ?? null,

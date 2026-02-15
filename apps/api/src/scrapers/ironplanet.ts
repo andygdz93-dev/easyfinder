@@ -2,11 +2,17 @@ import * as cheerio from "cheerio";
 import type { CheerioAPI } from "cheerio";
 import type { AnyNode } from "domhandler";
 import pLimit from "p-limit";
-import { getCollection } from "../db.js";
+import { createHash } from "node:crypto";
 import { getListingsCollection, type ListingDocument } from "../listings.js";
 
 const BASE_URL = "https://www.ironplanet.com";
 const FALLBACK_IMAGE_URL = "https://placehold.co/600x400?text=IronPlanet";
+
+export type IronPlanetScrapeSummary = {
+  scraped: number;
+  upserted: number;
+  modified: number;
+};
 
 type IronPlanetScrapedListing = ListingDocument & {
   source: "ironplanet";
@@ -24,10 +30,12 @@ const toAbsoluteUrl = (href: string): string | null => {
   }
 };
 
+const hashUrl = (url: string): string => createHash("sha256").update(url).digest("hex").slice(0, 24);
+
 const extractSourceExternalId = (url: string): string => {
   try {
     const parsed = new URL(url);
-    const fromQuery = parsed.searchParams.get("itemid") ?? parsed.searchParams.get("id");
+    const fromQuery = parsed.searchParams.get("itemid") ?? parsed.searchParams.get("id") ?? parsed.searchParams.get("listingId");
     if (fromQuery) return fromQuery;
 
     const parts = parsed.pathname.split("/").filter(Boolean);
@@ -36,9 +44,9 @@ const extractSourceExternalId = (url: string): string => {
       return parts[forSaleIndex + 1];
     }
 
-    return parts[parts.length - 1] ?? parsed.pathname;
+    return hashUrl(url);
   } catch {
-    return url;
+    return hashUrl(url);
   }
 };
 
@@ -145,68 +153,19 @@ const buildListingDocument = (
   };
 };
 
-const persistIronPlanetListings = async (listings: IronPlanetScrapedListing[]): Promise<void> => {
-  if (!listings.length) return;
+const persistIronPlanetListings = async (
+  listings: IronPlanetScrapedListing[]
+): Promise<{ upserted: number; modified: number }> => {
+  if (!listings.length) {
+    return { upserted: 0, modified: 0 };
+  }
 
   const listingsCollection = getListingsCollection();
-  const listingsDbCollection = getCollection<ListingDocument>("listings");
-
-  const externalIds = listings.map((listing) => listing.sourceExternalId);
-  const existing = await listingsDbCollection
-    .find({ source: "ironplanet", sourceExternalId: { $in: externalIds } })
-    .project<{ id?: string; sourceExternalId?: string; createdAt?: string }>({
-      _id: 0,
-      id: 1,
-      sourceExternalId: 1,
-      createdAt: 1,
-    })
-    .toArray();
-
-  const existingByExternalId = new Map(
-    existing
-      .filter((listing) => typeof listing.sourceExternalId === "string")
-      .map((listing) => [listing.sourceExternalId as string, listing])
-  );
-
-  const newListings: ListingDocument[] = [];
-  type ListingUpdatePromise = ReturnType<typeof listingsDbCollection.updateOne>;
-  const updates: Array<ListingUpdatePromise | null> = listings.map((listing) => {
-    const existingListing = existingByExternalId.get(listing.sourceExternalId);
-    if (!existingListing) {
-      newListings.push(listing);
-      return null;
-    }
-
-    return listingsDbCollection.updateOne(
-      { source: "ironplanet", sourceExternalId: listing.sourceExternalId },
-      {
-        $set: {
-          id: existingListing.id ?? listing.id,
-          title: listing.title,
-          description: listing.description,
-          state: listing.state,
-          price: listing.price,
-          hours: listing.hours,
-          operable: listing.operable,
-          is_operable: listing.is_operable,
-          category: listing.category,
-          imageUrl: listing.imageUrl,
-          images: listing.images,
-          sourceUrl: listing.sourceUrl,
-          status: "active",
-          isPublished: true,
-          updatedAt: listing.updatedAt,
-        },
-      }
-    );
-  });
-
-  const pendingUpdates = updates.filter((update): update is ListingUpdatePromise => update !== null);
-  await Promise.all(pendingUpdates);
-  await listingsCollection.insertMany(newListings);
+  return listingsCollection.upsertManyBySourceExternalId("ironplanet", listings);
 };
 
-export async function scrapeIronPlanetSearch(searchUrl: string): Promise<IronPlanetScrapedListing[]> {
+export async function scrapeIronPlanetSearch(searchUrl: string): Promise<IronPlanetScrapeSummary> {
+
   const response = await fetch(searchUrl);
   if (!response.ok) {
     throw new Error(`Failed to fetch search page: ${response.status}`);
@@ -250,7 +209,11 @@ export async function scrapeIronPlanetSearch(searchUrl: string): Promise<IronPla
     (listing: IronPlanetScrapedListing | null): listing is IronPlanetScrapedListing => listing !== null
   );
 
-  await persistIronPlanetListings(scrapedListings);
+  const { upserted, modified } = await persistIronPlanetListings(scrapedListings);
 
-  return scrapedListings;
+  return {
+    scraped: scrapedListings.length,
+    upserted,
+    modified,
+  };
 }
