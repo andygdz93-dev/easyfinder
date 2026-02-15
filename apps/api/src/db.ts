@@ -24,7 +24,14 @@ export const connectToDatabase = async () => {
         await db.collection("listings").createIndex({ source: 1, updatedAt: -1 });
         await db
           .collection("listings")
-          .createIndex({ source: 1, sourceExternalId: 1 }, { unique: true, sparse: true });
+          .createIndex(
+            { source: 1, sourceExternalId: 1 },
+            {
+              unique: true,
+              name: "source_1_sourceExternalId_1",
+              partialFilterExpression: { sourceExternalId: { $exists: true } },
+            }
+          );
         await db.collection("password_reset_tokens").createIndex({ token: 1 }, { unique: true });
         await db
           .collection("password_reset_tokens")
