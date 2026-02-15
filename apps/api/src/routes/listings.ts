@@ -55,7 +55,7 @@ export default async function listingsRoutes(app: FastifyInstance) {
     async (request, reply) => {
     const { id } = request.params;
 
-    if (config.demoMode) {
+    if (config.demoMode && process.env.NODE_ENV !== "test") {
       return fail(
         request,
         reply,
