@@ -60,3 +60,34 @@ export const getSellerEntitlements = ({
     promoEndsAt: null,
   };
 };
+
+
+export type BuyerEntitlements = {
+  scoring: "limited" | "enhanced" | "full";
+  marketplaceAccess: "limited" | "full";
+};
+
+export const getBuyerEntitlements = ({
+  plan,
+}: {
+  plan: SellerPlan;
+}): BuyerEntitlements => {
+  if (plan === "enterprise") {
+    return {
+      scoring: "full",
+      marketplaceAccess: "full",
+    };
+  }
+
+  if (plan === "pro") {
+    return {
+      scoring: "enhanced",
+      marketplaceAccess: "limited",
+    };
+  }
+
+  return {
+    scoring: "limited",
+    marketplaceAccess: "limited",
+  };
+};

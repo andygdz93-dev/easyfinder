@@ -90,6 +90,22 @@ const createCheckoutSchema = z.object({
   plan: z.enum(["pro", "enterprise"]),
 });
 
+const shouldUseStripeCheckout = ({
+  role,
+  plan,
+}: {
+  role: string | null | undefined;
+  plan: "pro" | "enterprise";
+}) => {
+  if (role === "seller") {
+    return plan === "enterprise";
+  }
+  if (role === "buyer") {
+    return plan === "pro" || plan === "enterprise";
+  }
+  return false;
+};
+
 const normalizeHeader = (value: string | string[] | undefined) =>
   Array.isArray(value) ? value[0] : value;
 
@@ -239,6 +255,7 @@ export default async function billingRoutes(app: FastifyInstance) {
         ...existingBilling,
         plan: "pro",
         status: "active",
+        isPromo: true,
         current_period_end: entitlements.promoEndsAt
           ? new Date(entitlements.promoEndsAt)
           : existingBilling.current_period_end,
@@ -285,6 +302,16 @@ export default async function billingRoutes(app: FastifyInstance) {
       }
 
       const billing = normalizeBilling(user.billing ?? defaultBilling());
+
+      if (!shouldUseStripeCheckout({ role: user.role, plan: payload.plan })) {
+        return fail(
+          request,
+          reply,
+          "CHECKOUT_NOT_ALLOWED",
+          "Stripe checkout is not available for this role and plan.",
+          403
+        );
+      }
 
       const stripe = getStripe();
       let stripeCustomerId = billing.stripe_customer_id;
@@ -443,12 +470,22 @@ export default async function billingRoutes(app: FastifyInstance) {
           case "checkout.session.completed": {
             const session = event.data.object as Stripe.Checkout.Session;
             if (!session.subscription) break;
+            const purchasedPlan =
+              session.metadata?.plan === "pro" || session.metadata?.plan === "enterprise"
+                ? session.metadata.plan
+                : undefined;
             const subscription =
               typeof session.subscription === "string"
                 ? await stripe.subscriptions.retrieve(session.subscription)
                 : session.subscription;
             if (!subscription) break;
-            await handleSubscriptionUpdate(subscription, event.type, event.id);
+            await handleSubscriptionUpdate(
+              subscription,
+              event.type,
+              event.id,
+              "active",
+              purchasedPlan
+            );
             break;
           }
           case "customer.subscription.updated": {
@@ -462,7 +499,7 @@ export default async function billingRoutes(app: FastifyInstance) {
               subscription,
               event.type,
               event.id,
-              "canceled",
+              "inactive",
               "free"
             );
             break;

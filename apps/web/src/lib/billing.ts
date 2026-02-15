@@ -1,11 +1,12 @@
 export type BillingPlan = "free" | "pro" | "enterprise";
-export type BillingStatus = "active" | "past_due" | "canceled" | "incomplete";
+export type BillingStatus = "active" | "past_due" | "canceled" | "incomplete" | "inactive";
 
 export type Billing = {
   stripe_customer_id?: string;
   stripe_subscription_id?: string;
   plan: BillingPlan;
   status: BillingStatus;
+  isPromo?: boolean;
   current_period_end?: string;
   promo?: { endsAt?: string } | null;
   promoActive?: boolean;
