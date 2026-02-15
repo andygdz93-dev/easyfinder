@@ -246,12 +246,23 @@ export default async function billingRoutes(app: FastifyInstance) {
         return fail(request, reply, "promo_inactive", "Launch promo is inactive.", 403);
       }
 
+      const billing = normalizeBilling(user.billing ?? defaultBilling());
+      if (
+        billing.plan === "pro" &&
+        billing.isPromo === true &&
+        billing.status === "active"
+      ) {
+        return ok(request, { success: true });
+      }
+
       const updateResult = await users.updateOne(
         { _id: new ObjectId(userId) },
         {
           $set: {
             "billing.plan": "pro",
             "billing.isPromo": true,
+            "billing.status": "active",
+            "billing.current_period_end": null,
           },
         }
       );
@@ -262,7 +273,11 @@ export default async function billingRoutes(app: FastifyInstance) {
 
       const updatedUser = await users.findOne({ _id: user._id });
       const updatedBilling = normalizeBilling(updatedUser?.billing ?? defaultBilling());
-      if (updatedBilling.plan !== "pro" || updatedBilling.isPromo !== true) {
+      if (
+        updatedBilling.plan !== "pro" ||
+        updatedBilling.isPromo !== true ||
+        updatedBilling.status !== "active"
+      ) {
         return fail(request, reply, "promo_not_applied", "Promo could not be applied.", 409);
       }
 
