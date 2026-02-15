@@ -1,10 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { useAuth } from "../../lib/auth";
-import { uploadSellerCsv } from "../../lib/api";
-import { ApiError } from "../../lib/api";
+import { importSellerListings, ApiError } from "../../lib/api";
 
 const REQUIRED_HEADERS = [
   "title",
@@ -92,6 +93,9 @@ const parseCsv = (csvText: string) => {
   }
 
   const header = parseCsvLine(lines[0]);
+  if (header.length > 0) {
+    header[0] = header[0].replace(/^\uFEFF/, "");
+  }
   const rows = lines.slice(1).map((line) => {
     const values = parseCsvLine(line);
     return header.reduce<Record<string, string>>((row, key, index) => {
@@ -103,18 +107,10 @@ const parseCsv = (csvText: string) => {
   return { header, rows };
 };
 
-const csvEscape = (value: unknown) => {
-  const s = String(value ?? "");
-  const needsQuotes = /[",\r\n]/.test(s);
-  const escaped = s.replace(/"/g, '""');
-  return needsQuotes ? `"${escaped}"` : escaped;
-};
-
-const rowsToCsv = (rows: Array<Array<unknown>>) =>
-  rows.map((row) => row.map(csvEscape).join(",")).join("\r\n");
-
 export const SellerUpload = () => {
   const { token, user, isUserLoading } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [parsedRows, setParsedRows] = useState<Record<string, string>[]>([]);
   const [validation, setValidation] = useState<UploadValidationResult | null>(
@@ -138,6 +134,7 @@ export const SellerUpload = () => {
   }
 
   const downloadTemplate = () => {
+    const BOM = "\uFEFF";
     const header = [
       "title",
       "make",
@@ -153,26 +150,28 @@ export const SellerUpload = () => {
       "image3",
       "image4",
       "image5",
-    ];
+    ].join(",");
 
     const sample = [
-      "Excavator 320",
+      "Example title",
       "Caterpillar",
-      "320",
+      "D6T",
       "2020",
       "1800",
       "178000",
       "good",
       "CA",
-      "Well maintained",
+      "Example description",
+      "https://example.com/img1.jpg",
       "",
       "",
       "",
       "",
-      "",
-    ];
+    ]
+      .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+      .join(",");
 
-    const csv = `\uFEFF${rowsToCsv([header, sample])}\r\n`;
+    const csv = BOM + header + "\r\n" + sample + "\r\n";
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
 
     const url = URL.createObjectURL(blob);
@@ -296,11 +295,19 @@ export const SellerUpload = () => {
     setUploadError(null);
 
     try {
-      const result = await uploadSellerCsv(rows);
+      const result = await importSellerListings(rows);
       setUploadResult(result);
+      await queryClient.invalidateQueries({ queryKey: ["seller-listings"] });
+      if (result.created > 0 && result.failed === 0) {
+        navigate("/app/seller/listings");
+      }
     } catch (error) {
       const message =
-        error instanceof ApiError ? error.message : "Upload failed.";
+        error instanceof ApiError
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : String(error);
       setUploadError(message);
     } finally {
       setUploading(false);
@@ -398,10 +405,15 @@ export const SellerUpload = () => {
               <ul className="mt-2 list-disc pl-5 text-rose-300">
                 {uploadErrors.slice(0, 10).map((error, index) => (
                   <li key={`${error.row}-${index}`}>
-                    Row {error.row}: {error.message}
+                    Row {error.row}: {error.message ?? String(error)}
                   </li>
                 ))}
               </ul>
+            ) : null}
+            {uploadResult.created > 0 ? (
+              <Button className="mt-3" onClick={() => navigate("/app/seller/listings")}>
+                View listings
+              </Button>
             ) : null}
           </div>
         ) : null}
