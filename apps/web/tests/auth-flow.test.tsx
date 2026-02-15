@@ -199,4 +199,68 @@ describe("auth flow", () => {
       expect(screen.queryByRole("heading", { name: /sign in/i })).not.toBeInTheDocument();
     });
   });
+
+  it("allows pro sellers to load /app/seller/upload without redirecting to upgrade", async () => {
+    localStorage.setItem(
+      AUTH_SESSION_STORAGE_KEY,
+      JSON.stringify({
+        token: "jwt-seller-pro",
+      })
+    );
+
+    setTestFetchHandler(async (input: RequestInfo | URL) => {
+      const url = String(input);
+
+      if (url.endsWith("/api/auth/me")) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              id: "seller-1",
+              email: "seller@easyfinder.ai",
+              name: "Seller",
+              role: "seller",
+              ndaAccepted: true,
+              ndaAcceptedAt: null,
+            },
+          }),
+        } as Response;
+      }
+
+      if (url.endsWith("/api/me")) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              billing: {
+                plan: "pro",
+                status: "active",
+                current_period_end: "2099-01-01T00:00:00.000Z",
+                entitlements: {
+                  csvUpload: true,
+                },
+              },
+            },
+          }),
+        } as Response;
+      }
+
+      if (url.includes("/nda/status")) {
+        return {
+          ok: true,
+          json: async () => ({ data: { accepted: true } }),
+        } as Response;
+      }
+
+      return {
+        ok: true,
+        json: async () => ({ data: {} }),
+      } as Response;
+    });
+
+    renderApp(["/app/seller/upload"]);
+
+    expect(await screen.findByRole("heading", { name: "Upload inventory" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Upgrade your access" })).not.toBeInTheDocument();
+  });
 });

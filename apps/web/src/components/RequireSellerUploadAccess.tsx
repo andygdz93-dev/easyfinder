@@ -12,7 +12,7 @@ export default function RequireSellerUploadAccess({
   const { token, user, isUserLoading } = useAuth();
   const location = useLocation();
   const [billing, setBilling] = useState<Billing | null>(null);
-  const [isBillingLoading, setIsBillingLoading] = useState(false);
+  const [isBillingLoading, setIsBillingLoading] = useState(true);
 
   useEffect(() => {
     let isActive = true;
