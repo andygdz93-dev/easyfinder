@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { getMe } from "../lib/api";
 import { useAuth } from "../lib/auth";
-import { Billing, isBillingActive } from "../lib/billing";
+import { Billing, canUseSellerCsvUpload } from "../lib/billing";
 
 export default function RequireSellerUploadAccess({
   children,
@@ -17,7 +17,7 @@ export default function RequireSellerUploadAccess({
   useEffect(() => {
     let isActive = true;
 
-    if (!token || !user || (user.role !== "seller" && user.role !== "admin")) {
+    if (!token || !user || user.role !== "seller") {
       setBilling(null);
       setIsBillingLoading(false);
       return;
@@ -50,13 +50,12 @@ export default function RequireSellerUploadAccess({
     return <div className="p-6 text-slate-300">Loading…</div>;
   }
 
-  const roleOk = user.role === "seller" || user.role === "admin";
+  const roleOk = user.role === "seller";
   if (!roleOk) return <Navigate to="/app/select-role" replace />;
 
-  const active = isBillingActive(billing);
-  const csvUploadAllowed = billing?.plan === "pro" || billing?.plan === "enterprise";
+  const csvUploadAllowed = canUseSellerCsvUpload(user.role, billing?.plan);
 
-  if (!(active && csvUploadAllowed)) return <Navigate to="/app/upgrade" replace />;
+  if (!csvUploadAllowed) return <Navigate to="/app/upgrade" replace />;
 
   return <>{children}</>;
 }

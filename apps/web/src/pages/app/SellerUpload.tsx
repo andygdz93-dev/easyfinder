@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
+import { Navigate, useNavigate } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { useAuth } from "../../lib/auth";
-import { importSellerListings, ApiError } from "../../lib/api";
+import { getMe, importSellerListings, ApiError } from "../../lib/api";
+import { canUseSellerCsvUpload } from "../../lib/billing";
 
 const REQUIRED_HEADERS = [
   "title",
@@ -123,14 +124,29 @@ export const SellerUpload = () => {
   const rows = Array.isArray(parsedRows) ? parsedRows : [];
   const validationErrors = validation?.errors ?? [];
   const uploadErrors = uploadResult?.errors ?? [];
+
+  const meQuery = useQuery({
+    queryKey: ["me"],
+    queryFn: () => getMe(),
+    enabled: Boolean(token && user && user.role === "seller"),
+  });
+
   if (!token) return null;
 
-  if (isUserLoading || !user) {
+  if (isUserLoading || !user || meQuery.isLoading) {
     return (
       <Card>
         <p className="text-sm text-slate-300">Loading…</p>
       </Card>
     );
+  }
+
+  const plan = meQuery.data?.billing?.plan ?? "free";
+  const role = user?.role ?? null;
+  const canUseCsvUpload = canUseSellerCsvUpload(role, plan);
+
+  if (!canUseCsvUpload) {
+    return <Navigate to="/app/upgrade" replace />;
   }
 
   const downloadTemplate = () => {
