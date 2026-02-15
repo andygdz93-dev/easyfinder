@@ -21,6 +21,7 @@ import ndaRoutes from "./routes/nda.js";
 import billingRoutes from "./routes/billing.js";
 import offersRoutes from "./routes/offers.js";
 import inquiriesRoutes from "./routes/inquiries.js";
+import ironPlanetScraperRoutes from "./routes/scrapers.ironplanet.js";
 import { ZodError } from "zod";
 import { env } from "./env.js";
 import meRoutes from "./routes/me.js";
@@ -261,6 +262,7 @@ export const buildServer = () => {
   app.register(ndaRoutes, { prefix: "/api/nda" });
   // Always mount billing routes so promo activation is available in all environments.
   app.register(billingRoutes, { prefix: "/api/billing" });
+  app.register(ironPlanetScraperRoutes);
 
   return app;
 };
