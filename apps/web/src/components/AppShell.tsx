@@ -165,7 +165,7 @@ export const AppShell = ({
     listingLimitLabel = "Unlimited";
   }
   const visibleSections = useMemo(() => {
-    const csvUploadAllowed = billing?.entitlements?.csvUpload === true;
+    const csvUploadAllowed = billing?.plan === "pro" || billing?.plan === "enterprise";
 
     return navSections
       .map((section) => {
@@ -214,7 +214,7 @@ export const AppShell = ({
 
         return section.title === "Upgrade";
       });
-  }, [billing?.entitlements?.csvUpload, demoMode, userRoleResolved]);
+  }, [billing?.plan, demoMode, userRoleResolved]);
 
 
   return (
