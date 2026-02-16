@@ -1020,12 +1020,11 @@ components:
         usage: { type: number }
         risk: { type: number }
         speed: { type: number }
-        quality: { type: number }
 
     ScoreReason:
       type: object
       properties:
-        kind: { type: string, enum: [deal, usage, risk, speed, quality] }
+        kind: { type: string, enum: [deal, usage, risk, speed] }
         message: { type: string }
 
     ScoreBreakdown:
