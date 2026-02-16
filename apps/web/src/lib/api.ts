@@ -425,7 +425,7 @@ export const patchAdminListing = (
 
 export const deleteAdminListing = (
   id: string,
-  input: { confirm: true; reason: string }
+  input: { confirmation: string; reason: string }
 ) => apiRequest<{ deleted: boolean }>(`/admin/listings/${id}`, { method: "DELETE", body: JSON.stringify(input) });
 
 export const getAdminInquiries = (params: { page?: number; pageSize?: number; status?: "open" | "closed" | "spam" }) => {
