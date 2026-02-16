@@ -203,8 +203,8 @@ export const ListingDetail = () => {
       <Card className="space-y-3">
         <h3 className="text-lg font-semibold">Score explanation</h3>
         <ul className="space-y-2 text-sm text-slate-300">
-          {rationale.map((item) => (
-            <li key={item}>- {item}</li>
+          {rationale.map((item, index) => (
+            <li key={`${index}-${typeof item === "string" ? item : item.message}`}>- {typeof item === "string" ? item : item.message}</li>
           ))}
         </ul>
       </Card>

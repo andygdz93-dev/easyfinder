@@ -981,6 +981,17 @@ components:
         hours: { type: number, nullable: true }
         year: { type: integer, nullable: true }
         condition: { type: number, nullable: true }
+        sellerType: { type: string, enum: [dealer, auction, private, unknown], nullable: true }
+        shippingAvailable: { type: boolean, nullable: true }
+        availability: { type: string, enum: [in_stock, scheduled_auction, unknown], nullable: true }
+        lastSeenAt: { type: string, format: date-time, nullable: true }
+        listingUpdatedAt: { type: string, format: date-time, nullable: true }
+        photoCount: { type: integer, nullable: true }
+        hasInspectionReport: { type: boolean, nullable: true }
+        hasServiceHistory: { type: boolean, nullable: true }
+        verifiedSeller: { type: boolean, nullable: true }
+        city: { type: string, nullable: true }
+        country: { type: string, nullable: true }
         operable: { type: boolean }
         source: { type: string }
         images:
@@ -989,26 +1000,51 @@ components:
         imageUrl: { type: string, nullable: true }
         createdAt: { type: string, format: date-time }
         totalScore: { type: number }
+        scoreV2:
+          $ref: "#/components/schemas/ScorePillars"
+        confidenceScore: { type: number }
+        reasons:
+          type: array
+          items: { $ref: "#/components/schemas/ScoreReason" }
+        flags:
+          type: array
+          items: { type: string }
+        bestOptionEligible: { type: boolean }
         score:
           $ref: "#/components/schemas/ScoreBreakdown"
+
+    ScorePillars:
+      type: object
+      properties:
+        deal: { type: number }
+        usage: { type: number }
+        risk: { type: number }
+        speed: { type: number }
+        quality: { type: number }
+
+    ScoreReason:
+      type: object
+      properties:
+        kind: { type: string, enum: [deal, usage, risk, speed, quality] }
+        message: { type: string }
 
     ScoreBreakdown:
       type: object
       properties:
         total: { type: number }
         breakdown:
-          type: object
-          properties:
-            price: { type: number }
-            hours: { type: number }
-            year: { type: number }
-            location: { type: number }
-            condition: { type: number }
-            completeness: { type: number }
+          $ref: "#/components/schemas/ScorePillars"
+        scoreV2:
+          $ref: "#/components/schemas/ScorePillars"
         reasons:
+          type: array
+          items: { $ref: "#/components/schemas/ScoreReason" }
+        flags:
           type: array
           items: { type: string }
         confidence: { type: number }
+        confidenceScore: { type: number }
+        bestOptionEligible: { type: boolean }
         disqualified: { type: boolean }
 
     ListingsResponse:

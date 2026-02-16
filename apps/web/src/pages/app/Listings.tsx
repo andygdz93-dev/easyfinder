@@ -268,8 +268,8 @@ export const Listings = () => {
                   </span>
                 </div>
                 <ul className="list-disc space-y-1 pl-4 text-xs text-slate-400">
-                  {(score?.reasons ?? []).slice(0, 3).map((reason) => (
-                    <li key={reason}>{reason}</li>
+                  {(score?.reasons ?? []).slice(0, 3).map((reason, index) => (
+                    <li key={`${index}-${typeof reason === "string" ? reason : reason.message}`}>{typeof reason === "string" ? reason : reason.message}</li>
                   ))}
                 </ul>
                 <div className="flex flex-wrap gap-3">

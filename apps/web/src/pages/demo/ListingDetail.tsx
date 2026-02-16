@@ -96,8 +96,8 @@ export default function DemoListingDetail({ listingId }: Props) {
 
             {rationale.length > 0 && (
               <div className="space-y-1 text-xs text-slate-400">
-                {rationale.map((reason: string, index: number) => (
-                  <p key={index}>• {String(reason)}</p>
+                {rationale.map((reason, index) => (
+                  <p key={index}>• {typeof reason === "string" ? reason : reason.message}</p>
                 ))}
               </div>
             )}
