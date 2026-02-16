@@ -7,7 +7,10 @@ import { getListingsCollection, type ListingDocument } from "../listings.js";
 
 const BASE_URL = "https://www.ironplanet.com";
 const FALLBACK_IMAGE_URL = "https://placehold.co/600x400?text=IronPlanet";
-const SAMPLE_LISTINGS_LIMIT = 10;
+const SEARCH_TIMEOUT_MS = 15000;
+const DETAIL_TIMEOUT_MS = 15000;
+const CONCURRENCY = 3;
+const MAX_LISTINGS = 25;
 
 export type IronPlanetScrapeSummary = {
   scraped: number;
@@ -57,6 +60,29 @@ const extractSourceExternalId = (url: string): string => {
 };
 
 const isListingUrl = (url: string): boolean => /\/for-sale\//i.test(url);
+
+const fetchHtml = async (url: string, timeoutMs: number): Promise<string> => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        Accept: "text/html",
+        "User-Agent": "EasyFinderBot/1.0 (+https://easyfinder.ai)",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch HTML (${response.status})`);
+    }
+
+    return await response.text();
+  } finally {
+    clearTimeout(timeout);
+  }
+};
 
 const firstText = ($: CheerioAPI, selectors: string[]): string => {
   for (const selector of selectors) {
@@ -124,18 +150,28 @@ const inferMakeAndModel = (title: string): { make?: string; model?: string } => 
 
 const findImages = ($: CheerioAPI): string[] => {
   const images = new Set<string>();
+  const junkTokens = ["icon", "logo", "pixel", "placeholder", "sprite", "blank"];
+
   $("img").each((_i: number, el: AnyNode) => {
     const raw = $(el).attr("src") || $(el).attr("data-src");
     if (!raw) return;
-    const absolute = toAbsoluteUrl(raw);
-    if (absolute) images.add(absolute);
+
+    const trimmed = raw.trim();
+    if (!trimmed || trimmed.startsWith("data:")) return;
+
+    const absolute = toAbsoluteUrl(trimmed);
+    if (!absolute) return;
+
+    const lower = absolute.toLowerCase();
+    if (lower.includes(".svg") || junkTokens.some((token) => lower.includes(token))) return;
+
+    images.add(absolute);
   });
 
-  if (images.size === 0) {
-    images.add(FALLBACK_IMAGE_URL);
-  }
+  const selected = Array.from(images).slice(0, 5);
+  if (selected.length === 0) return [FALLBACK_IMAGE_URL];
 
-  return Array.from(images).slice(0, 5);
+  return selected;
 };
 
 const normalizeImages = (images: string[]): string[] => {
@@ -171,7 +207,7 @@ const buildListingDocument = (
   return {
     id: `ironplanet:${sourceExternalId}`,
     title,
-    description: firstText(detail$, ["meta[name='description']", "main p", ".description"]) || "",
+    description: detail$("meta[name='description']").attr("content")?.trim() ?? firstText(detail$, ["main p", ".description"]),
     state: findState(detail$),
     price: findPrice(detail$) ?? 0,
     hours: findHours(detail$) ?? 0,
@@ -215,12 +251,7 @@ const persistIronPlanetListings = async (
 };
 
 export async function scrapeIronPlanetSearch(searchUrl: string): Promise<IronPlanetScrapeSummary> {
-  const response = await fetch(searchUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch search page: ${response.status}`);
-  }
-
-  const html = await response.text();
+  const html = await fetchHtml(searchUrl, SEARCH_TIMEOUT_MS);
   const $ = cheerio.load(html);
 
   const listingUrls = new Set<string>();
@@ -232,17 +263,14 @@ export async function scrapeIronPlanetSearch(searchUrl: string): Promise<IronPla
     listingUrls.add(absolute);
   });
 
-  const limit = pLimit(3);
-  const candidates = Array.from(listingUrls).slice(0, 10);
+  const limit = pLimit(CONCURRENCY);
+  const candidates = Array.from(listingUrls).slice(0, MAX_LISTINGS);
 
   const listings: Array<IronPlanetScrapedListing | null> = await Promise.all(
     candidates.map((url) =>
       limit(async (): Promise<IronPlanetScrapedListing | null> => {
         try {
-          const detailRes = await fetch(url);
-          if (!detailRes.ok) return null;
-
-          const detailHtml = await detailRes.text();
+          const detailHtml = await fetchHtml(url, DETAIL_TIMEOUT_MS);
           const sourceExternalId = extractSourceExternalId(url);
           const now = new Date().toISOString();
 
@@ -265,6 +293,6 @@ export async function scrapeIronPlanetSearch(searchUrl: string): Promise<IronPla
     upserted,
     modified,
     matched,
-    sampleListings: scrapedListings.slice(0, SAMPLE_LISTINGS_LIMIT),
+    sampleListings: scrapedListings.slice(0, 10),
   };
 }
