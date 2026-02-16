@@ -601,9 +601,11 @@ paths:
           application/json:
             schema:
               type: object
-              required: [confirm, reason]
+              required: [confirmation, reason]
               properties:
-                confirm: { type: boolean, enum: [true] }
+                confirmation:
+                  type: string
+                  description: Exact phrase "DELETE <listingId>"
                 reason: { type: string }
       responses:
         "200":
