@@ -1,31 +1,29 @@
 import "dotenv/config";
-import { MongoClient } from "mongodb";
 
-const PROD_BYPASS_FLAG = "--i-know-what-im-doing";
+const ALLOW_PRODUCTION_FLAG = "--allow-production";
+const LEGACY_ALLOW_PRODUCTION_FLAG = "--i-know-what-im-doing";
 
 type ParsedArgs = {
   email: string;
-  bypassProdGuard: boolean;
+  allowProduction: boolean;
 };
 
 const usage =
-  "Usage: pnpm --filter @easyfinderai/api promote-admin -- --email you@example.com [--i-know-what-im-doing]";
+  "Usage: pnpm --filter @easyfinderai/api promote-admin -- --email you@example.com [--allow-production]";
 
 const parseArgs = (argv: string[]): ParsedArgs => {
   let email = "";
-  let bypassProdGuard = false;
+  let allowProduction = false;
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
 
-    if (arg === "--") {
-      continue;
-    }
+    if (arg === "--") continue;
 
     if (arg === "--email") {
       const value = argv[i + 1];
       if (!value || value.startsWith("--")) {
-        throw new Error("Missing value for --email.\n" + usage);
+        throw new Error(`Missing value for --email.\n${usage}`);
       }
       email = value;
       i += 1;
@@ -37,8 +35,8 @@ const parseArgs = (argv: string[]): ParsedArgs => {
       continue;
     }
 
-    if (arg === PROD_BYPASS_FLAG) {
-      bypassProdGuard = true;
+    if (arg === ALLOW_PRODUCTION_FLAG || arg === LEGACY_ALLOW_PRODUCTION_FLAG) {
+      allowProduction = true;
       continue;
     }
 
@@ -51,7 +49,7 @@ const parseArgs = (argv: string[]): ParsedArgs => {
   }
 
   if (!email) {
-    throw new Error("--email is required.\n" + usage);
+    throw new Error(`--email is required.\n${usage}`);
   }
 
   const normalizedEmail = email.trim().toLowerCase();
@@ -59,69 +57,70 @@ const parseArgs = (argv: string[]): ParsedArgs => {
     throw new Error(`Invalid email: ${email}`);
   }
 
-  return { email: normalizedEmail, bypassProdGuard };
-};
-
-const requireMongoConfig = () => {
-  const { MONGO_URL, DB_NAME } = process.env;
-  if (!MONGO_URL || !DB_NAME) {
-    throw new Error("MONGO_URL and DB_NAME must be set in environment variables.");
-  }
-  return { MONGO_URL, DB_NAME };
+  return { email: normalizedEmail, allowProduction };
 };
 
 const main = async () => {
-  const { email, bypassProdGuard } = parseArgs(process.argv.slice(2));
-  const nodeEnv = process.env.NODE_ENV ?? "development";
+  const { email, allowProduction } = parseArgs(process.argv.slice(2));
 
-  if (nodeEnv === "production" && !bypassProdGuard) {
+  if (process.env.NODE_ENV === "production" && !allowProduction) {
     throw new Error(
-      `Refusing to run in production without ${PROD_BYPASS_FLAG}.` +
-        `\nRe-run with ${PROD_BYPASS_FLAG} only if you understand the risk.`
+      `Refusing to run in production without ${ALLOW_PRODUCTION_FLAG}.\n` +
+        `If you intentionally need this, run again with ${ALLOW_PRODUCTION_FLAG}.`
     );
   }
 
-  const { MONGO_URL, DB_NAME } = requireMongoConfig();
+  const db = await import("../src/db.js");
+  const usersModule = await import("../src/users.js");
 
-  const client = new MongoClient(MONGO_URL);
-  await client.connect();
+  await db.connectToDatabase();
 
   try {
-    const users = client.db(DB_NAME).collection("users");
+    const users = usersModule.getUsersCollection();
+    console.log(`Email searched: ${email}`);
 
-    const existingUser = await users.findOne<{ role?: string | null; email?: string; emailLower?: string }>(
-      { emailLower: email },
-      { projection: { role: 1, email: 1, emailLower: 1 } }
-    );
-
-    if (!existingUser) {
-      console.log(`No changes: user ${email} not found.`);
+    const user = await users.findOne({ emailLower: email });
+    if (!user) {
+      console.error("Status: ERROR");
+      console.error(`Reason: user not found for email ${email}`);
       process.exitCode = 1;
       return;
     }
 
-    const previousRole = existingUser.role ?? null;
-    const now = new Date();
+    const userId = user._id.toHexString();
+    const previousRole = user.role ?? "null";
 
-    const result = await users.updateOne(
-      { emailLower: email },
-      { $set: { role: "admin", roleSetAt: now, updatedAt: now } }
-    );
-
-    const resolvedEmail = existingUser.email ?? existingUser.emailLower ?? email;
-
-    if (result.modifiedCount === 0 && previousRole === "admin") {
-      console.log(
-        `No changes: ${resolvedEmail} already had role admin (matched=${result.matchedCount}, modified=${result.modifiedCount}).`
-      );
+    if (user.role === "admin") {
+      console.log(`User id: ${userId}`);
+      console.log(`Role transition: ${previousRole} -> admin`);
+      console.log("Status: NOOP");
       return;
     }
 
-    console.log(
-      `Changed user ${resolvedEmail}: role ${String(previousRole)} -> admin (matched=${result.matchedCount}, modified=${result.modifiedCount}).`
+    const updatedAt = new Date();
+    const result = await users.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          role: "admin",
+          roleSetAt: updatedAt,
+          updatedAt,
+        },
+      }
     );
+
+    if (result.matchedCount !== 1) {
+      console.error("Status: ERROR");
+      console.error(`Reason: expected to match 1 user, matched=${result.matchedCount}`);
+      process.exitCode = 1;
+      return;
+    }
+
+    console.log(`User id: ${userId}`);
+    console.log(`Role transition: ${previousRole} -> admin`);
+    console.log("Status: DONE");
   } finally {
-    await client.close();
+    await db.closeDatabaseConnection();
   }
 };
 
