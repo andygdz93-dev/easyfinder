@@ -370,6 +370,13 @@ export type AdminListingsResponse = {
   pageSize: number;
 };
 
+
+export type AdminListingDetail = {
+  listing: Listing & { status?: "active" | "paused" | "removed" | "pending_review" };
+  inquiries: Array<InquiryDto & { id: string; sellerId: string | null; buyerId: string; updatedAt: string }>;
+  audit: AdminAuditLog[];
+};
+
 export type AdminInquiriesResponse = {
   items: Array<InquiryDto & { id: string }>;
   total: number;
@@ -417,6 +424,8 @@ export const getAdminListings = (params: {
   const query = search.toString();
   return apiRequest<AdminListingsResponse>(`/admin/listings${query ? `?${query}` : ""}`);
 };
+
+export const getAdminListingDetail = (id: string) => apiRequest<AdminListingDetail>(`/admin/listings/${id}`);
 
 export const patchAdminListing = (
   id: string,
