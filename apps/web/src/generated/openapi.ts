@@ -1315,6 +1315,53 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List and filter admin audit logs */
+        get: {
+            parameters: {
+                query?: {
+                    action?: string;
+                    targetType?: "listing" | "inquiry" | "scoringConfig" | "ingestion";
+                    targetId?: string;
+                    actorEmail?: string;
+                    dateFrom?: string;
+                    dateTo?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Audit log page */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminAuditResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["ForbiddenError"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/scrape/ironplanet": {
         parameters: {
             query?: never;
@@ -2088,6 +2135,35 @@ export interface components {
         AdminInquiriesResponse: {
             data?: {
                 items?: components["schemas"]["Inquiry"][];
+                total?: number;
+                page?: number;
+                pageSize?: number;
+            };
+            requestId?: string;
+        };
+        AdminAuditLog: {
+            id: string;
+            actorUserId: string;
+            /** Format: email */
+            actorEmail: string;
+            action: string;
+            /** @enum {string} */
+            targetType: "listing" | "inquiry" | "scoringConfig" | "ingestion";
+            targetId: string;
+            reason?: string;
+            before?: {
+                [key: string]: unknown;
+            } | null;
+            after?: {
+                [key: string]: unknown;
+            } | null;
+            requestId: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        AdminAuditResponse: {
+            data?: {
+                items?: components["schemas"]["AdminAuditLog"][];
                 total?: number;
                 page?: number;
                 pageSize?: number;

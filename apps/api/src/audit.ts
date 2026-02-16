@@ -33,6 +33,17 @@ export type AuditLog = {
   createdAt: Date;
 };
 
+export type AuditLogFilters = {
+  action?: string;
+  targetType?: AuditTargetType;
+  targetId?: string;
+  actorEmail?: string;
+  dateFrom?: Date;
+  dateTo?: Date;
+  page: number;
+  pageSize: number;
+};
+
 const inMemoryAuditLogs: AuditLog[] = [];
 let indexesEnsured = false;
 
@@ -98,3 +109,55 @@ export const writeAuditLog = async (
 };
 
 export const getTestAuditLogs = () => inMemoryAuditLogs;
+
+export const findAuditLogs = async (filters: AuditLogFilters): Promise<{ items: AuditLog[]; total: number }> => {
+  const query: {
+    action?: string;
+    targetType?: AuditTargetType;
+    targetId?: string;
+    actorEmail?: string;
+    createdAt?: { $gte?: Date; $lte?: Date };
+  } = {};
+
+  if (filters.action) query.action = filters.action;
+  if (filters.targetType) query.targetType = filters.targetType;
+  if (filters.targetId) query.targetId = filters.targetId;
+  if (filters.actorEmail) query.actorEmail = filters.actorEmail;
+  if (filters.dateFrom || filters.dateTo) {
+    query.createdAt = {};
+    if (filters.dateFrom) query.createdAt.$gte = filters.dateFrom;
+    if (filters.dateTo) query.createdAt.$lte = filters.dateTo;
+  }
+
+  const skip = (filters.page - 1) * filters.pageSize;
+
+  try {
+    const collection = getAuditCollection();
+    const [items, total] = await Promise.all([
+      collection.find(query).sort({ createdAt: -1 }).skip(skip).limit(filters.pageSize).toArray(),
+      collection.countDocuments(query),
+    ]);
+    return { items, total };
+  } catch (error) {
+    if (env.NODE_ENV !== "test") {
+      throw error;
+    }
+
+    const filtered = inMemoryAuditLogs
+      .filter((item) => {
+        if (query.action && item.action !== query.action) return false;
+        if (query.targetType && item.targetType !== query.targetType) return false;
+        if (query.targetId && item.targetId !== query.targetId) return false;
+        if (query.actorEmail && item.actorEmail !== query.actorEmail) return false;
+        if (query.createdAt?.$gte && item.createdAt < query.createdAt.$gte) return false;
+        if (query.createdAt?.$lte && item.createdAt > query.createdAt.$lte) return false;
+        return true;
+      })
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    return {
+      items: filtered.slice(skip, skip + filters.pageSize),
+      total: filtered.length,
+    };
+  }
+};

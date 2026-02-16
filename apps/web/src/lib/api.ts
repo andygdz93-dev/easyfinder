@@ -377,6 +377,28 @@ export type AdminInquiriesResponse = {
   pageSize: number;
 };
 
+export type AdminAuditLog = {
+  id: string;
+  actorUserId: string;
+  actorEmail: string;
+  action: string;
+  targetType: "listing" | "inquiry" | "scoringConfig" | "ingestion";
+  targetId: string;
+  reason?: string;
+  before?: Record<string, unknown> | null;
+  after?: Record<string, unknown> | null;
+  requestId: string;
+  createdAt: string;
+};
+
+export type AdminAuditResponse = {
+  items: AdminAuditLog[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
+
 export const getAdminOverview = () => apiRequest<AdminOverview>("/admin/overview");
 
 export const getAdminListings = (params: {
@@ -423,3 +445,27 @@ export const runAdminIronPlanetScrape = (input: { url: string }) =>
     method: "POST",
     body: JSON.stringify(input),
   });
+
+
+export const getAdminAuditLogs = (params: {
+  action?: string;
+  targetType?: "listing" | "inquiry" | "scoringConfig" | "ingestion";
+  targetId?: string;
+  actorEmail?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  page?: number;
+  pageSize?: number;
+}) => {
+  const search = new URLSearchParams();
+  if (params.action) search.set("action", params.action);
+  if (params.targetType) search.set("targetType", params.targetType);
+  if (params.targetId) search.set("targetId", params.targetId);
+  if (params.actorEmail) search.set("actorEmail", params.actorEmail);
+  if (params.dateFrom) search.set("dateFrom", params.dateFrom);
+  if (params.dateTo) search.set("dateTo", params.dateTo);
+  if (params.page) search.set("page", String(params.page));
+  if (params.pageSize) search.set("pageSize", String(params.pageSize));
+  const query = search.toString();
+  return apiRequest<AdminAuditResponse>(`/admin/audit${query ? `?${query}` : ""}`);
+};

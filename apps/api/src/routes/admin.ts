@@ -8,7 +8,7 @@ import { getInquiriesCollection } from "../inquiries.js";
 import { env } from "../env.js";
 import { getScoringConfig, setScoringConfig, sourceHealth } from "../store.js";
 import { defaultScoringConfig } from "@easyfinderai/shared";
-import { insertAuditEvent } from "../audit.js";
+import { findAuditLogs, insertAuditEvent } from "../audit.js";
 import { isValidIronPlanetUrl } from "../scrapers/ironplanet.validation.js";
 import { scrapeIronPlanetSearch } from "../scrapers/ironplanet.js";
 
@@ -44,6 +44,17 @@ const inquiryPatchSchema = z.object({
 
 const scrapeSchema = z.object({
   url: z.string().min(1),
+});
+
+const auditQuerySchema = z.object({
+  action: z.string().min(1).optional(),
+  targetType: z.enum(["listing", "inquiry", "scoringConfig", "ingestion"]).optional(),
+  targetId: z.string().min(1).optional(),
+  actorEmail: z.string().email().optional(),
+  dateFrom: z.coerce.date().optional(),
+  dateTo: z.coerce.date().optional(),
+  page: z.coerce.number().int().positive().default(1),
+  pageSize: z.coerce.number().int().positive().max(100).default(20),
 });
 
 const scoringConfigInput = z.object({
@@ -236,6 +247,29 @@ export default async function adminRoutes(app: FastifyInstance) {
     });
 
     return ok(request, { config: next });
+  });
+
+  app.get("/audit", guard, async (request) => {
+    const query = auditQuerySchema.parse(request.query);
+    const result = await findAuditLogs(query);
+    return ok(request, {
+      items: result.items.map((item) => ({
+        id: item.id,
+        actorUserId: item.actorUserId,
+        actorEmail: item.actorEmail,
+        action: item.action,
+        targetType: item.targetType,
+        targetId: item.targetId,
+        reason: item.reason,
+        before: item.before,
+        after: item.after,
+        requestId: item.requestId,
+        createdAt: item.createdAt.toISOString(),
+      })),
+      total: result.total,
+      page: query.page,
+      pageSize: query.pageSize,
+    });
   });
 
   app.post("/scrape/ironplanet", guard, async (request, reply) => {
