@@ -17,7 +17,8 @@ export default function AdminListings() {
   });
 
   const hardDelete = useMutation({
-    mutationFn: ({ id }: { id: string }) => deleteAdminListing(id, { confirm: true, reason: "admin-delete" }),
+    mutationFn: ({ id, reason, confirmation }: { id: string; reason: string; confirmation: string }) =>
+      deleteAdminListing(id, { confirmation, reason }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-listings"] }),
   });
 
@@ -42,9 +43,12 @@ export default function AdminListings() {
                 <Button onClick={() => item.id && mutateStatus.mutate({ id: item.id, status: "removed" })}>Remove</Button>
                 <Button onClick={() => item.id && mutateStatus.mutate({ id: item.id, status: "active" })}>Restore</Button>
                 <Button variant="outline" onClick={() => {
-                  if (window.prompt("Type DELETE to confirm") === "DELETE") {
-                    if (item.id) hardDelete.mutate({ id: item.id });
-                  }
+                  if (!item.id) return;
+                  const confirmation = window.prompt(`Type DELETE ${item.id} to confirm hard delete`);
+                  if (!confirmation) return;
+                  const reason = window.prompt("Provide a reason for hard delete");
+                  if (!reason) return;
+                  hardDelete.mutate({ id: item.id, confirmation, reason });
                 }}>Delete</Button>
               </div>
             </div>

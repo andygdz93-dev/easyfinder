@@ -33,7 +33,7 @@ const listingPatchSchema = z.object({
 });
 
 const deleteListingSchema = z.object({
-  confirm: z.literal(true),
+  confirmation: z.string().min(1),
   reason: z.string().min(1),
 });
 
@@ -152,6 +152,11 @@ export default async function adminRoutes(app: FastifyInstance) {
   app.delete("/listings/:id", guard, async (request, reply) => {
     const { id } = request.params as { id: string };
     const payload = deleteListingSchema.parse(request.body);
+    const expectedConfirmation = `DELETE ${id}`;
+    if (payload.confirmation !== expectedConfirmation) {
+      return fail(request, reply, "BAD_REQUEST", `confirmation must equal \"${expectedConfirmation}\"`, 400);
+    }
+
     const before = await getListingsCollection().findById(id);
     if (!before) {
       return fail(request, reply, "NOT_FOUND", "Listing not found.", 404);

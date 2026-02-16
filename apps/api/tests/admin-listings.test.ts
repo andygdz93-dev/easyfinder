@@ -55,18 +55,18 @@ describe("admin listings", () => {
     expect(getTestAuditLogs().length).toBeGreaterThan(before);
   });
 
-  it("delete requires confirm and writes audit", async () => {
+  it("hard delete requires typed confirmation phrase and reason, then writes audit", async () => {
     const missingConfirm = await supertest(app.server)
       .delete(`/api/admin/listings/${listingId}`)
       .set("Authorization", `Bearer ${adminToken}`)
-      .send({ reason: "nope" });
+      .send({ confirmation: `DELETE wrong-${listingId}`, reason: "nope" });
     expect(missingConfirm.status).toBe(400);
 
     const before = getTestAuditLogs().length;
     const res = await supertest(app.server)
       .delete(`/api/admin/listings/${listingId}`)
       .set("Authorization", `Bearer ${adminToken}`)
-      .send({ confirm: true, reason: "test-delete" });
+      .send({ confirmation: `DELETE ${listingId}`, reason: "test-delete" });
 
     expect(res.status).toBe(200);
     expect(getTestAuditLogs().length).toBeGreaterThan(before);
