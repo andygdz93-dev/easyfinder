@@ -47,6 +47,16 @@ export const connectToDatabase = async () => {
   return connectPromise;
 };
 
+
+export const closeDatabaseConnection = async () => {
+  if (client) {
+    await client.close();
+  }
+  client = null;
+  db = null;
+  connectPromise = null;
+};
+
 export const getDb = () => {
   if (!db) {
     throw new Error("Database not initialized. Call connectToDatabase() on startup.");
