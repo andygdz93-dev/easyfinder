@@ -58,6 +58,8 @@ describe("scoreListing", () => {
 
     expect(faster.breakdown.speed).toBeGreaterThan(slower.breakdown.speed);
     expect(faster.total).toBeGreaterThan(slower.total);
+    expect(faster.reasons.some((entry) => entry.kind === "speed")).toBe(true);
+    expect(slower.reasons.some((entry) => entry.kind === "speed")).toBe(true);
   });
 
   it("lets cheap-higher-hours outrank expensive-low-hours only when value is very strong", () => {

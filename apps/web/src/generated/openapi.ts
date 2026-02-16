@@ -1692,11 +1692,10 @@ export interface components {
             usage?: number;
             risk?: number;
             speed?: number;
-            quality?: number;
         };
         ScoreReason: {
             /** @enum {string} */
-            kind?: "deal" | "usage" | "risk" | "speed" | "quality";
+            kind?: "deal" | "usage" | "risk" | "speed";
             message?: string;
         };
         ScoreBreakdown: {
