@@ -36,15 +36,14 @@ function Test-ExcludedPath {
 
 function Get-RelativePath {
   param(
-    [Parameter(Mandatory = $true)][string]$BasePath,
-    [Parameter(Mandatory = $true)][string]$TargetPath
+    [Parameter(Mandatory=$true)][string]$BasePath,
+    [Parameter(Mandatory=$true)][string]$TargetPath
   )
 
-  # Normalize to full paths
-  $baseFull = (Resolve-Path -LiteralPath $BasePath).Path
-  $targetFull = (Resolve-Path -LiteralPath $TargetPath).Path
+  # Do NOT use Resolve-Path (it requires the path to exist).
+  $baseFull = [System.IO.Path]::GetFullPath($BasePath)
+  $targetFull = [System.IO.Path]::GetFullPath($TargetPath)
 
-  # Ensure base ends with a trailing slash for MakeRelativeUri correctness
   if (-not $baseFull.EndsWith('\\')) { $baseFull += '\\' }
 
   $baseUri = [Uri]("file:///" + ($baseFull -replace '\\', '/'))
@@ -52,7 +51,6 @@ function Get-RelativePath {
 
   $rel = $baseUri.MakeRelativeUri($targetUri).ToString()
   $rel = [Uri]::UnescapeDataString($rel) -replace '/', '\\'
-
   return $rel
 }
 
@@ -91,6 +89,17 @@ function Add-FileContentSection {
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
 Set-Location $repoRoot
 
+$ignoreTokens = @('\\node_modules\\', '\\.turbo\\', '\\dist\\', '\\build\\', '\\coverage\\', '\\.git\\')
+
+function Test-IgnoredFullPath {
+  param(
+    [Parameter(Mandatory = $true)][string]$FullPath
+  )
+
+  $normalized = $FullPath -replace '/', '\\'
+  return [bool]($ignoreTokens | Where-Object { $normalized -like "*$_*" })
+}
+
 $docsDir = Join-Path $repoRoot 'docs'
 if (-not (Test-Path -LiteralPath $docsDir)) {
   New-Item -ItemType Directory -Path $docsDir | Out-Null
@@ -124,6 +133,7 @@ $fileIndexPath = Join-Path $docsDir 'FILE_INDEX.json'
 $fileIndex | Sort-Object path | ConvertTo-Json -Depth 4 | Out-File -LiteralPath $fileIndexPath -Encoding utf8
 
 $treeItems = Get-ChildItem -LiteralPath $repoRoot -Recurse -Force |
+  Where-Object { -not (Test-IgnoredFullPath -FullPath $_.FullName) } |
   Where-Object {
     $relative = Get-RelativePath -BasePath $repoRoot -TargetPath $_.FullName
     -not (Test-ExcludedPath -RelativePath $relative)
@@ -149,14 +159,17 @@ foreach ($matchGroup in $routeMatches.Matches) {
 $routes = $routes | Sort-Object -Unique
 
 $pageFiles = Get-ChildItem -Path (Join-Path $repoRoot 'apps/web/src/pages') -Recurse -File -Include *.tsx,*.ts -ErrorAction SilentlyContinue |
+  Where-Object { -not (Test-IgnoredFullPath -FullPath $_.FullName) } |
   ForEach-Object { Get-RelativePath -BasePath $repoRoot -TargetPath $_.FullName } |
   Sort-Object -Unique
 
 $componentFiles = Get-ChildItem -Path (Join-Path $repoRoot 'apps/web/src/components') -Recurse -File -Include *.tsx,*.ts -ErrorAction SilentlyContinue |
+  Where-Object { -not (Test-IgnoredFullPath -FullPath $_.FullName) } |
   ForEach-Object { Get-RelativePath -BasePath $repoRoot -TargetPath $_.FullName } |
   Sort-Object -Unique
 
 $apiRouteFiles = Get-ChildItem -Path (Join-Path $repoRoot 'apps/api/src/routes') -Recurse -File -Include *.ts -ErrorAction SilentlyContinue |
+  Where-Object { -not (Test-IgnoredFullPath -FullPath $_.FullName) } |
   ForEach-Object { Get-RelativePath -BasePath $repoRoot -TargetPath $_.FullName } |
   Sort-Object -Unique
 
