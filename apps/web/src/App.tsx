@@ -42,6 +42,7 @@ import RequireSellerUploadAccess from "./components/RequireSellerUploadAccess";
 import AdminHome from "./pages/admin/AdminHome";
 import AdminListings from "./pages/admin/AdminListings";
 import AdminInquiries from "./pages/admin/AdminInquiries";
+import AdminAudit from "./pages/admin/AdminAudit";
 
 const LegacyListingRedirect = () => {
   const { id } = useParams();
@@ -155,6 +156,7 @@ const AdminEntry = () => {
       <Route path="/admin/home" element={<AdminHome />} />
       <Route path="/admin/listings" element={<AdminListings />} />
       <Route path="/admin/inquiries" element={<AdminInquiries />} />
+      <Route path="/admin/audit" element={<AdminAudit />} />
       <Route path="*" element={<Navigate to="/admin/home" replace />} />
     </Routes>
   );
