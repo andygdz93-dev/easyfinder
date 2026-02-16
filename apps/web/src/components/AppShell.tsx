@@ -5,7 +5,11 @@ import { UserRole, useAuth } from "../lib/auth";
 import { getMe } from "../lib/api";
 import { Billing, canUseSellerCsvUpload } from "../lib/billing";
 import { useRuntime } from "../lib/runtime";
-import { canAccessSection, displayRoleLabel, shouldShowUpgrade } from "../lib/roles";
+import {
+  canAccessSection,
+  displayRoleLabel,
+  shouldShowUpgrade,
+} from "../lib/roles";
 import DemoBanner from "./DemoBanner";
 
 const NDA_WARNING_TEXT = "NDA must be accepted before accessing this resource.";
@@ -29,7 +33,6 @@ function formatPlanLabel(billing?: Billing) {
   return label;
 }
 
-
 const navSections = [
   {
     title: "Buyer",
@@ -48,6 +51,17 @@ const navSections = [
       { to: "/app/seller/pipeline", label: "Pipeline" },
       { to: "/app/seller/add", label: "Add listing" },
       { to: "/app/seller/upload", label: "Upload listing" },
+    ],
+  },
+  {
+    title: "Admin",
+    items: [
+      { to: "/app/admin/overview", label: "Overview" },
+      { to: "/app/admin/sources", label: "Sources" },
+      { to: "/admin/listings", label: "Listings" },
+      { to: "/admin/inquiries", label: "Inquiries" },
+      { to: "/app/scoring", label: "Scoring" },
+      { to: "/app/admin/sources", label: "Scrape" },
     ],
   },
   {
@@ -100,7 +114,9 @@ export const AppShell = ({
         if (!isActive) return;
         setBilling(null);
         setMeRole(null);
-        setBillingError(error instanceof Error ? error.message : "Unable to load billing.");
+        setBillingError(
+          error instanceof Error ? error.message : "Unable to load billing.",
+        );
       })
       .finally(() => {
         if (!isActive) return;
@@ -138,12 +154,16 @@ export const AppShell = ({
   }, [planResolved, userRoleResolved]);
 
   const roleLabel = displayRoleLabel({ role: effectiveRole });
-  const isShellLoading = !hydrated || billingLoading || (Boolean(token) && !user);
+  const isShellLoading =
+    !hydrated || billingLoading || (Boolean(token) && !user);
   const badgeLabel = isShellLoading ? "Loading…" : roleLabel;
 
   let listingLimitLabel = "25";
 
-  if (billing?.plan !== "free" && billing?.entitlements?.maxActiveListings === null) {
+  if (
+    billing?.plan !== "free" &&
+    billing?.entitlements?.maxActiveListings === null
+  ) {
     listingLimitLabel = "Unlimited";
   } else if (typeof billing?.entitlements?.maxActiveListings === "number") {
     listingLimitLabel = String(billing.entitlements.maxActiveListings);
@@ -156,7 +176,7 @@ export const AppShell = ({
     const csvUploadAllowed = canUseSellerCsvUpload(
       userRoleResolved,
       billing?.plan,
-      billing?.entitlements?.csvUpload
+      billing?.entitlements?.csvUpload,
     );
 
     return navSections
@@ -165,7 +185,11 @@ export const AppShell = ({
           return {
             ...section,
             items: section.items.filter((item) => {
-              if (demoMode && (item.label === "Add listing" || item.label === "Upload listing")) {
+              if (
+                demoMode &&
+                (item.label === "Add listing" ||
+                  item.label === "Upload listing")
+              ) {
                 return false;
               }
 
@@ -185,18 +209,32 @@ export const AppShell = ({
           return canAccessSection({ role: effectiveRole }, "buyer");
         }
         if (section.title === "Seller") {
-          return section.items.length > 0 && canAccessSection({ role: effectiveRole }, "seller");
+          return (
+            section.items.length > 0 &&
+            canAccessSection({ role: effectiveRole }, "seller")
+          );
+        }
+        if (section.title === "Admin") {
+          return canAccessSection({ role: effectiveRole }, "admin");
         }
         if (section.title === "Enterprise") {
           return canAccessSection({ role: effectiveRole }, "enterprise");
         }
         if (section.title === "Upgrade") {
-          return canAccessSection({ role: effectiveRole }, "upgrade") && shouldShowUpgrade({ role: effectiveRole });
+          return (
+            canAccessSection({ role: effectiveRole }, "upgrade") &&
+            shouldShowUpgrade({ role: effectiveRole })
+          );
         }
         return false;
       });
-  }, [billing?.entitlements?.csvUpload, billing?.plan, demoMode, effectiveRole, userRoleResolved]);
-
+  }, [
+    billing?.entitlements?.csvUpload,
+    billing?.plan,
+    demoMode,
+    effectiveRole,
+    userRoleResolved,
+  ]);
 
   return (
     <div
@@ -222,9 +260,7 @@ export const AppShell = ({
             <p className="mt-2 text-xs text-rose-400">{billingError}</p>
           ) : null}
           {user?.ndaAccepted === false ? (
-            <p className="mt-2 text-xs text-rose-400">
-              {NDA_WARNING_TEXT}
-            </p>
+            <p className="mt-2 text-xs text-rose-400">{NDA_WARNING_TEXT}</p>
           ) : null}
           <nav className="mt-8 space-y-6">
             {visibleSections.map((section) => (
@@ -271,9 +307,13 @@ export const AppShell = ({
           <header className="flex items-center justify-between border-b border-slate-800 px-8 py-6">
             <div>
               <h2 className="text-lg font-semibold">
-                {user?.ndaAccepted ? "Welcome back" : "Welcome to Easy Finder AI"}
+                {user?.ndaAccepted
+                  ? "Welcome back"
+                  : "Welcome to Easy Finder AI"}
               </h2>
-              <p className="text-sm text-slate-400">Premium equipment intelligence</p>
+              <p className="text-sm text-slate-400">
+                Premium equipment intelligence
+              </p>
             </div>
             <div className="flex items-center gap-3">
               {isDemoMode ? (
