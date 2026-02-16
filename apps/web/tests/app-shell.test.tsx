@@ -102,7 +102,7 @@ describe("AppShell seller upload navigation", () => {
     );
 
 
-  it("renders buyer badge labels in buyer routes", async () => {
+  it("renders buyer role badge labels in buyer routes", async () => {
     setTestFetchHandler(async (input: RequestInfo | URL) => {
       const url = String(input);
       if (url.endsWith("/api/auth/me")) {
@@ -141,7 +141,7 @@ describe("AppShell seller upload navigation", () => {
 
     renderSellerShell(["/app/listings"]);
 
-    expect(await screen.findByText("Free Buyer")).toBeInTheDocument();
+    expect(await screen.findByText("Role: Buyer")).toBeInTheDocument();
   });
 
   it("shows Upload listing for pro sellers", async () => {
@@ -187,7 +187,7 @@ describe("AppShell seller upload navigation", () => {
     renderSellerShell();
 
     expect(await screen.findByRole("link", { name: "Upload listing" })).toBeInTheDocument();
-    expect(await screen.findByText("Pro Seller")).toBeInTheDocument();
+    expect(await screen.findByText("Role: Seller")).toBeInTheDocument();
   });
 
   it("hides Upload listing for free sellers", async () => {

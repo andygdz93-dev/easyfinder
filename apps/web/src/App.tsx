@@ -39,6 +39,7 @@ import { getAdminOverview } from "./lib/api";
 import { SelectRole } from "./pages/app/SelectRole";
 import { Billing } from "./pages/app/Billing";
 import RequireSellerUploadAccess from "./components/RequireSellerUploadAccess";
+import { isAdmin } from "./lib/roles";
 import AdminHome from "./pages/admin/AdminHome";
 import AdminListings from "./pages/admin/AdminListings";
 import AdminListingDetail from "./pages/admin/AdminListingDetail";
@@ -129,6 +130,17 @@ const RequireRoleSelection = ({ children }: { children?: React.ReactNode }) => {
   return <>{children ?? <Outlet />}</>;
 };
 
+
+
+const UpgradeRouteGuard = () => {
+  const { user } = useAuth();
+
+  if (isAdmin(user)) {
+    return <Navigate to="/admin" replace />;
+  }
+
+  return <Upgrade />;
+};
 
 const AdminEntry = () => {
   const { user, isUserLoading } = useAuth();
@@ -236,7 +248,7 @@ export default function App() {
             <Route path="admin/sources" element={<AdminSources />} />
             <Route
               element={
-                <RequireRoles allowed={["seller"]}>
+                <RequireRoles allowed={["seller", "admin"]}>
                   <Outlet />
                 </RequireRoles>
               }
@@ -267,7 +279,7 @@ export default function App() {
                 </RequireEnterprise>
               }
             />
-            <Route path="upgrade" element={<Upgrade />} />
+            <Route path="upgrade" element={<UpgradeRouteGuard />} />
             <Route path="nda" element={<Nda />} />
           </Route>
         </Route>
