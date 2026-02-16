@@ -16,7 +16,8 @@
     "test": "turbo run test",
     "clean": "powershell -ExecutionPolicy Bypass -File scripts/clean.ps1",
     "openapi:validate": "swagger-cli validate ./openapi.yml",
-    "openapi:types": "openapi-typescript ./openapi.yml -o ./apps/web/src/generated/openapi.ts"
+    "openapi:types": "openapi-typescript ./openapi.yml -o ./apps/web/src/generated/openapi.ts",
+    "repo:snapshot": "powershell -ExecutionPolicy Bypass -File ./scripts/repo-snapshot.ps1"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.3.0",

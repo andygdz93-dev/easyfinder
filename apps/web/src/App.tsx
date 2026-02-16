@@ -63,7 +63,7 @@ const DashboardRedirect = () => {
   }
 
   if (user?.role === "admin") {
-    return <Navigate to="/app/admin/sources" replace />;
+    return <Navigate to="/app/admin/overview" replace />;
   }
 
   return <Navigate to="/app/listings" replace />;
@@ -129,8 +129,6 @@ const RequireRoleSelection = ({ children }: { children?: React.ReactNode }) => {
 
   return <>{children ?? <Outlet />}</>;
 };
-
-
 
 const UpgradeRouteGuard = () => {
   const { user } = useAuth();
@@ -200,6 +198,10 @@ export default function App() {
         path="/admin/sources"
         element={<Navigate to="/app/admin/sources" replace />}
       />
+      <Route
+        path="/app/admin"
+        element={<Navigate to="/app/admin/overview" replace />}
+      />
       <Route path="/scoring" element={<Navigate to="/app/scoring" replace />} />
       <Route
         path="/seller"
@@ -246,6 +248,10 @@ export default function App() {
               <Route path="offers" element={<Offers />} />
             </Route>
             <Route path="admin/sources" element={<AdminSources />} />
+            <Route
+              path="admin/overview"
+              element={<Navigate to="/admin/home" replace />}
+            />
             <Route
               element={
                 <RequireRoles allowed={["seller", "admin"]}>
