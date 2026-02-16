@@ -1658,6 +1658,21 @@ export interface components {
             hours?: number | null;
             year?: number | null;
             condition?: number | null;
+            /** @enum {string|null} */
+            sellerType?: "dealer" | "auction" | "private" | "unknown" | null;
+            shippingAvailable?: boolean | null;
+            /** @enum {string|null} */
+            availability?: "in_stock" | "scheduled_auction" | "unknown" | null;
+            /** Format: date-time */
+            lastSeenAt?: string | null;
+            /** Format: date-time */
+            listingUpdatedAt?: string | null;
+            photoCount?: number | null;
+            hasInspectionReport?: boolean | null;
+            hasServiceHistory?: boolean | null;
+            verifiedSeller?: boolean | null;
+            city?: string | null;
+            country?: string | null;
             operable: boolean;
             source: string;
             images?: string[];
@@ -1665,20 +1680,34 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
             totalScore?: number;
+            scoreV2?: components["schemas"]["ScorePillars"];
+            confidenceScore?: number;
+            reasons?: components["schemas"]["ScoreReason"][];
+            flags?: string[];
+            bestOptionEligible?: boolean;
             score?: components["schemas"]["ScoreBreakdown"];
+        };
+        ScorePillars: {
+            deal?: number;
+            usage?: number;
+            risk?: number;
+            speed?: number;
+            quality?: number;
+        };
+        ScoreReason: {
+            /** @enum {string} */
+            kind?: "deal" | "usage" | "risk" | "speed" | "quality";
+            message?: string;
         };
         ScoreBreakdown: {
             total?: number;
-            breakdown?: {
-                price?: number;
-                hours?: number;
-                year?: number;
-                location?: number;
-                condition?: number;
-                completeness?: number;
-            };
-            reasons?: string[];
+            breakdown?: components["schemas"]["ScorePillars"];
+            scoreV2?: components["schemas"]["ScorePillars"];
+            reasons?: components["schemas"]["ScoreReason"][];
+            flags?: string[];
             confidence?: number;
+            confidenceScore?: number;
+            bestOptionEligible?: boolean;
             disqualified?: boolean;
         };
         ListingsResponse: {

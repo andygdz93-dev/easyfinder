@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import type { Listing } from "@easyfinderai/shared";
+import type { Listing, ScoreBreakdown } from "@easyfinderai/shared";
 import { demoListings, defaultScoringConfig, scoreListing } from "@easyfinderai/shared";
 import { useDemoWatchlist } from "../../lib/demoWatchlist";
 import { formatCategory } from "../../lib/formatters";
@@ -79,14 +79,14 @@ export default function DemoListings() {
 function ListingCard({
   listing,
   score,
-  reasons,
+  reasons = [],
   confidence,
   isSaved,
   onToggleWatchlist,
 }: {
   listing: Listing;
   score: number;
-  reasons: string[];
+  reasons: ScoreBreakdown["reasons"];
   confidence: number;
   isSaved: boolean;
   onToggleWatchlist: () => void;
@@ -166,8 +166,8 @@ function ListingCard({
           </div>
           </div>
           <ul className="list-disc space-y-1 pl-4 text-xs text-slate-500">
-            {reasons.slice(0, 3).map((reason) => (
-              <li key={reason}>{reason}</li>
+            {reasons.slice(0, 3).map((reason, index) => (
+              <li key={`${index}-${typeof reason === "string" ? reason : reason.message}`}>{typeof reason === "string" ? reason : reason.message}</li>
             ))}
           </ul>
         </div>
