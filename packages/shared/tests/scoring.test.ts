@@ -14,71 +14,101 @@ const baseListing: Listing = {
   condition: 4.5,
   category: "Excavator",
   imageUrl: "https://example.com/image.jpg",
+  images: [
+    "https://example.com/image-1.jpg",
+    "https://example.com/image-2.jpg",
+    "https://example.com/image-3.jpg",
+    "https://example.com/image-4.jpg",
+    "https://example.com/image-5.jpg"
+  ],
   source: "auctionplanet",
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 
 describe("scoreListing", () => {
-  it("returns zero when listing is not operable", () => {
-    const result = scoreListing(
-      { ...baseListing, operable: false },
-      defaultScoringConfig
-    );
+  it("returns zero and marks ineligible when listing is not operable", () => {
+    const result = scoreListing({ ...baseListing, operable: false }, defaultScoringConfig);
 
     expect(result.total).toBe(0);
     expect(result.disqualified).toBe(true);
-    expect(result.breakdown.price).toBe(0);
-    expect(result.reasons[0]).toMatch(/not operable/i);
+    expect(result.breakdown.risk).toBe(0);
+    expect(result.flags).toContain("NON_OPERABLE");
+    expect(result.bestOptionEligible).toBe(false);
   });
 
-  it("flags missing data and reduces confidence", () => {
+  it("applies speed advantage for dealer + shipping", () => {
+    const faster = scoreListing(
+      {
+        ...baseListing,
+        sellerType: "dealer",
+        shippingAvailable: true,
+        availability: "in_stock",
+      },
+      defaultScoringConfig
+    );
+    const slower = scoreListing(
+      {
+        ...baseListing,
+        sellerType: "auction",
+        shippingAvailable: false,
+        availability: "scheduled_auction",
+      },
+      defaultScoringConfig
+    );
+
+    expect(faster.breakdown.speed).toBeGreaterThan(slower.breakdown.speed);
+    expect(faster.total).toBeGreaterThan(slower.total);
+  });
+
+  it("lets cheap-higher-hours outrank expensive-low-hours only when value is very strong", () => {
+    const expensiveLowHours = scoreListing(
+      {
+        ...baseListing,
+        price: 130000,
+        hours: 1200,
+      },
+      defaultScoringConfig
+    );
+
+    const moderatelyCheapHigherHours = scoreListing(
+      {
+        ...baseListing,
+        price: 60000,
+        hours: 3200,
+      },
+      defaultScoringConfig
+    );
+
+    const stronglyCheapHigherHours = scoreListing(
+      {
+        ...baseListing,
+        price: 25000,
+        hours: 3200,
+        sellerType: "dealer",
+        shippingAvailable: true,
+        availability: "in_stock",
+      },
+      defaultScoringConfig
+    );
+
+    expect(moderatelyCheapHigherHours.total).toBeLessThanOrEqual(expensiveLowHours.total);
+    expect(stronglyCheapHigherHours.breakdown.deal).toBeGreaterThan(expensiveLowHours.breakdown.deal);
+    expect(stronglyCheapHigherHours.total).toBeGreaterThan(expensiveLowHours.total);
+  });
+
+  it("reduces confidence when price and hours are missing", () => {
     const result = scoreListing(
       {
         ...baseListing,
         price: Number.NaN,
         hours: Number.NaN,
-        year: undefined,
-        condition: undefined,
       },
       defaultScoringConfig
     );
 
-    expect(result.confidence).toBeLessThan(1);
-    expect(result.breakdown.completeness).toBeLessThan(100);
-    expect(result.reasons.join(" ")).toMatch(/missing/i);
-  });
-
-  it("handles extreme values", () => {
-    const result = scoreListing(
-      {
-        ...baseListing,
-        price: 9999999,
-        hours: 50000,
-        year: 1990,
-        condition: 1,
-      },
-      defaultScoringConfig
-    );
-
-    expect(result.breakdown.price).toBe(0);
-    expect(result.breakdown.hours).toBe(0);
-    expect(result.breakdown.year).toBe(0);
-  });
-
-  it("scores a perfect listing highly", () => {
-    const result = scoreListing(
-      {
-        ...baseListing,
-        price: 50000,
-        hours: 500,
-        year: defaultScoringConfig.maxYear,
-        condition: defaultScoringConfig.maxCondition,
-        state: "CA",
-      },
-      defaultScoringConfig
-    );
-
-    expect(result.total).toBeGreaterThanOrEqual(90);
-    expect(result.confidence).toBe(1);
+    expect(result.confidenceScore).toBeLessThan(60);
+    expect(result.flags).toContain("MISSING_PRICE");
+    expect(result.flags).toContain("MISSING_HOURS");
+    expect(result.bestOptionEligible).toBe(false);
   });
 });

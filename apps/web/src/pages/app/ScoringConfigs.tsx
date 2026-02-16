@@ -171,8 +171,8 @@ export const ScoringConfigs = () => {
         <Card className="space-y-3">
           <h3 className="text-lg font-semibold">Why this score</h3>
           <ul className="list-disc space-y-2 pl-5 text-sm text-slate-300">
-            {sampleReasons.map((reason: string) => (
-              <li key={String(reason)}>{String(reason)}</li>
+            {sampleReasons.map((reason, index) => (
+              <li key={`${index}-${typeof reason === "string" ? reason : reason.message}`}>{typeof reason === "string" ? reason : reason.message}</li>
             ))}
           </ul>
         </Card>

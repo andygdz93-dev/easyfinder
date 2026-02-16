@@ -32,6 +32,11 @@ export default async function listingsRoutes(app: FastifyInstance) {
       return {
         ...listing,
         totalScore: score.total,
+        scoreV2: score.scoreV2,
+        confidenceScore: score.confidenceScore,
+        reasons: score.reasons,
+        flags: score.flags,
+        bestOptionEligible: score.bestOptionEligible,
         score,
       };
     });
@@ -78,6 +83,11 @@ export default async function listingsRoutes(app: FastifyInstance) {
     return ok(request, {
       ...listing,
       totalScore: score.total,
+      scoreV2: score.scoreV2,
+      confidenceScore: score.confidenceScore,
+      reasons: score.reasons,
+      flags: score.flags,
+      bestOptionEligible: score.bestOptionEligible,
       score,
     });
     }

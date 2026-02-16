@@ -16,6 +16,11 @@ type ApiEnvelope<T> = {
 
 export type ListingWithScore = Listing & {
   totalScore: number;
+  scoreV2?: ScoreBreakdown["scoreV2"];
+  confidenceScore?: number;
+  reasons?: ScoreBreakdown["reasons"];
+  flags?: string[];
+  bestOptionEligible?: boolean;
   score: ScoreBreakdown;
 };
 
