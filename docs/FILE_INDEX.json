@@ -925,6 +925,11 @@
         "modifiedUtc":  "2026-02-16T04:52:24Z"
     },
     {
+        "path":  "docs/FILE_INDEX.json",
+        "bytes":  30926,
+        "modifiedUtc":  "2026-02-16T22:52:09Z"
+    },
+    {
         "path":  "docs/product/PRODUCT_VISION.md",
         "bytes":  2526,
         "modifiedUtc":  "2026-02-16T04:52:24Z"
@@ -1071,8 +1076,8 @@
     },
     {
         "path":  "scripts/repo-snapshot.ps1",
-        "bytes":  9629,
-        "modifiedUtc":  "2026-02-16T22:52:06Z"
+        "bytes":  10189,
+        "modifiedUtc":  "2026-02-16T22:57:35Z"
     },
     {
         "path":  "scripts/setup.ps1",
