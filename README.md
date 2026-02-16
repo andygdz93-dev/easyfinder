@@ -88,4 +88,4 @@ When API contract changes:
 
 ## Admin bootstrap / promote flow
 
-To safely promote an existing user to `admin` without editing Mongo manually, run the API helper with `MONGO_URL` and `DB_NAME` set in `apps/api/.env`: `pnpm --filter @easyfinderai/api promote-admin -- --email fernandogarciarodriguez78@gmail.com`; in production it is blocked unless you intentionally pass `--allow-production` (`pnpm --filter @easyfinderai/api promote-admin -- --email fernandogarciarodriguez78@gmail.com --allow-production`), and the command prints email searched, user id, previous role → new role, and a final `DONE`/`NOOP` status.
+To safely promote an existing user to `admin` without editing Mongo manually, run the API helper with `MONGO_URL` and `DB_NAME` set in `apps/api/.env`: `pnpm --filter @easyfinderai/api promote-admin -- --email andygdz932@gmail.com`; in production it is blocked unless you intentionally pass `--allow-production` (`pnpm --filter @easyfinderai/api promote-admin -- --email andygdz932@gmail.com --allow-production`), and the command prints email searched, user id, previous role → new role, and a final `DONE`/`NOOP` status.
