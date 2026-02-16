@@ -1,54 +1,53 @@
 # Scoring Model (Product-Level)
 
-This document describes the ranking intent and human-readable scoring semantics. For request/response schema truth, use `openapi.yml`.
+This document defines current scoring semantics and near-term direction. For API schema truth, use `openapi.yml`.
 
-## Scope
+## Current scoring pillars
 
-EasyFinder ranking evaluates listing quality and fit using the API-exposed scoring object:
+EasyFinder treats these as first-class pillars:
 
-- `totalScore`
-- `score.total`
-- `score.breakdown.{price,hours,year,location,condition,completeness}`
-- `score.reasons[]`
-- `score.confidence`
-- `score.disqualified`
+- `deal`
+- `usage`
+- `risk`
+- `speed`
 
-These field names intentionally mirror the current `Listing` schema in OpenAPI.
+`speed` is now part of the same explainable surface as the other pillars (not a hidden tiebreaker).
 
-## Inputs considered
+## Current output semantics
 
-- Price
-- Usage hours
-- Year
-- Location fit
-- Condition
-- Data completeness
-- Operability state (policy-sensitive)
+The score payload supports:
 
-## Output semantics
+- `total`
+- `breakdown.{deal,usage,risk,speed}`
+- `scoreV2.{deal,usage,risk,speed}`
+- `reasons[]` (human-readable explainability)
+- `flags[]`
+- `confidence` and `confidenceScore`
+- `bestOptionEligible`
+- `disqualified`
 
-- **`totalScore` / `score.total`**: composite score used for ordering.
-- **`score.breakdown.*`**: per-factor contributions for explainability.
-- **`score.reasons`**: concise rationale strings shown in UI.
-- **`score.confidence`**: confidence indicator based on signal quality/completeness.
-- **`score.disqualified`**: listing should not be treated as competitive for recommendation purposes.
+## Weighting posture today
 
-## Product guardrails
+- Composite score currently starts from equal-weight blending across pillars (25% each).
+- This equal baseline is intentional while the new pillar model stabilizes.
 
-- Ranking logic must remain explainable to end users.
-- Promotions/paid placement are never merged into relevance score; they must be visually and semantically separated.
-- Scoring configuration changes should be auditable and reversible.
+## Schema evolution (planned)
 
-## Config control
+The scoring config contract still includes legacy weight keys (`price/hours/year/location/condition/completeness`).
 
-Active scoring configuration is exposed via `/api/scoring-configs` (see OpenAPI schema `ScoringConfigInput`).
+Direction:
 
-Primary configuration groups:
+- Align config schema with pillar-based scoring.
+- Keep migrations explicit and backwards-safe.
+- Update OpenAPI + generated types in the same PR whenever schema changes.
 
-- `weights` for each breakdown axis
-- `preferredStates`
-- numeric bounds (`min/max` for price, hours, year, condition)
+## Explainability requirements (non-negotiable)
 
-## Known evolution area
+- Every ranking output must be explainable to end users.
+- Paid placement/promotion cannot be merged into relevance score.
+- Score changes must remain auditable and reversible.
 
-As ranking evolves, this product doc should stay aligned with API response fields in `openapi.yml`. If new score axes are added, update both OpenAPI and this document in the same change.
+## References
+
+- Runtime/ops context: `docs/engineering/SYSTEM_OVERVIEW.md`
+- API schema: `openapi.yml`
