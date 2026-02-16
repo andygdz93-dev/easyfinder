@@ -37,6 +37,17 @@ export const listingSchema = z.object({
   is_operable: z.boolean().optional(),
   year: z.number().optional(),
   condition: z.number().optional(),
+  sellerType: z.enum(["dealer", "auction", "private", "unknown"]).optional(),
+  shippingAvailable: z.boolean().optional(),
+  availability: z.enum(["in_stock", "scheduled_auction", "unknown"]).optional(),
+  lastSeenAt: z.string().optional(),
+  listingUpdatedAt: z.string().optional(),
+  photoCount: z.number().optional(),
+  hasInspectionReport: z.boolean().optional(),
+  hasServiceHistory: z.boolean().optional(),
+  verifiedSeller: z.boolean().optional(),
+  city: z.string().optional(),
+  country: z.string().optional(),
   category: z.string(),
   imageUrl: urlOrPath.optional(),
   images: z
@@ -79,15 +90,29 @@ export type ScoringConfig = z.infer<typeof scoringConfigSchema>;
 export const scoreBreakdownSchema = z.object({
   total: z.number(),
   breakdown: z.object({
-    price: z.number(),
-    hours: z.number(),
-    year: z.number(),
-    location: z.number(),
-    condition: z.number(),
-    completeness: z.number(),
+    deal: z.number(),
+    usage: z.number(),
+    risk: z.number(),
+    speed: z.number(),
+    quality: z.number(),
   }),
-  reasons: z.array(z.string()),
+  scoreV2: z.object({
+    deal: z.number(),
+    usage: z.number(),
+    risk: z.number(),
+    speed: z.number(),
+    quality: z.number(),
+  }),
+  reasons: z.array(
+    z.object({
+      kind: z.enum(["deal", "usage", "risk", "speed", "quality"]),
+      message: z.string(),
+    })
+  ),
+  flags: z.array(z.string()),
   confidence: z.number(),
+  confidenceScore: z.number(),
+  bestOptionEligible: z.boolean(),
   disqualified: z.boolean(),
 });
 export type ScoreBreakdown = z.infer<typeof scoreBreakdownSchema>;

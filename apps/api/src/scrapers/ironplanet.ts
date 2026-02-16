@@ -224,6 +224,11 @@ const buildListingDocument = (
     sourceUrl: url,
     status: "active",
     isPublished: true,
+    sellerType: "auction",
+    availability: "scheduled_auction",
+    photoCount: normalizedImages.length,
+    lastSeenAt: nowIso,
+    listingUpdatedAt: nowIso,
     createdAt: nowIso,
     updatedAt: nowIso,
   };

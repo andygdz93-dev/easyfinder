@@ -27,50 +27,63 @@ describe("scoring engine", () => {
     const score = scoreListing({ ...baseListing, operable: false }, defaultScoringConfig);
     expect(score.total).toBe(0);
     expect(score.disqualified).toBe(true);
+    expect(score.bestOptionEligible).toBe(false);
   });
 
-  it("rewards price, hours, year, and preferred location", () => {
-    const better = scoreListing(
-      { ...baseListing, hours: 1000, price: 30000, year: 2023, state: "CA", condition: 4.5 },
-      defaultScoringConfig
-    );
-    const worse = scoreListing(
-      { ...baseListing, hours: 9000, price: 220000, year: 2000, state: "NY", condition: 2 },
+  it("lets cheap-higher-hours outrank expensive-low-hours only when value is very strong", () => {
+    const expensiveLowHours = scoreListing(
+      { ...baseListing, hours: 1200, price: 130000, year: 2020 },
       defaultScoringConfig
     );
 
-    expect(better.total ?? 0).toBeGreaterThan(worse.total ?? 0);
-    expect(better.breakdown).toBeDefined();
-    expect(worse.breakdown).toBeDefined();
+    const moderatelyCheapHigherHours = scoreListing(
+      { ...baseListing, hours: 3200, price: 60000, year: 2020 },
+      defaultScoringConfig
+    );
 
-    const betterB = better.breakdown!;
-    const worseB = worse.breakdown!;
+    const stronglyCheapHigherHours = scoreListing(
+      { ...baseListing, hours: 3200, price: 25000, year: 2020, sellerType: "dealer", shippingAvailable: true, availability: "in_stock" },
+      defaultScoringConfig
+    );
 
-    const betterPrice = betterB.price ?? 0;
-    const worsePrice = worseB.price ?? 0;
-    const betterHours = betterB.hours ?? 0;
-    const worseHours = worseB.hours ?? 0;
-    const betterYear = betterB.year ?? 0;
-    const worseYear = worseB.year ?? 0;
-    const betterLocation = betterB.location ?? 0;
-    const worseLocation = worseB.location ?? 0;
+    expect(moderatelyCheapHigherHours.total ?? 0).toBeLessThanOrEqual(expensiveLowHours.total ?? 0);
+    expect(stronglyCheapHigherHours.breakdown?.deal ?? 0).toBeGreaterThan(expensiveLowHours.breakdown?.deal ?? 0);
+    expect(stronglyCheapHigherHours.total ?? 0).toBeGreaterThan(expensiveLowHours.total ?? 0);
+  });
 
-    expect(betterPrice).toBeGreaterThan(worsePrice);
-    expect(betterHours).toBeGreaterThan(worseHours);
-    expect(betterYear).toBeGreaterThan(worseYear);
-    expect(betterLocation).toBeGreaterThan(worseLocation);
+  it("prioritizes speed for dealer + shipping", () => {
+    const faster = scoreListing(
+      {
+        ...baseListing,
+        sellerType: "dealer",
+        shippingAvailable: true,
+        availability: "in_stock",
+      },
+      defaultScoringConfig
+    );
+    const slower = scoreListing(
+      {
+        ...baseListing,
+        sellerType: "auction",
+        shippingAvailable: false,
+        availability: "scheduled_auction",
+      },
+      defaultScoringConfig
+    );
+
+    expect(faster.breakdown?.speed ?? 0).toBeGreaterThan(slower.breakdown?.speed ?? 0);
+    expect(faster.total ?? 0).toBeGreaterThan(slower.total ?? 0);
   });
 
   it("reduces confidence with missing data", () => {
     const score = scoreListing(
-      { ...baseListing, price: Number.NaN, hours: Number.NaN, year: undefined, condition: undefined },
+      { ...baseListing, price: Number.NaN, hours: Number.NaN },
       defaultScoringConfig
     );
-    expect(score.confidence).toBeLessThan(1);
-    expect(score.breakdown).toBeDefined();
 
-    const b = score.breakdown!;
-
-    expect(b.completeness).toBeLessThan(100);
+    expect(score.confidenceScore).toBeLessThan(60);
+    expect(score.flags).toContain("MISSING_PRICE");
+    expect(score.flags).toContain("MISSING_HOURS");
+    expect(score.bestOptionEligible).toBe(false);
   });
 });
