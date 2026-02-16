@@ -17,7 +17,7 @@ export default function RequireSellerUploadAccess({
   useEffect(() => {
     let isActive = true;
 
-    if (!token || !user || user.role !== "seller") {
+    if (!token || !user || (user.role !== "seller" && user.role !== "admin")) {
       setBilling(null);
       setIsBillingLoading(false);
       return;
@@ -50,13 +50,13 @@ export default function RequireSellerUploadAccess({
     return <div className="p-6 text-slate-300">Loading…</div>;
   }
 
-  const roleOk = user.role === "seller";
+  const roleOk = user.role === "seller" || user.role === "admin";
   if (!roleOk) return <Navigate to="/app/select-role" replace />;
 
   const csvUploadAllowed = canUseSellerCsvUpload(
-    user.role,
+    user.role === "admin" ? "seller" : user.role,
     billing?.plan,
-    billing?.entitlements?.csvUpload
+    billing?.entitlements?.csvUpload,
   );
 
   if (!csvUploadAllowed) return <Navigate to="/app/upgrade" replace />;
