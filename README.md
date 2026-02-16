@@ -1,91 +1,97 @@
 # EasyFinder
 
-Intelligent equipment discovery and scoring in a pnpm monorepo.
+Intelligent heavy-equipment discovery and scoring in a pnpm monorepo.
 
-## What this repo contains
+## Repository layout
 
-- **`apps/api`**: Fastify API for listings, auth, scoring config, seller/admin workflows, and billing gates.
-- **`apps/web`**: Vite + React frontend.
-- **`packages/shared`**: shared domain types/utilities consumed by API and web.
+- `apps/api` — Fastify API (auth, listings, NDA, seller/admin workflows, billing, scraping entrypoints).
+- `apps/web` — Vite + React frontend.
+- `packages/shared` — shared types and scoring logic used by API and web.
 
-## Documentation Index
+## Canonical docs
 
-- Product vision + acquisition strategy: `docs/product/PRODUCT_VISION.md`
-- Scoring model semantics: `docs/product/SCORING_MODEL.md`
-- Engineering/system overview (including admin, frontend contract, billing/webhook notes): `docs/engineering/SYSTEM_OVERVIEW.md`
-- AI/dev invariants only: `docs/engineering/AI_DEV_CONTEXT.md`
-- API contract (canonical): `openapi.yml`
+- Architecture map: `docs/ARCHITECTURE_MAP.md`
+- Engineering/runtime overview: `docs/engineering/SYSTEM_OVERVIEW.md`
+- AI/dev invariants: `docs/engineering/AI_DEV_CONTEXT.md`
+- Product vision: `docs/product/PRODUCT_VISION.md`
+- Scoring model direction: `docs/product/SCORING_MODEL.md`
+- API contract (source of truth): `openapi.yml`
 
-## Local development
-
-### Prerequisites
+## Prerequisites
 
 - Node.js 20.x
 - pnpm 9.6.0+
 
-### Environment setup
+## Environment setup (PowerShell)
 
-```bash
-cp apps/api/.env.example apps/api/.env
-cp apps/web/.env.example apps/web/.env
+```powershell
+Copy-Item apps/api/.env.example apps/api/.env
+Copy-Item apps/web/.env.example apps/web/.env
 ```
 
-Notes:
-- `apps/api/.env` must be configured with required backend secrets/settings.
-- `apps/web/.env` should set `VITE_API_BASE_URL`.
+Set `VITE_API_BASE_URL` to the API origin **without** `/api`.
 
-### Frontend API base URL contract
+Examples:
 
-Use host-only API origin without `/api`:
+- Local: `http://127.0.0.1:8080`
+- Production: `https://easyfinder.fly.dev`
 
-- Local: `VITE_API_BASE_URL=http://127.0.0.1:8080`
-- Production example: `VITE_API_BASE_URL=https://easyfinder.fly.dev`
+## Install and run
 
-The web client normalizes paths and adds `/api` as needed.
-
-### Install, run, verify
-
-```bash
+```powershell
 pnpm install
 pnpm dev
 ```
 
-Common verification:
+## Local verification
 
-```bash
-pnpm -w lint
+Run the same workspace checks expected in CI:
+
+```powershell
 pnpm -w typecheck
-pnpm -w test
 pnpm -w build
+pnpm -w lint
+pnpm -w test
 ```
 
 ## OpenAPI workflow
 
-`openapi.yml` is the single API source of truth.
+`openapi.yml` is the canonical contract.
 
 When API contract changes:
 
 1. Update `openapi.yml`.
-2. Regenerate web types:
-   ```bash
+2. Regenerate frontend types:
+   ```powershell
    pnpm -w openapi:types
    ```
-3. Commit the generated file changes together.
+3. Commit `apps/web/src/generated/openapi.ts` in the same PR.
 
-## Safety checklist before merge/deploy
+## Git workflow (PR-only)
 
-- Import shared modules only through `@easyfinderai/shared` (no deep imports from `packages/shared/src`).
-- Keep Docker build sequence deterministic (shared build before dependent app builds).
-- Preserve Fly runtime assumptions unless intentionally changing infra:
-  - API port `8080`
-  - health endpoint available
-  - runtime entry `node dist/index.js`
-- Run full workspace gates:
-  - `pnpm -w lint`
-  - `pnpm -w typecheck`
-  - `pnpm -w test`
-  - `pnpm -w build`
+Changes must go through a Pull Request. Do **not** push direct commits to the `app` branch.
 
-## Admin bootstrap / promote flow
+Recommended flow:
 
-To safely promote an existing user to `admin` without editing Mongo manually, run the API helper with `MONGO_URL` and `DB_NAME` set in `apps/api/.env`: `pnpm --filter @easyfinderai/api promote-admin -- --email fernandogarciarodriguez78@gmail.com`; in production it is blocked unless you intentionally pass `--allow-production` (`pnpm --filter @easyfinderai/api promote-admin -- --email fernandogarciarodriguez78@gmail.com --allow-production`), and the command prints email searched, user id, previous role → new role, and a final `DONE`/`NOOP` status.
+1. Create a branch from latest `app`.
+2. Commit your work on that branch.
+3. Push the branch to origin.
+4. Open a PR into `app`.
+5. Merge after review + required checks.
+
+## Admin bootstrap / promotion
+
+Use the API helper to promote an existing user to `admin`:
+
+```powershell
+pnpm --filter @easyfinderai/api promote-admin -- --email fernandogarciarodriguez78@gmail.com
+pnpm --filter @easyfinderai/api promote-admin -- --email andygdz653@gmail.com
+```
+
+Important notes:
+
+- `promote-admin` only works for users that already exist in the database.
+- In production, add `--allow-production` intentionally:
+  ```powershell
+  pnpm --filter @easyfinderai/api promote-admin -- --email fernandogarciarodriguez78@gmail.com --allow-production
+  ```
