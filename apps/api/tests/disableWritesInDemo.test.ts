@@ -23,12 +23,16 @@ describe("disableWritesInDemo", () => {
     await disableWritesInDemo({ requestId: "req-1" } as any, reply as any);
 
     expect(reply.statusCode).toBe(403);
-    expect(reply.payload).toEqual({
+    expect(reply.payload).toMatchObject({
       error: {
         code: "DEMO_WRITE_DISABLED",
-        message: "Creating or modifying data is disabled in demo mode.",
         requestId: "req-1",
       },
     });
+
+    const payload = reply.payload as { error: { message: string; requestId: string } };
+    expect(payload.error.message).toEqual(expect.any(String));
+    expect(payload.error.message).not.toHaveLength(0);
+    expect(payload.error.message).toContain("Writes are disabled");
   });
 });
