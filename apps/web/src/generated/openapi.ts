@@ -404,6 +404,76 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/scrape/ironplanet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Scrape IronPlanet search results and upsert into live listings
+         * @description Scrapes an IronPlanet search results page (url query param), extracts listings, and upserts them into MongoDB. Writes are blocked when DEMO_MODE is enabled.
+         *
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description URL-encoded IronPlanet search URL to scrape. */
+                    url: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Scrape + upsert summary */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ScrapeIronPlanetResponse"];
+                    };
+                };
+                /** @description Invalid request (missing/invalid url) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Writes disabled in demo mode */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Scrape failure */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/scoring-configs": {
         parameters: {
             query?: never;
@@ -986,7 +1056,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Trigger source sync */
+        /**
+         * Trigger source sync (not guaranteed implemented)
+         * @description Present in some specs; ensure route exists in apps/api before relying on it.
+         *
+         */
         post: {
             parameters: {
                 query?: never;
@@ -1015,6 +1089,15 @@ export interface paths {
                 401: components["responses"]["UnauthorizedError"];
                 402: components["responses"]["PaymentRequiredError"];
                 403: components["responses"]["ForbiddenError"];
+                /** @description Not implemented */
+                501: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
             };
         };
         delete?: never;
@@ -1030,7 +1113,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List ingestion sources */
+        /**
+         * List ingestion sources (not guaranteed implemented)
+         * @description Present in some specs; ensure route exists in apps/api before relying on it.
+         *
+         */
         get: {
             parameters: {
                 query?: never;
@@ -1062,6 +1149,15 @@ export interface paths {
                 401: components["responses"]["UnauthorizedError"];
                 402: components["responses"]["PaymentRequiredError"];
                 403: components["responses"]["ForbiddenError"];
+                /** @description Not implemented */
+                501: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
             };
         };
         put?: never;
@@ -1339,6 +1435,68 @@ export interface paths {
                 401: components["responses"]["UnauthorizedError"];
                 404: components["responses"]["NotFoundError"];
                 422: components["responses"]["ValidationError"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/activate-pro-promo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Activate seller Pro launch promo
+         * @description Route is registered only when BILLING_ENABLED is true.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Promo activated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                success?: boolean;
+                            };
+                            requestId?: string;
+                        };
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description Forbidden (non-seller role or promo inactive) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: {
+                                /** @enum {string} */
+                                code?: "FORBIDDEN" | "promo_inactive";
+                                message?: string;
+                            };
+                            requestId?: string;
+                        };
+                    };
+                };
+                404: components["responses"]["NotFoundError"];
             };
         };
         delete?: never;
@@ -1655,7 +1813,26 @@ export interface components {
                     status?: "active" | "past_due" | "canceled" | "incomplete";
                     /** Format: date-time */
                     current_period_end?: string;
+                    promoActive?: boolean;
+                    /** Format: date-time */
+                    promoEndsAt?: string | null;
+                    entitlements?: {
+                        maxActiveListings?: number | null;
+                        csvUpload?: boolean;
+                        marketplaceIntegrations?: boolean;
+                    };
                 };
+            };
+        };
+        ScrapeIronPlanetResponse: {
+            data?: {
+                scraped: number;
+                upserted: number;
+                modified: number;
+                matched: number;
+                sampleListings?: {
+                    [key: string]: unknown;
+                }[];
             };
             requestId?: string;
         };
