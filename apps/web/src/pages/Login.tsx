@@ -5,6 +5,7 @@ import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../lib/auth";
+import { queryClient } from "../lib/queryClient";
 
 export const Login = () => {
   const [email, setEmail] = useState("");
@@ -22,6 +23,7 @@ export const Login = () => {
         body: JSON.stringify({ email, password }),
       });
       setSession(data.token, data.user);
+      await queryClient.invalidateQueries({ queryKey: ["me"] });
       navigate("/app/dashboard", { replace: true });
     } catch (err) {
       setError((err as Error).message);

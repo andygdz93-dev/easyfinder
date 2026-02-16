@@ -1,8 +1,9 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getMe } from "../lib/api";
-import { useAuth } from "../lib/auth";
+import { UserRole, useAuth } from "../lib/auth";
 import { useRuntime } from "../lib/runtime";
+import { displayRoleLabel, isAdmin, shouldShowUpgrade } from "../lib/roles";
 
 type Mode = "demo" | "live";
 
@@ -34,14 +35,14 @@ export const ModeLayout = ({
   const { demoMode, hydrated } = useRuntime();
   const { token, user } = useAuth();
   const config = modeConfig[mode];
-  const [plan, setPlan] = useState<"free" | "pro" | "enterprise">("free");
+  const [meRole, setMeRole] = useState<UserRole>(null);
   const [planLoading, setPlanLoading] = useState(false);
 
   useEffect(() => {
     let active = true;
 
     if (!token) {
-      setPlan("free");
+      setMeRole(null);
       setPlanLoading(false);
       return;
     }
@@ -51,11 +52,11 @@ export const ModeLayout = ({
     getMe()
       .then((data) => {
         if (!active) return;
-        setPlan(data.billing?.plan ?? "free");
+        setMeRole(data.role ?? null);
       })
       .catch(() => {
         if (!active) return;
-        setPlan("free");
+        setMeRole(null);
       })
       .finally(() => {
         if (!active) return;
@@ -67,18 +68,20 @@ export const ModeLayout = ({
     };
   }, [token]);
 
-  const roleLabel = user?.role === "seller" ? "Seller" : "Buyer";
-  const planLabel = plan === "free" ? "Free" : plan === "pro" ? "Pro" : "Enterprise";
+  const effectiveRole = meRole ?? user?.role ?? null;
+  const roleLabel = displayRoleLabel({ role: effectiveRole });
   const isLoading = !hydrated || (!!token && !user) || planLoading;
 
-  const liveBadgeLabel = isLoading ? "Loading…" : `${planLabel} ${roleLabel}`;
+  const liveBadgeLabel = isLoading ? "Loading…" : roleLabel;
   const badgeLabel = mode === "demo" ? config.label : liveBadgeLabel;
   const badgeClass =
     mode === "demo"
       ? config.badgeClass
-      : roleLabel === "Seller"
-        ? "bg-emerald-400 text-emerald-950"
-        : config.badgeClass;
+      : isAdmin({ role: effectiveRole })
+        ? "bg-violet-400 text-violet-950"
+        : roleLabel === "Seller"
+          ? "bg-emerald-400 text-emerald-950"
+          : config.badgeClass;
 
   return (
     <div className={`min-h-screen ${config.shellClass}`}>
@@ -94,14 +97,14 @@ export const ModeLayout = ({
           <Link to="/" className="text-[10px] font-semibold underline-offset-4 hover:underline">
             Switch mode
           </Link>
-        ) : (
+        ) : shouldShowUpgrade({ role: effectiveRole }) ? (
           <Link
             to="/app/upgrade"
             className="text-[10px] font-semibold underline-offset-4 hover:underline"
           >
             Upgrade
           </Link>
-        )}
+        ) : null}
       </div>
       <div className="min-h-[calc(100vh-52px)]">{children}</div>
     </div>
