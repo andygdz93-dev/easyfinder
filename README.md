@@ -189,6 +189,15 @@ For monorepo safety and deterministic production builds, use this checklist befo
   - `pnpm -w typecheck`
   - `pnpm -w build`
 
+## OpenAPI type generation workflow
+
+When you modify `openapi.yml`, regenerate and commit the generated client types in the same change:
+
+- Run `pnpm -w openapi:types`.
+- Commit `apps/web/src/generated/openapi.ts`.
+
+CI verifies OpenAPI consistency by running validation/type generation and failing if that generated file differs.
+
 
 **⚙️ Tech Stack**
 
