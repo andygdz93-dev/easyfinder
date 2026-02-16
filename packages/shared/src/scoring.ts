@@ -60,15 +60,15 @@ const ageInDays = (iso?: string) => {
   return (Date.now() - parsed) / (1000 * 60 * 60 * 24);
 };
 
-export function scoreListing(listing: Listing, config: ScoringConfig): ScoreBreakdown {
+export function scoreListingV2(listing: Listing, config: ScoringConfig): ScoreBreakdown {
   const operableFlag = listing.is_operable !== undefined ? listing.is_operable : listing.operable;
   const flags: string[] = [];
   if (operableFlag === false) {
     flags.push("NON_OPERABLE", "NOT_BEST_OPTION_ELIGIBLE");
     return {
       total: 0,
-      breakdown: { deal: 0, usage: 0, risk: 0, speed: 0, quality: 0 },
-      scoreV2: { deal: 0, usage: 0, risk: 0, speed: 0, quality: 0 },
+      breakdown: { deal: 0, usage: 0, risk: 0, speed: 0 },
+      scoreV2: { deal: 0, usage: 0, risk: 0, speed: 0 },
       reasons: [reason("risk", "Listing marked as not operable.")],
       flags,
       confidence: 0,
@@ -83,7 +83,6 @@ export function scoreListing(listing: Listing, config: ScoringConfig): ScoreBrea
   const inferredYear = inferYearFromTitle(listing.title);
   const year = Number.isFinite(listing.year) ? listing.year : inferredYear ?? Number.NaN;
 
-  // Deal score (price + hours interaction)
   const priceNorm = normalizePrice(price, config);
   const hoursNorm = normalizeHours(hours, config);
   const valuePressure = clamp(priceNorm * 0.65 + hoursNorm * 0.35 + priceNorm * hoursNorm * 0.5, 0, 1.5);
@@ -97,16 +96,19 @@ export function scoreListing(listing: Listing, config: ScoringConfig): ScoreBrea
   } else {
     dealReasons.push(reason("deal", "Price and usage are reasonably balanced."));
   }
+
   if (!Number.isFinite(price)) {
     deal = clamp(deal - 18, 0, 100);
     dealReasons.push(reason("deal", "Price missing; value estimate is less reliable."));
+    flags.push("MISSING_PRICE");
   }
+
   if (!Number.isFinite(hours)) {
     deal = clamp(deal - 12, 0, 100);
     dealReasons.push(reason("deal", "Hours missing; value estimate is less reliable."));
+    flags.push("MISSING_HOURS");
   }
 
-  // Usage score
   let usage = clamp(Math.round((1 - hoursNorm) * 100), 0, 100);
   const usageReasons: Reason[] = [];
   if (usage >= 70) {
@@ -116,24 +118,36 @@ export function scoreListing(listing: Listing, config: ScoringConfig): ScoreBrea
   } else {
     usageReasons.push(reason("usage", "Usage is moderate for this category."));
   }
+
   if (Number.isFinite(year)) {
     const yearNorm = clamp((year - config.minYear) / Math.max(1, config.maxYear - config.minYear), 0, 1);
     const yearBonus = Math.round((yearNorm - 0.5) * 16);
     usage = clamp(usage + yearBonus, 0, 100);
-    usageReasons.push(reason("usage", yearBonus >= 0 ? "Newer model year slightly improves usage outlook." : "Older model year slightly reduces usage outlook."));
+    usageReasons.push(
+      reason(
+        "usage",
+        yearBonus >= 0
+          ? "Newer model year slightly improves usage outlook."
+          : "Older model year slightly reduces usage outlook."
+      )
+    );
   }
 
-  // Risk score
   let risk = 70;
   const riskReasons: Reason[] = [];
   if (listing.verifiedSeller) {
     risk += 8;
     riskReasons.push(reason("risk", "Verified seller lowers transaction risk."));
+  } else {
+    risk -= 5;
+    riskReasons.push(reason("risk", "Unverified seller adds transaction risk."));
   }
+
   if (listing.hasInspectionReport) {
     risk += 10;
     riskReasons.push(reason("risk", "Inspection report available."));
   }
+
   if (listing.hasServiceHistory) {
     risk += 8;
     riskReasons.push(reason("risk", "Service history provided."));
@@ -152,16 +166,18 @@ export function scoreListing(listing: Listing, config: ScoringConfig): ScoreBrea
     risk -= 8;
     riskReasons.push(reason("risk", "Missing price increases negotiation uncertainty."));
   }
+
   if (!Number.isFinite(hours)) {
     risk -= 8;
     riskReasons.push(reason("risk", "Missing hours increases wear uncertainty."));
   }
+
   if (!listing.state) {
     risk -= 6;
     riskReasons.push(reason("risk", "Missing state increases logistics uncertainty."));
   }
 
-  const staleDays = ageInDays(listing.lastSeenAt);
+  const staleDays = ageInDays(listing.lastSeenAt ?? listing.listingUpdatedAt);
   if (typeof staleDays === "number" && staleDays > 14) {
     risk -= 8;
     flags.push("STALE_LISTING");
@@ -170,7 +186,6 @@ export function scoreListing(listing: Listing, config: ScoringConfig): ScoreBrea
 
   risk = clamp(Math.round(risk), 0, 100);
 
-  // Speed score
   let speed = 50;
   const speedReasons: Reason[] = [];
   const sellerType = listing.sellerType ?? "unknown";
@@ -209,56 +224,72 @@ export function scoreListing(listing: Listing, config: ScoringConfig): ScoreBrea
   }
   speed = clamp(Math.round(speed), 0, 100);
 
-  // Quality and confidence
-  let quality = 100;
-  const qualityReasons: Reason[] = [];
+  let confidenceScore = 100;
   if (!Number.isFinite(price)) {
-    quality -= 20;
-    qualityReasons.push(reason("quality", "Missing price reduces data completeness."));
-    flags.push("MISSING_PRICE");
+    confidenceScore -= 20;
   }
   if (!Number.isFinite(hours)) {
-    quality -= 20;
-    qualityReasons.push(reason("quality", "Missing hours reduces data completeness."));
-    flags.push("MISSING_HOURS");
+    confidenceScore -= 20;
   }
   if (!listing.state) {
-    quality -= 12;
-    qualityReasons.push(reason("quality", "Missing state reduces logistics clarity."));
+    confidenceScore -= 12;
     flags.push("MISSING_STATE");
   }
   if (!listing.description?.trim()) {
-    quality -= 8;
-    qualityReasons.push(reason("quality", "Missing description lowers listing clarity."));
+    confidenceScore -= 8;
   }
   if (!Number.isFinite(photos ?? Number.NaN)) {
-    quality -= 8;
-    qualityReasons.push(reason("quality", "Photo count missing lowers verification confidence."));
+    confidenceScore -= 8;
   } else if ((photos ?? 0) < 5) {
-    quality -= 8;
-    qualityReasons.push(reason("quality", "Low photo count lowers verification confidence."));
+    confidenceScore -= 8;
   }
-  quality = clamp(Math.round(quality), 0, 100);
+  if (!listing.verifiedSeller) {
+    confidenceScore -= 8;
+  }
+  if (!listing.source || listing.source === "unknown") {
+    confidenceScore -= 6;
+  }
+  if (typeof staleDays === "number" && staleDays > 14) {
+    confidenceScore -= 10;
+  }
+
+  confidenceScore = clamp(Math.round(confidenceScore), 0, 100);
 
   const total = clamp(Math.round(deal * 0.25 + usage * 0.25 + risk * 0.25 + speed * 0.25), 0, 100);
-  const confidenceScore = clamp(Math.round(quality * 0.8 + risk * 0.2), 0, 100);
-
   const bestOptionEligible = !flags.includes("NON_OPERABLE") && confidenceScore >= 60 && risk >= 40;
+
+  if (confidenceScore < 60) {
+    flags.push("LOW_CONFIDENCE");
+  }
+
   if (!bestOptionEligible) {
     flags.push("NOT_BEST_OPTION_ELIGIBLE");
   }
 
-  const reasons = [...dealReasons.slice(0, 2), ...usageReasons.slice(0, 2), ...riskReasons.slice(0, 2), ...speedReasons.slice(0, 2), ...qualityReasons.slice(0, 2)].slice(0, 8);
+  const reasons = [
+    dealReasons[0],
+    usageReasons[0],
+    riskReasons[0],
+    speedReasons[0],
+    ...dealReasons.slice(1),
+    ...usageReasons.slice(1),
+    ...riskReasons.slice(1),
+    ...speedReasons.slice(1),
+  ].filter((item): item is Reason => Boolean(item)).slice(0, 8);
 
   return {
     total,
-    breakdown: { deal, usage, risk, speed, quality },
-    scoreV2: { deal, usage, risk, speed, quality },
+    breakdown: { deal, usage, risk, speed },
+    scoreV2: { deal, usage, risk, speed },
     reasons,
-    flags,
+    flags: [...new Set(flags)],
     confidence: Number((confidenceScore / 100).toFixed(2)),
     confidenceScore,
     bestOptionEligible,
     disqualified: !bestOptionEligible,
   };
+}
+
+export function scoreListing(listing: Listing, config: ScoringConfig): ScoreBreakdown {
+  return scoreListingV2(listing, config);
 }

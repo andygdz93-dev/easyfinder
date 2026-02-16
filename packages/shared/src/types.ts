@@ -87,28 +87,25 @@ export const scoringConfigSchema = z.object({
 });
 export type ScoringConfig = z.infer<typeof scoringConfigSchema>;
 
+export const scoreReasonSchema = z.object({
+  kind: z.enum(["deal", "usage", "risk", "speed"]),
+  message: z.string(),
+});
+export type ScoreReason = z.infer<typeof scoreReasonSchema>;
+
+export const scorePillarsSchema = z.object({
+  deal: z.number(),
+  usage: z.number(),
+  risk: z.number(),
+  speed: z.number(),
+});
+export type ScorePillars = z.infer<typeof scorePillarsSchema>;
+
 export const scoreBreakdownSchema = z.object({
   total: z.number(),
-  breakdown: z.object({
-    deal: z.number(),
-    usage: z.number(),
-    risk: z.number(),
-    speed: z.number(),
-    quality: z.number(),
-  }),
-  scoreV2: z.object({
-    deal: z.number(),
-    usage: z.number(),
-    risk: z.number(),
-    speed: z.number(),
-    quality: z.number(),
-  }),
-  reasons: z.array(
-    z.object({
-      kind: z.enum(["deal", "usage", "risk", "speed", "quality"]),
-      message: z.string(),
-    })
-  ),
+  breakdown: scorePillarsSchema,
+  scoreV2: scorePillarsSchema,
+  reasons: z.array(scoreReasonSchema),
   flags: z.array(z.string()),
   confidence: z.number(),
   confidenceScore: z.number(),

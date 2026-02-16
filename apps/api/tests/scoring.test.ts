@@ -73,6 +73,8 @@ describe("scoring engine", () => {
 
     expect(faster.breakdown?.speed ?? 0).toBeGreaterThan(slower.breakdown?.speed ?? 0);
     expect(faster.total ?? 0).toBeGreaterThan(slower.total ?? 0);
+    expect((faster.reasons ?? []).some((entry) => entry.kind === "speed")).toBe(true);
+    expect((slower.reasons ?? []).some((entry) => entry.kind === "speed")).toBe(true);
   });
 
   it("reduces confidence with missing data", () => {

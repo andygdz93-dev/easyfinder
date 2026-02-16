@@ -42,4 +42,5 @@ export {
   defaultScoringConfig,
   DefaultScoringConfig,
   scoreListing,
+  scoreListingV2,
 } from "./scoring.js";
