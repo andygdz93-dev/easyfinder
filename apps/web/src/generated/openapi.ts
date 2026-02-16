@@ -1091,8 +1091,8 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        /** @enum {boolean} */
-                        confirm: true;
+                        /** @description Exact phrase "DELETE <listingId>" */
+                        confirmation: string;
                         reason: string;
                     };
                 };
