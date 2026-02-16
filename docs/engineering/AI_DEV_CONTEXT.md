@@ -1,6 +1,6 @@
 # AI Development Context (Invariants Only)
 
-This file is intentionally minimal. It captures engineering rules/invariants; product narrative and endpoint schema details live elsewhere.
+This file is intentionally minimal and operational.
 
 ## Monorepo invariants
 
@@ -8,30 +8,34 @@ This file is intentionally minimal. It captures engineering rules/invariants; pr
 - Import shared code via `@easyfinderai/shared` only.
 - Do **not** deep-import from `packages/shared/src/*` across workspace apps.
 
-## Docker determinism principles
+## Build/runtime invariants
 
-- Keep container builds deterministic and dependency-driven.
-- Build shared package artifacts before dependent app builds.
-- Avoid hidden build-time side effects that depend on local state.
+- Keep builds deterministic; build shared package artifacts before dependent apps.
+- API runtime entry remains `node dist/index.js`.
+- API service binds to port `8080`.
+- Health endpoint must stay available.
 
-## Fly runtime assumptions
+## Verification gates
 
-- API process runs `node dist/index.js`.
-- Service binds to port `8080`.
-- Health endpoint remains available for runtime checks.
+Run these before handoff:
 
-## Definition of Done checks
-
-Run workspace gates before handoff:
-
-- `pnpm -w lint`
 - `pnpm -w typecheck`
-- `pnpm -w test`
 - `pnpm -w build`
+- `pnpm -w lint`
+- `pnpm -w test`
+
+If API contract changes, also run:
+
+- `pnpm -w openapi:types`
+
+## Delivery policy
+
+- PR-only workflow to `app` (branch -> push -> PR -> merge).
+- Do not bypass PR review by pushing direct commits to `app`.
 
 ## Canonical references
 
+- System/runtime behavior: `docs/engineering/SYSTEM_OVERVIEW.md`
 - Product direction: `docs/product/PRODUCT_VISION.md`
 - Scoring semantics: `docs/product/SCORING_MODEL.md`
-- Engineering/API overview: `docs/engineering/SYSTEM_OVERVIEW.md`
 - API contract: `openapi.yml`
