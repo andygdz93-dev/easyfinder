@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
@@ -36,7 +37,7 @@ export default function AdminListings() {
         <div className="space-y-2">
           {data?.items?.map((item) => (
             <div key={item.id} className="rounded border border-slate-700 p-3">
-              <p className="font-medium">{item.title}</p>
+              <p className="font-medium"><Link className="text-blue-300 hover:text-blue-200" to={`/admin/listings/${item.id}`}>{item.title}</Link></p>
               <p className="text-xs text-slate-400">{item.id} · {item.status}</p>
               <div className="mt-2 flex gap-2">
                 <Button onClick={() => item.id && mutateStatus.mutate({ id: item.id, status: "paused" })}>Pause</Button>

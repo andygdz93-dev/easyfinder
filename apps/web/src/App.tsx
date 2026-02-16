@@ -41,6 +41,7 @@ import { Billing } from "./pages/app/Billing";
 import RequireSellerUploadAccess from "./components/RequireSellerUploadAccess";
 import AdminHome from "./pages/admin/AdminHome";
 import AdminListings from "./pages/admin/AdminListings";
+import AdminListingDetail from "./pages/admin/AdminListingDetail";
 import AdminInquiries from "./pages/admin/AdminInquiries";
 import AdminAudit from "./pages/admin/AdminAudit";
 
@@ -155,6 +156,7 @@ const AdminEntry = () => {
     <Routes>
       <Route path="/admin/home" element={<AdminHome />} />
       <Route path="/admin/listings" element={<AdminListings />} />
+      <Route path="/admin/listings/:id" element={<AdminListingDetail />} />
       <Route path="/admin/inquiries" element={<AdminInquiries />} />
       <Route path="/admin/audit" element={<AdminAudit />} />
       <Route path="*" element={<Navigate to="/admin/home" replace />} />

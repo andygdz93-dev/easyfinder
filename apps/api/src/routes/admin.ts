@@ -123,6 +123,52 @@ export default async function adminRoutes(app: FastifyInstance) {
     return ok(request, { items: result.items, total: result.total, page: query.page, pageSize: query.pageSize });
   });
 
+
+  app.get("/listings/:id", guard, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const listing = await getListingsCollection().findById(id);
+    if (!listing) {
+      return fail(request, reply, "NOT_FOUND", "Listing not found.", 404);
+    }
+
+    const [inquiries, audit] = await Promise.all([
+      getInquiriesCollection().findMany({ listingId: id }),
+      findAuditLogs({ targetType: "listing", targetId: id, page: 1, pageSize: 25 }),
+    ]);
+
+    return ok(request, {
+      listing,
+      inquiries: inquiries
+        .slice()
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+        .map((inquiry) => ({
+          id: inquiry._id.toHexString(),
+          listingId: inquiry.listingId,
+          sellerId: inquiry.sellerId,
+          buyerId: inquiry.buyerId,
+          buyerEmail: inquiry.buyerEmail,
+          buyerName: inquiry.buyerName,
+          message: inquiry.message,
+          status: inquiry.status,
+          createdAt: inquiry.createdAt.toISOString(),
+          updatedAt: inquiry.updatedAt.toISOString(),
+        })),
+      audit: audit.items.map((item) => ({
+        id: item.id,
+        actorUserId: item.actorUserId,
+        actorEmail: item.actorEmail,
+        action: item.action,
+        targetType: item.targetType,
+        targetId: item.targetId,
+        reason: item.reason,
+        before: item.before,
+        after: item.after,
+        requestId: item.requestId,
+        createdAt: item.createdAt.toISOString(),
+      })),
+    });
+  });
+
   app.patch("/listings/:id", guard, async (request, reply) => {
     const { id } = request.params as { id: string };
     const payload = listingPatchSchema.parse(request.body);
