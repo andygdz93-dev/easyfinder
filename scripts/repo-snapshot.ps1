@@ -40,8 +40,20 @@ function Get-RelativePath {
     [Parameter(Mandatory = $true)][string]$TargetPath
   )
 
-  $relative = [System.IO.Path]::GetRelativePath($BasePath, $TargetPath)
-  return $relative.Replace('\\', '/')
+  # Normalize to full paths
+  $baseFull = (Resolve-Path -LiteralPath $BasePath).Path
+  $targetFull = (Resolve-Path -LiteralPath $TargetPath).Path
+
+  # Ensure base ends with a trailing slash for MakeRelativeUri correctness
+  if (-not $baseFull.EndsWith('\\')) { $baseFull += '\\' }
+
+  $baseUri = [Uri]("file:///" + ($baseFull -replace '\\', '/'))
+  $targetUri = [Uri]("file:///" + ($targetFull -replace '\\', '/'))
+
+  $rel = $baseUri.MakeRelativeUri($targetUri).ToString()
+  $rel = [Uri]::UnescapeDataString($rel) -replace '/', '\\'
+
+  return $rel
 }
 
 function Add-FileContentSection {
