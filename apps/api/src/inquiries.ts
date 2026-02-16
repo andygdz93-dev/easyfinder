@@ -20,6 +20,7 @@ export type InquiryDocument = {
 type InquiryQuery = {
   sellerId?: string | null;
   status?: InquiryStatus;
+  listingId?: string;
 };
 
 type InquiriesCollection = {
@@ -40,6 +41,9 @@ const matchesQuery = (doc: InquiryDocument, query?: InquiryQuery) => {
     return false;
   }
   if (Object.prototype.hasOwnProperty.call(query, "status") && query.status && doc.status !== query.status) {
+    return false;
+  }
+  if (Object.prototype.hasOwnProperty.call(query, "listingId") && query.listingId && doc.listingId !== query.listingId) {
     return false;
   }
   return true;
