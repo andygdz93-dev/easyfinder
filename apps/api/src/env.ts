@@ -31,6 +31,12 @@ const EnvSchema = z
       .optional()
       .transform((v) => v === "true"),
 
+    ADMIN_ENABLED: z
+      .string()
+      .optional()
+      .transform((v) => (v === undefined ? true : v === "true")),
+    ADMIN_EMAIL_ALLOWLIST: z.string().optional(),
+
     // Feature toggles (prevents optional integrations from bricking prod)
     BILLING_ENABLED: z
       .enum(["true", "false"])

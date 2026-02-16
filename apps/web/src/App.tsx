@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import {
   Navigate,
   Outlet,
@@ -34,9 +35,13 @@ import { DemoLayout } from "./layouts/DemoLayout";
 import { LiveLayout } from "./layouts/LiveLayout";
 import { NdaProvider } from "./lib/nda";
 import { useAuth } from "./lib/auth";
+import { getAdminOverview } from "./lib/api";
 import { SelectRole } from "./pages/app/SelectRole";
 import { Billing } from "./pages/app/Billing";
 import RequireSellerUploadAccess from "./components/RequireSellerUploadAccess";
+import AdminHome from "./pages/admin/AdminHome";
+import AdminListings from "./pages/admin/AdminListings";
+import AdminInquiries from "./pages/admin/AdminInquiries";
 
 const LegacyListingRedirect = () => {
   const { id } = useParams();
@@ -122,6 +127,39 @@ const RequireRoleSelection = ({ children }: { children?: React.ReactNode }) => {
   return <>{children ?? <Outlet />}</>;
 };
 
+
+const AdminEntry = () => {
+  const { user, isUserLoading } = useAuth();
+  const location = useLocation();
+  const overview = useQuery({
+    queryKey: ["admin-overview-gate"],
+    queryFn: getAdminOverview,
+    enabled: Boolean(user && user.role === "admin"),
+    retry: false,
+  });
+
+  if (isUserLoading || overview.isLoading) {
+    return <div className="p-6 text-sm text-slate-400">Loading…</div>;
+  }
+
+  if (!user || user.role !== "admin" || overview.isError) {
+    return <div className="p-6">Not authorized.</div>;
+  }
+
+  if (location.pathname === "/admin") {
+    return <Navigate to="/admin/home" replace />;
+  }
+
+  return (
+    <Routes>
+      <Route path="/admin/home" element={<AdminHome />} />
+      <Route path="/admin/listings" element={<AdminListings />} />
+      <Route path="/admin/inquiries" element={<AdminInquiries />} />
+      <Route path="*" element={<Navigate to="/admin/home" replace />} />
+    </Routes>
+  );
+};
+
 export default function App() {
   return (
     <Routes>
@@ -131,6 +169,7 @@ export default function App() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/app/login" element={<Login />} />
+      <Route path="/admin/*" element={<AdminEntry />} />
       <Route path="/app/register" element={<Register />} />
       <Route
         path="/listings"

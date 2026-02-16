@@ -2,7 +2,7 @@ import { ObjectId } from "mongodb";
 import { env } from "./env.js";
 import { getCollection } from "./db.js";
 
-export type InquiryStatus = "new" | "reviewing" | "contacted" | "closed";
+export type InquiryStatus = "new" | "reviewing" | "contacted" | "closed" | "open" | "spam";
 
 export type InquiryDocument = {
   _id: ObjectId;
@@ -19,6 +19,7 @@ export type InquiryDocument = {
 
 type InquiryQuery = {
   sellerId?: string | null;
+  status?: InquiryStatus;
 };
 
 type InquiriesCollection = {
@@ -28,14 +29,18 @@ type InquiriesCollection = {
     query: { _id: ObjectId },
     update: { $set: Partial<InquiryDocument> }
   ) => Promise<{ matchedCount: number }>;
+  findById: (id: string) => Promise<InquiryDocument | null>;
 };
 
 const testInquiries = new Map<string, InquiryDocument>();
 
 const matchesQuery = (doc: InquiryDocument, query?: InquiryQuery) => {
   if (!query) return true;
-  if (Object.prototype.hasOwnProperty.call(query, "sellerId")) {
-    return doc.sellerId === query.sellerId;
+  if (Object.prototype.hasOwnProperty.call(query, "sellerId") && doc.sellerId !== query.sellerId) {
+    return false;
+  }
+  if (Object.prototype.hasOwnProperty.call(query, "status") && query.status && doc.status !== query.status) {
+    return false;
   }
   return true;
 };
@@ -51,6 +56,10 @@ export const getInquiriesCollection = (): InquiriesCollection => {
       updateOne: async (query, update) => {
         const result = await collection.updateOne(query, update);
         return { matchedCount: result.matchedCount };
+      },
+      findById: async (id) => {
+        if (!ObjectId.isValid(id)) return null;
+        return collection.findOne({ _id: new ObjectId(id) });
       },
     };
   } catch (error) {
@@ -82,6 +91,7 @@ export const getInquiriesCollection = (): InquiriesCollection => {
         testInquiries.set(next._id.toHexString(), next);
         return { matchedCount: 1 };
       },
+      findById: async (id) => testInquiries.get(id) ?? null,
     };
   }
 };
