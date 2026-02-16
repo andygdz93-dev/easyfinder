@@ -352,3 +352,74 @@ export const createInquiry = (input: { listingId: string; message: string }) =>
 // Legacy helper for internal usage
 export const apiFetch = <T>(path: string, options: ApiRequestOptions = {}) =>
   apiRequest<T>(path, options);
+
+
+export type AdminOverview = {
+  listings: { active: number; paused: number; removed: number; pending_review: number };
+  bySource: Record<string, number>;
+  inquiries: { total: number; open: number; closed: number };
+  lastIngestion: Record<string, string | null>;
+  demoMode: boolean;
+  billingEnabled: boolean;
+};
+
+export type AdminListingsResponse = {
+  items: Array<Listing & { status?: "active" | "paused" | "removed" | "pending_review" }>;
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
+export type AdminInquiriesResponse = {
+  items: Array<InquiryDto & { id: string }>;
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
+export const getAdminOverview = () => apiRequest<AdminOverview>("/admin/overview");
+
+export const getAdminListings = (params: {
+  q?: string;
+  status?: "active" | "paused" | "removed" | "pending_review";
+  source?: string;
+  page?: number;
+  pageSize?: number;
+}) => {
+  const search = new URLSearchParams();
+  if (params.q) search.set("q", params.q);
+  if (params.status) search.set("status", params.status);
+  if (params.source) search.set("source", params.source);
+  if (params.page) search.set("page", String(params.page));
+  if (params.pageSize) search.set("pageSize", String(params.pageSize));
+  const query = search.toString();
+  return apiRequest<AdminListingsResponse>(`/admin/listings${query ? `?${query}` : ""}`);
+};
+
+export const patchAdminListing = (
+  id: string,
+  input: { status: "active" | "paused" | "removed"; reason?: string }
+) => apiRequest<{ listing: Listing }>(`/admin/listings/${id}`, { method: "PATCH", body: JSON.stringify(input) });
+
+export const deleteAdminListing = (
+  id: string,
+  input: { confirm: true; reason: string }
+) => apiRequest<{ deleted: boolean }>(`/admin/listings/${id}`, { method: "DELETE", body: JSON.stringify(input) });
+
+export const getAdminInquiries = (params: { page?: number; pageSize?: number; status?: "open" | "closed" | "spam" }) => {
+  const search = new URLSearchParams();
+  if (params.page) search.set("page", String(params.page));
+  if (params.pageSize) search.set("pageSize", String(params.pageSize));
+  if (params.status) search.set("status", params.status);
+  const query = search.toString();
+  return apiRequest<AdminInquiriesResponse>(`/admin/inquiries${query ? `?${query}` : ""}`);
+};
+
+export const patchAdminInquiry = (id: string, input: { status: "open" | "closed" | "spam"; reason?: string }) =>
+  apiRequest<{ inquiry: InquiryDto }>(`/admin/inquiries/${id}`, { method: "PATCH", body: JSON.stringify(input) });
+
+export const runAdminIronPlanetScrape = (input: { url: string }) =>
+  apiRequest<{ scraped: number; upserted: number; modified: number; matched: number }>("/admin/scrape/ironplanet", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });

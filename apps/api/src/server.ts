@@ -256,7 +256,16 @@ export const buildServer = () => {
   app.register(offersRoutes, { prefix: "/api/offers" });
   app.register(inquiriesRoutes, { prefix: "/api/inquiries" });
   app.register(authRoutes, { prefix: "/api/auth" });
-  app.register(adminRoutes, { prefix: "/api/admin" });
+  if (env.ADMIN_ENABLED) {
+    app.register(adminRoutes, { prefix: "/api/admin" });
+  } else {
+    app.all("/api/admin/*", async (request, reply) => {
+      return reply.status(404).send({
+        error: { code: "ADMIN_DISABLED", message: "Admin endpoints are disabled." },
+        requestId: request.requestId,
+      });
+    });
+  }
   app.register(sellerRoutes, { prefix: "/api/seller" });
   app.register(meRoutes, { prefix: "/api/me" });
   app.register(ironPlanetScraperRoutes);

@@ -986,138 +986,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/admin/ingest/csv": {
+    "/api/admin/overview": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
-        /** Ingest listings from CSV */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "multipart/form-data": {
-                        /** Format: binary */
-                        file: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Ingest completed */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                ingested?: number;
-                            };
-                            requestId?: string;
-                        };
-                    };
-                };
-                /** @description Missing file */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorEnvelope"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-                402: components["responses"]["PaymentRequiredError"];
-                403: components["responses"]["ForbiddenError"];
-                422: components["responses"]["ValidationError"];
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/sources/sync": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Trigger source sync (not guaranteed implemented)
-         * @description Present in some specs; ensure route exists in apps/api before relying on it.
-         *
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Sync started */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                status?: string;
-                                /** Format: date-time */
-                                syncedAt?: string;
-                            };
-                            requestId?: string;
-                        };
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-                402: components["responses"]["PaymentRequiredError"];
-                403: components["responses"]["ForbiddenError"];
-                /** @description Not implemented */
-                501: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorEnvelope"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/sources": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List ingestion sources (not guaranteed implemented)
-         * @description Present in some specs; ensure route exists in apps/api before relying on it.
-         *
-         */
+        /** Admin platform overview */
         get: {
             parameters: {
                 query?: never;
@@ -1127,7 +1003,138 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Source health list */
+                /** @description Overview payload */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminOverviewResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["ForbiddenError"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/listings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List and filter listings for moderation */
+        get: {
+            parameters: {
+                query?: {
+                    q?: string;
+                    status?: "active" | "paused" | "removed" | "pending_review";
+                    source?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Listings page */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminListingsResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["ForbiddenError"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/listings/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Hard delete listing */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["ListingId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        confirm: true;
+                        reason: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Listing hard deleted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RemovedResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["ForbiddenError"];
+                404: components["responses"]["NotFoundError"];
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Moderate listing status */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["ListingId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        status: "active" | "paused" | "removed";
+                        reason?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Listing updated */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -1135,22 +1142,215 @@ export interface paths {
                     content: {
                         "application/json": {
                             data?: {
-                                sources?: {
-                                    name?: string;
-                                    status?: string;
-                                    /** Format: date-time */
-                                    lastSync?: string | null;
-                                }[];
+                                listing?: components["schemas"]["Listing"];
                             };
                             requestId?: string;
                         };
                     };
                 };
                 401: components["responses"]["UnauthorizedError"];
-                402: components["responses"]["PaymentRequiredError"];
                 403: components["responses"]["ForbiddenError"];
-                /** @description Not implemented */
-                501: {
+                404: components["responses"]["NotFoundError"];
+            };
+        };
+        trace?: never;
+    };
+    "/api/admin/inquiries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List inquiries for moderation */
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                    status?: "open" | "closed" | "spam";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Inquiry page */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminInquiriesResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["ForbiddenError"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/inquiries/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update inquiry status */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        status: "open" | "closed" | "spam";
+                        reason?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Inquiry updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                inquiry?: components["schemas"]["Inquiry"];
+                            };
+                            requestId?: string;
+                        };
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["ForbiddenError"];
+                404: components["responses"]["NotFoundError"];
+            };
+        };
+        trace?: never;
+    };
+    "/api/admin/scoring-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get active scoring config */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Active config */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ScoringConfigEnvelope"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["ForbiddenError"];
+            };
+        };
+        put?: never;
+        /** Replace scoring config */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ScoringConfigInput"];
+                };
+            };
+            responses: {
+                /** @description Config replaced */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ScoringConfigEnvelope"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["ForbiddenError"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/scrape/ironplanet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Trigger IronPlanet scrape */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        url: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Scrape summary */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ScrapeIronPlanetResponse"];
+                    };
+                };
+                /** @description Invalid URL */
+                400: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -1158,10 +1358,10 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorEnvelope"];
                     };
                 };
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["ForbiddenError"];
             };
         };
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1851,6 +2051,48 @@ export interface components {
                     };
                 };
             };
+        };
+        AdminOverviewResponse: {
+            data?: {
+                listings?: {
+                    active?: number;
+                    paused?: number;
+                    removed?: number;
+                    pending_review?: number;
+                };
+                bySource?: {
+                    [key: string]: number;
+                };
+                inquiries?: {
+                    total?: number;
+                    open?: number;
+                    closed?: number;
+                };
+                lastIngestion?: {
+                    [key: string]: string | null;
+                };
+                demoMode?: boolean;
+                billingEnabled?: boolean;
+            };
+            requestId?: string;
+        };
+        AdminListingsResponse: {
+            data?: {
+                items?: components["schemas"]["Listing"][];
+                total?: number;
+                page?: number;
+                pageSize?: number;
+            };
+            requestId?: string;
+        };
+        AdminInquiriesResponse: {
+            data?: {
+                items?: components["schemas"]["Inquiry"][];
+                total?: number;
+                page?: number;
+                pageSize?: number;
+            };
+            requestId?: string;
         };
         ScrapeIronPlanetResponse: {
             data?: {
