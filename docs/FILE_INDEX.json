@@ -1,0 +1,1092 @@
+﻿[
+    {
+        "path":  ".dockerignore",
+        "bytes":  95,
+        "modifiedUtc":  "2026-01-29T12:47:22Z"
+    },
+    {
+        "path":  ".easyfinder-context.md",
+        "bytes":  226,
+        "modifiedUtc":  "2026-02-16T04:52:24Z"
+    },
+    {
+        "path":  ".gitattributes",
+        "bytes":  80,
+        "modifiedUtc":  "2026-02-13T10:55:03Z"
+    },
+    {
+        "path":  ".github/workflows/ci.yml",
+        "bytes":  1725,
+        "modifiedUtc":  "2026-02-14T00:31:23Z"
+    },
+    {
+        "path":  ".github/workflows/lockfile-refresh.yml",
+        "bytes":  1350,
+        "modifiedUtc":  "2026-02-08T21:35:06Z"
+    },
+    {
+        "path":  ".gitignore",
+        "bytes":  582,
+        "modifiedUtc":  "2026-02-13T11:15:23Z"
+    },
+    {
+        "path":  ".npmrc",
+        "bytes":  161,
+        "modifiedUtc":  "2026-01-29T12:47:22Z"
+    },
+    {
+        "path":  ".vscode/settings.json",
+        "bytes":  317,
+        "modifiedUtc":  "2026-01-29T12:47:19Z"
+    },
+    {
+        "path":  "apps/api/package.json",
+        "bytes":  1311,
+        "modifiedUtc":  "2026-02-16T07:14:35Z"
+    },
+    {
+        "path":  "apps/api/scripts/promote-admin.ts",
+        "bytes":  3368,
+        "modifiedUtc":  "2026-02-16T10:21:05Z"
+    },
+    {
+        "path":  "apps/api/src/audit.ts",
+        "bytes":  4841,
+        "modifiedUtc":  "2026-02-16T07:23:37Z"
+    },
+    {
+        "path":  "apps/api/src/auth.ts",
+        "bytes":  420,
+        "modifiedUtc":  "2026-02-13T06:00:30Z"
+    },
+    {
+        "path":  "apps/api/src/bcryptjs.d.ts",
+        "bytes":  27,
+        "modifiedUtc":  "2026-01-29T12:47:20Z"
+    },
+    {
+        "path":  "apps/api/src/billing.ts",
+        "bytes":  3271,
+        "modifiedUtc":  "2026-02-15T07:07:55Z"
+    },
+    {
+        "path":  "apps/api/src/config.ts",
+        "bytes":  217,
+        "modifiedUtc":  "2026-01-29T12:47:20Z"
+    },
+    {
+        "path":  "apps/api/src/db.ts",
+        "bytes":  2099,
+        "modifiedUtc":  "2026-02-16T10:21:05Z"
+    },
+    {
+        "path":  "apps/api/src/email.ts",
+        "bytes":  688,
+        "modifiedUtc":  "2026-02-11T02:29:50Z"
+    },
+    {
+        "path":  "apps/api/src/entitlements.ts",
+        "bytes":  1976,
+        "modifiedUtc":  "2026-02-15T07:00:19Z"
+    },
+    {
+        "path":  "apps/api/src/env.ts",
+        "bytes":  4681,
+        "modifiedUtc":  "2026-02-16T06:40:29Z"
+    },
+    {
+        "path":  "apps/api/src/index.ts",
+        "bytes":  621,
+        "modifiedUtc":  "2026-02-08T10:57:46Z"
+    },
+    {
+        "path":  "apps/api/src/inquiries.ts",
+        "bytes":  3061,
+        "modifiedUtc":  "2026-02-16T08:06:29Z"
+    },
+    {
+        "path":  "apps/api/src/lib/audit.ts",
+        "bytes":  228,
+        "modifiedUtc":  "2026-02-11T08:57:04Z"
+    },
+    {
+        "path":  "apps/api/src/listings.ts",
+        "bytes":  12542,
+        "modifiedUtc":  "2026-02-16T06:40:29Z"
+    },
+    {
+        "path":  "apps/api/src/middleware/disableWritesInDemo.ts",
+        "bytes":  674,
+        "modifiedUtc":  "2026-02-15T16:31:49Z"
+    },
+    {
+        "path":  "apps/api/src/middleware/requireAdmin.ts",
+        "bytes":  1277,
+        "modifiedUtc":  "2026-02-16T06:40:29Z"
+    },
+    {
+        "path":  "apps/api/src/middleware/requireNDA.ts",
+        "bytes":  419,
+        "modifiedUtc":  "2026-02-16T06:40:29Z"
+    },
+    {
+        "path":  "apps/api/src/middleware/requirePlan.ts",
+        "bytes":  1597,
+        "modifiedUtc":  "2026-02-15T10:51:15Z"
+    },
+    {
+        "path":  "apps/api/src/passwordResetTokens.ts",
+        "bytes":  357,
+        "modifiedUtc":  "2026-02-11T02:29:50Z"
+    },
+    {
+        "path":  "apps/api/src/response.ts",
+        "bytes":  488,
+        "modifiedUtc":  "2026-01-29T12:47:20Z"
+    },
+    {
+        "path":  "apps/api/src/routes/admin.ts",
+        "bytes":  12131,
+        "modifiedUtc":  "2026-02-16T08:06:29Z"
+    },
+    {
+        "path":  "apps/api/src/routes/auth.ts",
+        "bytes":  6254,
+        "modifiedUtc":  "2026-02-15T00:52:07Z"
+    },
+    {
+        "path":  "apps/api/src/routes/billing.ts",
+        "bytes":  17300,
+        "modifiedUtc":  "2026-02-15T10:59:49Z"
+    },
+    {
+        "path":  "apps/api/src/routes/demo-listings.ts",
+        "bytes":  1834,
+        "modifiedUtc":  "2026-02-16T06:10:55Z"
+    },
+    {
+        "path":  "apps/api/src/routes/health.ts",
+        "bytes":  361,
+        "modifiedUtc":  "2026-02-11T08:52:54Z"
+    },
+    {
+        "path":  "apps/api/src/routes/inquiries.ts",
+        "bytes":  2468,
+        "modifiedUtc":  "2026-02-13T20:54:02Z"
+    },
+    {
+        "path":  "apps/api/src/routes/listings.ts",
+        "bytes":  3426,
+        "modifiedUtc":  "2026-02-16T06:10:55Z"
+    },
+    {
+        "path":  "apps/api/src/routes/me.ts",
+        "bytes":  5564,
+        "modifiedUtc":  "2026-02-15T07:07:55Z"
+    },
+    {
+        "path":  "apps/api/src/routes/nda.ts",
+        "bytes":  1796,
+        "modifiedUtc":  "2026-02-13T12:39:05Z"
+    },
+    {
+        "path":  "apps/api/src/routes/offers.ts",
+        "bytes":  684,
+        "modifiedUtc":  "2026-02-11T08:57:04Z"
+    },
+    {
+        "path":  "apps/api/src/routes/scoring.ts",
+        "bytes":  1484,
+        "modifiedUtc":  "2026-02-08T15:50:52Z"
+    },
+    {
+        "path":  "apps/api/src/routes/scrapers.ironplanet.ts",
+        "bytes":  1193,
+        "modifiedUtc":  "2026-02-16T04:14:11Z"
+    },
+    {
+        "path":  "apps/api/src/routes/seller.ts",
+        "bytes":  9371,
+        "modifiedUtc":  "2026-02-15T09:46:15Z"
+    },
+    {
+        "path":  "apps/api/src/routes/watchlist.ts",
+        "bytes":  2912,
+        "modifiedUtc":  "2026-02-11T07:57:30Z"
+    },
+    {
+        "path":  "apps/api/src/scrapers/ironplanet.ts",
+        "bytes":  9006,
+        "modifiedUtc":  "2026-02-16T06:10:55Z"
+    },
+    {
+        "path":  "apps/api/src/scrapers/ironplanet.validation.ts",
+        "bytes":  531,
+        "modifiedUtc":  "2026-02-16T04:14:11Z"
+    },
+    {
+        "path":  "apps/api/src/server.ts",
+        "bytes":  8534,
+        "modifiedUtc":  "2026-02-16T06:40:29Z"
+    },
+    {
+        "path":  "apps/api/src/store.ts",
+        "bytes":  1731,
+        "modifiedUtc":  "2026-02-06T08:44:10Z"
+    },
+    {
+        "path":  "apps/api/src/stripe.ts",
+        "bytes":  677,
+        "modifiedUtc":  "2026-02-09T23:15:37Z"
+    },
+    {
+        "path":  "apps/api/src/types.d.ts",
+        "bytes":  1075,
+        "modifiedUtc":  "2026-02-13T06:00:30Z"
+    },
+    {
+        "path":  "apps/api/src/users.ts",
+        "bytes":  5280,
+        "modifiedUtc":  "2026-02-15T11:41:19Z"
+    },
+    {
+        "path":  "apps/api/tests/admin-audit.test.ts",
+        "bytes":  1845,
+        "modifiedUtc":  "2026-02-16T07:23:37Z"
+    },
+    {
+        "path":  "apps/api/tests/admin-auth.test.ts",
+        "bytes":  1635,
+        "modifiedUtc":  "2026-02-16T06:40:29Z"
+    },
+    {
+        "path":  "apps/api/tests/admin-listings.test.ts",
+        "bytes":  3836,
+        "modifiedUtc":  "2026-02-16T08:06:29Z"
+    },
+    {
+        "path":  "apps/api/tests/api.test.ts",
+        "bytes":  16096,
+        "modifiedUtc":  "2026-02-15T07:29:50Z"
+    },
+    {
+        "path":  "apps/api/tests/billing.test.ts",
+        "bytes":  6810,
+        "modifiedUtc":  "2026-02-15T07:07:55Z"
+    },
+    {
+        "path":  "apps/api/tests/disableWritesInDemo.test.ts",
+        "bytes":  1109,
+        "modifiedUtc":  "2026-02-16T00:17:23Z"
+    },
+    {
+        "path":  "apps/api/tests/ironplanet-scraper.test.ts",
+        "bytes":  3594,
+        "modifiedUtc":  "2026-02-16T04:20:18Z"
+    },
+    {
+        "path":  "apps/api/tests/me-billing.test.ts",
+        "bytes":  4456,
+        "modifiedUtc":  "2026-02-15T07:00:19Z"
+    },
+    {
+        "path":  "apps/api/tests/scoring.test.ts",
+        "bytes":  3041,
+        "modifiedUtc":  "2026-02-16T06:23:46Z"
+    },
+    {
+        "path":  "apps/api/tests/seller-upload.test.ts",
+        "bytes":  6459,
+        "modifiedUtc":  "2026-02-15T11:50:17Z"
+    },
+    {
+        "path":  "apps/api/tsconfig.json",
+        "bytes":  358,
+        "modifiedUtc":  "2026-02-11T08:46:35Z"
+    },
+    {
+        "path":  "apps/api/tsconfig.test.json",
+        "bytes":  133,
+        "modifiedUtc":  "2026-01-29T12:47:19Z"
+    },
+    {
+        "path":  "apps/api/vitest.config.ts",
+        "bytes":  470,
+        "modifiedUtc":  "2026-02-11T08:43:47Z"
+    },
+    {
+        "path":  "apps/web/index.html",
+        "bytes":  328,
+        "modifiedUtc":  "2026-01-29T12:47:20Z"
+    },
+    {
+        "path":  "apps/web/package.json",
+        "bytes":  1078,
+        "modifiedUtc":  "2026-01-29T12:47:20Z"
+    },
+    {
+        "path":  "apps/web/postcss.config.js",
+        "bytes":  81,
+        "modifiedUtc":  "2026-01-29T12:47:20Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/backhoe/1.jpg",
+        "bytes":  45816,
+        "modifiedUtc":  "2026-01-30T07:08:29Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/backhoe/2.jpg",
+        "bytes":  1310735,
+        "modifiedUtc":  "2026-01-30T07:08:46Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/backhoe/3.jpg",
+        "bytes":  2880033,
+        "modifiedUtc":  "2026-01-30T07:09:31Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/backhoe/4.jpg",
+        "bytes":  151005,
+        "modifiedUtc":  "2026-01-30T07:09:50Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/backhoe/5.jpg",
+        "bytes":  177844,
+        "modifiedUtc":  "2026-01-30T07:10:23Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/dozer/1.jpg",
+        "bytes":  262144,
+        "modifiedUtc":  "2026-01-30T07:01:52Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/dozer/2.jpg",
+        "bytes":  1254165,
+        "modifiedUtc":  "2026-01-30T07:02:02Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/dozer/3.jpg",
+        "bytes":  299066,
+        "modifiedUtc":  "2026-01-30T07:02:21Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/dozer/4.jpg",
+        "bytes":  298866,
+        "modifiedUtc":  "2026-01-30T07:02:31Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/dozer/5.jpg",
+        "bytes":  64066,
+        "modifiedUtc":  "2026-01-30T07:03:10Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/excavator/1.jpg",
+        "bytes":  209454,
+        "modifiedUtc":  "2026-01-30T06:56:42Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/excavator/2.jpg",
+        "bytes":  17858026,
+        "modifiedUtc":  "2026-01-30T06:57:04Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/excavator/3.jpg",
+        "bytes":  105972,
+        "modifiedUtc":  "2026-01-30T06:57:43Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/excavator/4.jpg",
+        "bytes":  112584,
+        "modifiedUtc":  "2026-01-30T06:57:58Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/excavator/5.jpg",
+        "bytes":  1571085,
+        "modifiedUtc":  "2026-01-30T06:58:38Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/other/1.jpg",
+        "bytes":  213639,
+        "modifiedUtc":  "2026-01-30T07:14:59Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/other/2.jpg",
+        "bytes":  75574,
+        "modifiedUtc":  "2026-01-30T07:15:54Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/other/3.jpg",
+        "bytes":  52174,
+        "modifiedUtc":  "2026-01-30T07:16:16Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/other/4.jpg",
+        "bytes":  116817,
+        "modifiedUtc":  "2026-01-30T07:17:09Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/other/5.jpg",
+        "bytes":  208855,
+        "modifiedUtc":  "2026-01-30T07:17:20Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/skid-steer/1.jpg",
+        "bytes":  66317,
+        "modifiedUtc":  "2026-01-30T06:51:43Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/skid-steer/2.jpg",
+        "bytes":  73068,
+        "modifiedUtc":  "2026-01-30T06:52:48Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/skid-steer/3.jpg",
+        "bytes":  87695,
+        "modifiedUtc":  "2026-01-30T06:53:08Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/skid-steer/4.jpg",
+        "bytes":  53394,
+        "modifiedUtc":  "2026-01-30T06:53:49Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/skid-steer/5.jpg",
+        "bytes":  71811,
+        "modifiedUtc":  "2026-01-30T06:54:00Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/telehandler/1.jpg",
+        "bytes":  91302,
+        "modifiedUtc":  "2026-01-30T07:11:05Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/telehandler/2.jpg",
+        "bytes":  471952,
+        "modifiedUtc":  "2026-01-30T07:11:44Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/telehandler/3.jpg",
+        "bytes":  473971,
+        "modifiedUtc":  "2026-01-30T07:12:37Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/telehandler/4.jpg",
+        "bytes":  629934,
+        "modifiedUtc":  "2026-01-30T07:13:05Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/telehandler/5.jpg",
+        "bytes":  224914,
+        "modifiedUtc":  "2026-01-30T07:14:02Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/wheel-loader/1.jpg",
+        "bytes":  60002,
+        "modifiedUtc":  "2026-01-30T07:04:00Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/wheel-loader/2.jpg",
+        "bytes":  74182,
+        "modifiedUtc":  "2026-01-30T07:04:15Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/wheel-loader/3.jpg",
+        "bytes":  56581,
+        "modifiedUtc":  "2026-01-30T07:04:49Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/wheel-loader/4.jpg",
+        "bytes":  53149,
+        "modifiedUtc":  "2026-01-30T07:05:22Z"
+    },
+    {
+        "path":  "apps/web/public/demo-images/wheel-loader/5.jpg",
+        "bytes":  83217,
+        "modifiedUtc":  "2026-01-30T07:07:41Z"
+    },
+    {
+        "path":  "apps/web/src/App.tsx",
+        "bytes":  10267,
+        "modifiedUtc":  "2026-02-16T22:01:01Z"
+    },
+    {
+        "path":  "apps/web/src/components/AppShell.tsx",
+        "bytes":  10689,
+        "modifiedUtc":  "2026-02-16T22:01:01Z"
+    },
+    {
+        "path":  "apps/web/src/components/DemoBanner.tsx",
+        "bytes":  216,
+        "modifiedUtc":  "2026-02-11T08:12:20Z"
+    },
+    {
+        "path":  "apps/web/src/components/DemoListingCard.tsx",
+        "bytes":  2763,
+        "modifiedUtc":  "2026-02-07T06:28:49Z"
+    },
+    {
+        "path":  "apps/web/src/components/ErrorBoundary.tsx",
+        "bytes":  1209,
+        "modifiedUtc":  "2026-02-14T23:25:06Z"
+    },
+    {
+        "path":  "apps/web/src/components/ImageGallery.tsx",
+        "bytes":  4753,
+        "modifiedUtc":  "2026-02-07T06:28:49Z"
+    },
+    {
+        "path":  "apps/web/src/components/Layout.tsx",
+        "bytes":  1224,
+        "modifiedUtc":  "2026-01-29T12:47:21Z"
+    },
+    {
+        "path":  "apps/web/src/components/RequireAuth.tsx",
+        "bytes":  409,
+        "modifiedUtc":  "2026-02-05T14:26:06Z"
+    },
+    {
+        "path":  "apps/web/src/components/RequireEnterprise.tsx",
+        "bytes":  1491,
+        "modifiedUtc":  "2026-02-08T15:50:52Z"
+    },
+    {
+        "path":  "apps/web/src/components/RequireLiveNda.tsx",
+        "bytes":  1029,
+        "modifiedUtc":  "2026-02-13T18:04:14Z"
+    },
+    {
+        "path":  "apps/web/src/components/RequireSellerUploadAccess.tsx",
+        "bytes":  1793,
+        "modifiedUtc":  "2026-02-16T22:01:01Z"
+    },
+    {
+        "path":  "apps/web/src/components/ui/badge.tsx",
+        "bytes":  319,
+        "modifiedUtc":  "2026-01-29T12:47:21Z"
+    },
+    {
+        "path":  "apps/web/src/components/ui/button.tsx",
+        "bytes":  697,
+        "modifiedUtc":  "2026-02-11T14:32:38Z"
+    },
+    {
+        "path":  "apps/web/src/components/ui/card.tsx",
+        "bytes":  292,
+        "modifiedUtc":  "2026-01-29T12:47:21Z"
+    },
+    {
+        "path":  "apps/web/src/components/ui/input.tsx",
+        "bytes":  369,
+        "modifiedUtc":  "2026-01-29T12:47:21Z"
+    },
+    {
+        "path":  "apps/web/src/env.ts",
+        "bytes":  1281,
+        "modifiedUtc":  "2026-02-11T08:07:13Z"
+    },
+    {
+        "path":  "apps/web/src/generated/openapi.ts",
+        "bytes":  70101,
+        "modifiedUtc":  "2026-02-16T07:29:07Z"
+    },
+    {
+        "path":  "apps/web/src/index.css",
+        "bytes":  971,
+        "modifiedUtc":  "2026-02-11T14:32:38Z"
+    },
+    {
+        "path":  "apps/web/src/layouts/DemoLayout.tsx",
+        "bytes":  209,
+        "modifiedUtc":  "2026-02-06T08:44:10Z"
+    },
+    {
+        "path":  "apps/web/src/layouts/LiveLayout.tsx",
+        "bytes":  292,
+        "modifiedUtc":  "2026-02-06T08:44:10Z"
+    },
+    {
+        "path":  "apps/web/src/layouts/ModeLayout.tsx",
+        "bytes":  3191,
+        "modifiedUtc":  "2026-02-16T21:21:27Z"
+    },
+    {
+        "path":  "apps/web/src/lib/api.ts",
+        "bytes":  13846,
+        "modifiedUtc":  "2026-02-16T08:06:29Z"
+    },
+    {
+        "path":  "apps/web/src/lib/apiClient.ts",
+        "bytes":  435,
+        "modifiedUtc":  "2026-02-14T00:31:23Z"
+    },
+    {
+        "path":  "apps/web/src/lib/auth.tsx",
+        "bytes":  5307,
+        "modifiedUtc":  "2026-02-13T18:32:06Z"
+    },
+    {
+        "path":  "apps/web/src/lib/billing.ts",
+        "bytes":  1026,
+        "modifiedUtc":  "2026-02-15T07:29:50Z"
+    },
+    {
+        "path":  "apps/web/src/lib/demoApi.ts",
+        "bytes":  1123,
+        "modifiedUtc":  "2026-02-08T12:13:14Z"
+    },
+    {
+        "path":  "apps/web/src/lib/demoWatchlist.ts",
+        "bytes":  1559,
+        "modifiedUtc":  "2026-02-04T10:30:16Z"
+    },
+    {
+        "path":  "apps/web/src/lib/formatters.ts",
+        "bytes":  220,
+        "modifiedUtc":  "2026-02-05T14:26:06Z"
+    },
+    {
+        "path":  "apps/web/src/lib/nda.tsx",
+        "bytes":  946,
+        "modifiedUtc":  "2026-02-08T11:33:34Z"
+    },
+    {
+        "path":  "apps/web/src/lib/queryClient.ts",
+        "bytes":  204,
+        "modifiedUtc":  "2026-02-16T21:21:27Z"
+    },
+    {
+        "path":  "apps/web/src/lib/roles.ts",
+        "bytes":  1130,
+        "modifiedUtc":  "2026-02-16T22:01:01Z"
+    },
+    {
+        "path":  "apps/web/src/lib/runtime.tsx",
+        "bytes":  1707,
+        "modifiedUtc":  "2026-02-11T08:52:54Z"
+    },
+    {
+        "path":  "apps/web/src/lib/sellerCapabilities.ts",
+        "bytes":  1017,
+        "modifiedUtc":  "2026-02-13T19:07:41Z"
+    },
+    {
+        "path":  "apps/web/src/main.tsx",
+        "bytes":  839,
+        "modifiedUtc":  "2026-02-16T21:21:27Z"
+    },
+    {
+        "path":  "apps/web/src/pages/admin/AdminAudit.tsx",
+        "bytes":  5801,
+        "modifiedUtc":  "2026-02-16T07:23:37Z"
+    },
+    {
+        "path":  "apps/web/src/pages/admin/AdminHome.tsx",
+        "bytes":  1439,
+        "modifiedUtc":  "2026-02-16T07:23:37Z"
+    },
+    {
+        "path":  "apps/web/src/pages/admin/AdminInquiries.tsx",
+        "bytes":  1408,
+        "modifiedUtc":  "2026-02-16T06:40:29Z"
+    },
+    {
+        "path":  "apps/web/src/pages/admin/AdminListingDetail.tsx",
+        "bytes":  3884,
+        "modifiedUtc":  "2026-02-16T08:06:29Z"
+    },
+    {
+        "path":  "apps/web/src/pages/admin/AdminListings.tsx",
+        "bytes":  3296,
+        "modifiedUtc":  "2026-02-16T08:06:29Z"
+    },
+    {
+        "path":  "apps/web/src/pages/app/AdminSources.tsx",
+        "bytes":  3044,
+        "modifiedUtc":  "2026-02-06T08:44:10Z"
+    },
+    {
+        "path":  "apps/web/src/pages/app/Billing.tsx",
+        "bytes":  322,
+        "modifiedUtc":  "2026-02-14T02:49:21Z"
+    },
+    {
+        "path":  "apps/web/src/pages/app/ListingDetail.tsx",
+        "bytes":  8626,
+        "modifiedUtc":  "2026-02-16T06:10:55Z"
+    },
+    {
+        "path":  "apps/web/src/pages/app/Listings.tsx",
+        "bytes":  10371,
+        "modifiedUtc":  "2026-02-16T06:10:55Z"
+    },
+    {
+        "path":  "apps/web/src/pages/app/Nda.tsx",
+        "bytes":  4068,
+        "modifiedUtc":  "2026-02-14T07:41:22Z"
+    },
+    {
+        "path":  "apps/web/src/pages/app/Offers.tsx",
+        "bytes":  323,
+        "modifiedUtc":  "2026-02-08T11:55:29Z"
+    },
+    {
+        "path":  "apps/web/src/pages/app/ScoringConfigs.tsx",
+        "bytes":  6716,
+        "modifiedUtc":  "2026-02-16T06:10:55Z"
+    },
+    {
+        "path":  "apps/web/src/pages/app/SelectRole.tsx",
+        "bytes":  2621,
+        "modifiedUtc":  "2026-02-13T16:20:38Z"
+    },
+    {
+        "path":  "apps/web/src/pages/app/SellerAdd.tsx",
+        "bytes":  10489,
+        "modifiedUtc":  "2026-02-14T07:09:33Z"
+    },
+    {
+        "path":  "apps/web/src/pages/app/SellerDashboard.tsx",
+        "bytes":  8066,
+        "modifiedUtc":  "2026-02-15T05:20:53Z"
+    },
+    {
+        "path":  "apps/web/src/pages/app/SellerInquiries.tsx",
+        "bytes":  3541,
+        "modifiedUtc":  "2026-02-13T20:02:38Z"
+    },
+    {
+        "path":  "apps/web/src/pages/app/SellerListings.tsx",
+        "bytes":  3135,
+        "modifiedUtc":  "2026-02-15T00:52:07Z"
+    },
+    {
+        "path":  "apps/web/src/pages/app/SellerPipeline.tsx",
+        "bytes":  503,
+        "modifiedUtc":  "2026-02-13T19:32:25Z"
+    },
+    {
+        "path":  "apps/web/src/pages/app/SellerUpload.tsx",
+        "bytes":  12349,
+        "modifiedUtc":  "2026-02-15T07:29:50Z"
+    },
+    {
+        "path":  "apps/web/src/pages/app/Settings.tsx",
+        "bytes":  323,
+        "modifiedUtc":  "2026-02-08T11:55:29Z"
+    },
+    {
+        "path":  "apps/web/src/pages/app/Upgrade.tsx",
+        "bytes":  6573,
+        "modifiedUtc":  "2026-02-15T07:00:19Z"
+    },
+    {
+        "path":  "apps/web/src/pages/app/Watchlist.tsx",
+        "bytes":  3548,
+        "modifiedUtc":  "2026-02-06T08:56:55Z"
+    },
+    {
+        "path":  "apps/web/src/pages/demo/ListingDetail.tsx",
+        "bytes":  4068,
+        "modifiedUtc":  "2026-02-16T06:10:55Z"
+    },
+    {
+        "path":  "apps/web/src/pages/demo/Listings.tsx",
+        "bytes":  6433,
+        "modifiedUtc":  "2026-02-16T06:10:55Z"
+    },
+    {
+        "path":  "apps/web/src/pages/demo/Tour.tsx",
+        "bytes":  58151,
+        "modifiedUtc":  "2026-02-13T07:27:01Z"
+    },
+    {
+        "path":  "apps/web/src/pages/demo/Watchlist.tsx",
+        "bytes":  2076,
+        "modifiedUtc":  "2026-02-06T08:56:55Z"
+    },
+    {
+        "path":  "apps/web/src/pages/ForgotPassword.tsx",
+        "bytes":  2052,
+        "modifiedUtc":  "2026-02-11T02:29:50Z"
+    },
+    {
+        "path":  "apps/web/src/pages/Landing.tsx",
+        "bytes":  2052,
+        "modifiedUtc":  "2026-02-09T21:27:40Z"
+    },
+    {
+        "path":  "apps/web/src/pages/Login.tsx",
+        "bytes":  2225,
+        "modifiedUtc":  "2026-02-16T21:21:27Z"
+    },
+    {
+        "path":  "apps/web/src/pages/Register.tsx",
+        "bytes":  2941,
+        "modifiedUtc":  "2026-02-15T00:52:07Z"
+    },
+    {
+        "path":  "apps/web/src/pages/ResetPassword.tsx",
+        "bytes":  2681,
+        "modifiedUtc":  "2026-02-11T02:29:50Z"
+    },
+    {
+        "path":  "apps/web/src/vite-env.d.ts",
+        "bytes":  38,
+        "modifiedUtc":  "2026-01-29T12:47:20Z"
+    },
+    {
+        "path":  "apps/web/tailwind.config.js",
+        "bytes":  279,
+        "modifiedUtc":  "2026-01-29T12:47:20Z"
+    },
+    {
+        "path":  "apps/web/tests/api-env.test.ts",
+        "bytes":  4296,
+        "modifiedUtc":  "2026-02-08T11:33:34Z"
+    },
+    {
+        "path":  "apps/web/tests/app-shell.test.tsx",
+        "bytes":  6420,
+        "modifiedUtc":  "2026-02-16T21:21:27Z"
+    },
+    {
+        "path":  "apps/web/tests/auth-flow.test.tsx",
+        "bytes":  7881,
+        "modifiedUtc":  "2026-02-15T08:32:00Z"
+    },
+    {
+        "path":  "apps/web/tests/demo.test.tsx",
+        "bytes":  4870,
+        "modifiedUtc":  "2026-02-11T09:54:46Z"
+    },
+    {
+        "path":  "apps/web/tests/env.test.ts",
+        "bytes":  1064,
+        "modifiedUtc":  "2026-02-11T08:07:13Z"
+    },
+    {
+        "path":  "apps/web/tests/landing.test.tsx",
+        "bytes":  618,
+        "modifiedUtc":  "2026-02-11T09:54:46Z"
+    },
+    {
+        "path":  "apps/web/tests/listing-detail.test.tsx",
+        "bytes":  3012,
+        "modifiedUtc":  "2026-02-08T12:13:14Z"
+    },
+    {
+        "path":  "apps/web/tests/listings.test.tsx",
+        "bytes":  2734,
+        "modifiedUtc":  "2026-02-12T13:53:10Z"
+    },
+    {
+        "path":  "apps/web/tests/require-live-nda.test.tsx",
+        "bytes":  2432,
+        "modifiedUtc":  "2026-02-13T18:32:06Z"
+    },
+    {
+        "path":  "apps/web/tests/setup.ts",
+        "bytes":  1818,
+        "modifiedUtc":  "2026-02-11T09:54:46Z"
+    },
+    {
+        "path":  "apps/web/tsconfig.json",
+        "bytes":  371,
+        "modifiedUtc":  "2026-01-29T12:47:20Z"
+    },
+    {
+        "path":  "apps/web/vercel.json",
+        "bytes":  65,
+        "modifiedUtc":  "2026-02-04T10:30:16Z"
+    },
+    {
+        "path":  "apps/web/vite.config.ts",
+        "bytes":  573,
+        "modifiedUtc":  "2026-02-04T10:30:16Z"
+    },
+    {
+        "path":  "Dockerfile",
+        "bytes":  767,
+        "modifiedUtc":  "2026-02-13T10:35:11Z"
+    },
+    {
+        "path":  "docs/ARCHITECTURE_MAP.md",
+        "bytes":  18696,
+        "modifiedUtc":  "2026-02-16T04:34:15Z"
+    },
+    {
+        "path":  "docs/engineering/AI_DEV_CONTEXT.md",
+        "bytes":  1143,
+        "modifiedUtc":  "2026-02-16T04:52:24Z"
+    },
+    {
+        "path":  "docs/engineering/SYSTEM_OVERVIEW.md",
+        "bytes":  3895,
+        "modifiedUtc":  "2026-02-16T04:52:24Z"
+    },
+    {
+        "path":  "docs/product/PRODUCT_VISION.md",
+        "bytes":  2526,
+        "modifiedUtc":  "2026-02-16T04:52:24Z"
+    },
+    {
+        "path":  "docs/product/SCORING_MODEL.md",
+        "bytes":  1827,
+        "modifiedUtc":  "2026-02-16T04:52:24Z"
+    },
+    {
+        "path":  "eslint.config.js",
+        "bytes":  451,
+        "modifiedUtc":  "2026-01-29T12:47:22Z"
+    },
+    {
+        "path":  "fly.toml",
+        "bytes":  724,
+        "modifiedUtc":  "2026-02-13T11:06:39Z"
+    },
+    {
+        "path":  "openapi.yml",
+        "bytes":  46706,
+        "modifiedUtc":  "2026-02-16T07:29:07Z"
+    },
+    {
+        "path":  "package.json",
+        "bytes":  1074,
+        "modifiedUtc":  "2026-02-16T22:01:01Z"
+    },
+    {
+        "path":  "packages/shared/package.json",
+        "bytes":  830,
+        "modifiedUtc":  "2026-02-13T06:00:30Z"
+    },
+    {
+        "path":  "packages/shared/src/data.ts",
+        "bytes":  11450,
+        "modifiedUtc":  "2026-02-13T10:14:49Z"
+    },
+    {
+        "path":  "packages/shared/src/demoImages.ts",
+        "bytes":  4949,
+        "modifiedUtc":  "2026-02-02T01:21:51Z"
+    },
+    {
+        "path":  "packages/shared/src/index.ts",
+        "bytes":  927,
+        "modifiedUtc":  "2026-02-16T06:23:46Z"
+    },
+    {
+        "path":  "packages/shared/src/scoring.ts",
+        "bytes":  9667,
+        "modifiedUtc":  "2026-02-16T06:23:46Z"
+    },
+    {
+        "path":  "packages/shared/src/types.ts",
+        "bytes":  4755,
+        "modifiedUtc":  "2026-02-16T06:23:46Z"
+    },
+    {
+        "path":  "packages/shared/tests/scoring.test.ts",
+        "bytes":  3410,
+        "modifiedUtc":  "2026-02-16T06:23:46Z"
+    },
+    {
+        "path":  "packages/shared/tsconfig.json",
+        "bytes":  351,
+        "modifiedUtc":  "2026-02-13T10:14:49Z"
+    },
+    {
+        "path":  "pnpm-lock.yaml",
+        "bytes":  184497,
+        "modifiedUtc":  "2026-02-15T14:52:14Z"
+    },
+    {
+        "path":  "pnpm-workspace.yaml",
+        "bytes":  40,
+        "modifiedUtc":  "2026-01-29T12:47:22Z"
+    },
+    {
+        "path":  "project docs/_archive/SCORING_MODEL.v1.md",
+        "bytes":  516,
+        "modifiedUtc":  "2026-02-16T06:23:46Z"
+    },
+    {
+        "path":  "project docs/ADDENDUM_LISTINGS_STRATEGY.md",
+        "bytes":  516,
+        "modifiedUtc":  "2026-02-16T04:59:12Z"
+    },
+    {
+        "path":  "project docs/ADMIN_SPECS.md",
+        "bytes":  516,
+        "modifiedUtc":  "2026-02-16T04:59:12Z"
+    },
+    {
+        "path":  "project docs/API_REFERENCE.md",
+        "bytes":  516,
+        "modifiedUtc":  "2026-02-16T04:59:12Z"
+    },
+    {
+        "path":  "project docs/EasyFinder_Product_Vision.md",
+        "bytes":  516,
+        "modifiedUtc":  "2026-02-16T04:59:12Z"
+    },
+    {
+        "path":  "project docs/EasyFinder_System_Overview.md",
+        "bytes":  516,
+        "modifiedUtc":  "2026-02-16T04:59:12Z"
+    },
+    {
+        "path":  "project docs/FRONTEND_CONTRACT.md",
+        "bytes":  516,
+        "modifiedUtc":  "2026-02-16T04:59:12Z"
+    },
+    {
+        "path":  "project docs/README.md",
+        "bytes":  341,
+        "modifiedUtc":  "2026-02-16T06:23:46Z"
+    },
+    {
+        "path":  "project docs/SCORING.md",
+        "bytes":  3309,
+        "modifiedUtc":  "2026-02-16T06:23:46Z"
+    },
+    {
+        "path":  "project docs/STRIPE_WEBHOOK_VERIFICATION.md",
+        "bytes":  516,
+        "modifiedUtc":  "2026-02-16T04:59:12Z"
+    },
+    {
+        "path":  "README.md",
+        "bytes":  2889,
+        "modifiedUtc":  "2026-02-16T10:30:24Z"
+    },
+    {
+        "path":  "scripts/clean.ps1",
+        "bytes":  1002,
+        "modifiedUtc":  "2026-02-06T08:15:36Z"
+    },
+    {
+        "path":  "scripts/cors-smoke-test.sh",
+        "bytes":  553,
+        "modifiedUtc":  "2026-02-08T10:46:30Z"
+    },
+    {
+        "path":  "scripts/repo-snapshot.ps1",
+        "bytes":  9629,
+        "modifiedUtc":  "2026-02-16T22:52:06Z"
+    },
+    {
+        "path":  "scripts/setup.ps1",
+        "bytes":  693,
+        "modifiedUtc":  "2026-01-29T12:47:22Z"
+    },
+    {
+        "path":  "turbo.json",
+        "bytes":  626,
+        "modifiedUtc":  "2026-02-06T08:23:57Z"
+    },
+    {
+        "path":  "vercel.json",
+        "bytes":  103,
+        "modifiedUtc":  "2026-02-08T09:04:52Z"
+    }
+]
