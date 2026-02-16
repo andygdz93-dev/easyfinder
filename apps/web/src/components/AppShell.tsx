@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
-import { useAuth } from "../lib/auth";
+import { UserRole, useAuth } from "../lib/auth";
 import { getMe } from "../lib/api";
 import { Billing, canUseSellerCsvUpload } from "../lib/billing";
 import { useRuntime } from "../lib/runtime";
+import { canAccessSection, displayRoleLabel, shouldShowUpgrade } from "../lib/roles";
 import DemoBanner from "./DemoBanner";
 
 const NDA_WARNING_TEXT = "NDA must be accepted before accessing this resource.";
@@ -28,30 +29,6 @@ function formatPlanLabel(billing?: Billing) {
   return label;
 }
 
-function resolveShellMode(pathname: string): "buyer" | "seller" {
-  return pathname.startsWith("/app/seller") ? "seller" : "buyer";
-}
-
-function formatPlanBadgeLabel(
-  plan: Billing["plan"] | "free",
-  mode: "buyer" | "seller",
-  promoActive?: boolean
-) {
-  const modeLabel = mode === "buyer" ? "Buyer" : "Seller";
-
-  if (plan === "pro") {
-    if (mode === "seller" && promoActive) {
-      return "Pro Seller (promo)";
-    }
-    return `Pro ${modeLabel}`;
-  }
-
-  if (plan === "enterprise") {
-    return `Enterprise ${modeLabel}`;
-  }
-
-  return `Free ${modeLabel}`;
-}
 
 const navSections = [
   {
@@ -96,6 +73,7 @@ export const AppShell = ({
   const isDemoMode = demoMode;
   const showDemoBanner = demoMode;
   const [billing, setBilling] = useState<Billing | null>(null);
+  const [meRole, setMeRole] = useState<UserRole>(null);
   const [billingError, setBillingError] = useState<string | null>(null);
   const [billingLoading, setBillingLoading] = useState(false);
 
@@ -103,6 +81,7 @@ export const AppShell = ({
     let isActive = true;
     if (!token) {
       setBilling(null);
+      setMeRole(null);
       setBillingError(null);
       setBillingLoading(false);
       return;
@@ -114,11 +93,13 @@ export const AppShell = ({
       .then((data) => {
         if (!isActive) return;
         setBilling(data.billing ?? null);
+        setMeRole(data.role ?? null);
         setBillingError(null);
       })
       .catch((error) => {
         if (!isActive) return;
         setBilling(null);
+        setMeRole(null);
         setBillingError(error instanceof Error ? error.message : "Unable to load billing.");
       })
       .finally(() => {
@@ -130,7 +111,8 @@ export const AppShell = ({
     };
   }, [location.pathname, location.search, token]);
 
-  const userRole = user?.role ?? null;
+  const effectiveRole = meRole ?? user?.role ?? null;
+  const userRole = effectiveRole;
   const userRoleResolved =
     userRole === "enterprise"
       ? "enterprise"
@@ -155,23 +137,9 @@ export const AppShell = ({
     };
   }, [planResolved, userRoleResolved]);
 
-  const roleLabel =
-    userRole === "seller"
-      ? "Seller"
-      : userRole === "enterprise"
-        ? "Enterprise"
-        : userRole === "admin"
-          ? "Admin"
-          : userRole === "demo"
-            ? "Demo"
-            : userRole === null
-              ? "Unselected"
-              : "Buyer";
+  const roleLabel = displayRoleLabel({ role: effectiveRole });
   const isShellLoading = !hydrated || billingLoading || (Boolean(token) && !user);
-  const shellMode = resolveShellMode(location.pathname);
-  const badgeLabel = isShellLoading
-    ? "Loading…"
-    : formatPlanBadgeLabel(planResolved, shellMode, billing?.promoActive);
+  const badgeLabel = isShellLoading ? "Loading…" : roleLabel;
 
   let listingLimitLabel = "25";
 
@@ -213,32 +181,21 @@ export const AppShell = ({
         return section;
       })
       .filter((section) => {
-        if (userRoleResolved === "seller") {
-          return (
-            (section.title === "Seller" || section.title === "Upgrade") &&
-            (section.title !== "Seller" || section.items.length > 0)
-          );
+        if (section.title === "Buyer") {
+          return canAccessSection({ role: effectiveRole }, "buyer");
         }
-
-        if (userRoleResolved === "buyer") {
-          return section.title === "Buyer" || section.title === "Upgrade";
+        if (section.title === "Seller") {
+          return section.items.length > 0 && canAccessSection({ role: effectiveRole }, "seller");
         }
-
-        if (userRoleResolved === "enterprise") {
-          return (
-            section.title === "Buyer" ||
-            section.title === "Enterprise" ||
-            section.title === "Upgrade"
-          );
+        if (section.title === "Enterprise") {
+          return canAccessSection({ role: effectiveRole }, "enterprise");
         }
-
-        if (userRoleResolved === "admin") {
-          return true;
+        if (section.title === "Upgrade") {
+          return canAccessSection({ role: effectiveRole }, "upgrade") && shouldShowUpgrade({ role: effectiveRole });
         }
-
-        return section.title === "Upgrade";
+        return false;
       });
-  }, [billing?.plan, demoMode, userRoleResolved]);
+  }, [billing?.entitlements?.csvUpload, billing?.plan, demoMode, effectiveRole, userRoleResolved]);
 
 
   return (
