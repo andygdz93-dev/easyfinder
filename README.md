@@ -1,455 +1,87 @@
-**🚜EasyFinder**
-**Intelligent Equipment Discovery & Scoring Platform**
+# EasyFinder
 
-_Find the best heavy equipment — faster, smarter, and without middlemen._
+Intelligent equipment discovery and scoring in a pnpm monorepo.
 
-**🌍** **What Is EasyFinder?**
+## What this repo contains
 
-EasyFinder is a full-stack platform designed to help buyers and sellers of heavy-duty equipment (construction, industrial, agricultural) connect efficiently.
+- **`apps/api`**: Fastify API for listings, auth, scoring config, seller/admin workflows, and billing gates.
+- **`apps/web`**: Vite + React frontend.
+- **`packages/shared`**: shared domain types/utilities consumed by API and web.
 
-Instead of bouncing between dealers, auctions, and third-party marketplaces, EasyFinder provides a single destination where:
+## Documentation Index
 
-Buyers instantly discover the best equipment for their budget
+- Product vision + acquisition strategy: `docs/product/PRODUCT_VISION.md`
+- Scoring model semantics: `docs/product/SCORING_MODEL.md`
+- Engineering/system overview (including admin, frontend contract, billing/webhook notes): `docs/engineering/SYSTEM_OVERVIEW.md`
+- AI/dev invariants only: `docs/engineering/AI_DEV_CONTEXT.md`
+- API contract (canonical): `openapi.yml`
 
-Sellers list equipment and reach serious buyers faster
-
-The platform intelligently scores and ranks listings
-
-Every recommendation is explainable, transparent, and data-driven
-
-**🎯 Core Value Proposition**
-
-**For Buyers**
-
-One place to search across inventory
-
-Instant ranking of best options
-
-Price vs condition vs usage scored automatically
-
-No dealer pressure or auction friction
-
-**For Sellers**
-
-Faster exposure to qualified buyers
-
-Intelligent positioning of listings
-
-Reduced time-to-sale
-
-**For the Platform**
-
-Commission-based transaction model
-
-High-value equipment → meaningful margins
-
-Scalable intelligence layer
-
-**🧠 What Makes EasyFinder Different?**
-
-✔ Scoring, not sorting
-✔ Explainable rankings
-✔ Config-driven intelligence
-✔ Built for scale, not MVP hacks
-
-EasyFinder doesn’t just list equipment — it tells you what’s worth buying and why.
-
-
-**🏗️ System Architecture (High Level**)
-
-**User Browser**
-
-     │
-     ▼
-**Frontend (Vercel / Vite + React)**
-
-     │
-     ▼
-**Backend API (Fly.io / Fastify)**
-
-     │
-     ▼
-**Scoring Engine + Database (MongoDB)**
-
-
-
-**📁 Repository Structure**
-
-**easyfinder/**
-
-**├── apps/**
-
-**│   ├── api/                # Backend API (Fastify + TypeScript)**
-
-**│   │   ├── src/**
-
-**│   │   │   ├── routes/     # API endpoints**
-
-**│   │   │   ├── scoring/    # Scoring engine**
-
-**│   │   │   ├── services/  # Business logic**
-
-**│   │   │   ├── plugins/   # Fastify plugins (JWT, auth)**
-
-**│   │   │   └── index.ts   # API entry point**
-
-**│   │   └── tests/**
-
-**│   │**
-
-**│   └── web/                # Frontend (Vite + React)**
-
-**│       ├── src/**
-
-**│       └── dist/**
-
-**│**
-
-**├── packages/**
-
-**│   └── shared/             # Shared types & utilities**
-
-**│**
-
-**├── .github/workflows/      # CI pipelines**
-
-**├── Dockerfile              # API container**
-
-**├── fly.toml                # Fly.io config**
-
-**├── pnpm-workspace.yaml**
-
-**└── README.md**
-
-## Local development (Windows / PowerShell)
+## Local development
 
 ### Prerequisites
 
-- Node.js 20.x (matches the Dockerfile runtime)
-- pnpm 9.6.0 (`corepack enable` if needed)
+- Node.js 20.x
+- pnpm 9.6.0+
 
 ### Environment setup
 
-Copy the example files and fill in real values locally:
-
-```powershell
-Copy-Item apps/api/.env.example apps/api/.env
-Copy-Item apps/web/.env.example apps/web/.env
+```bash
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env
 ```
 
 Notes:
-- `apps/api/.env` is required (see `JWT_SECRET`, `MONGO_URL`, `DB_NAME`).
-- `apps/web/.env` should set `VITE_API_BASE_URL` (recommended: `http://127.0.0.1:8080`).
+- `apps/api/.env` must be configured with required backend secrets/settings.
+- `apps/web/.env` should set `VITE_API_BASE_URL`.
 
-### Clean install + build
+### Frontend API base URL contract
 
-```powershell
-pnpm clean
+Use host-only API origin without `/api`:
+
+- Local: `VITE_API_BASE_URL=http://127.0.0.1:8080`
+- Production example: `VITE_API_BASE_URL=https://easyfinder.fly.dev`
+
+The web client normalizes paths and adds `/api` as needed.
+
+### Install, run, verify
+
+```bash
 pnpm install
-pnpm -r build
-```
-
-### Run dev (API + Web)
-
-Single command (turbo runs both in parallel):
-
-```powershell
 pnpm dev
 ```
 
-Two terminals (if you prefer separate logs):
-
-```powershell
-pnpm --filter @easyfinderai/api dev
-pnpm --filter @easyfinderai/web dev
-```
-
-### Verify locally
-
-- Web: http://127.0.0.1:5173
-- API health: http://127.0.0.1:8080/api/health
-
-Vercel note: set `VITE_API_BASE_URL` as the host-only API origin (e.g. `https://easyfinder.fly.dev`) without `/api`.
-
-## Production build and deployment safety checklist
-
-For monorepo safety and deterministic production builds, use this checklist before shipping structural changes:
-
-- Import shared code only from `@easyfinderai/shared` (never `packages/shared/src/*`).
-- If shared types change, rebuild shared first and then rebuild/typecheck consumers:
-  - `pnpm --filter @easyfinderai/shared build`
-  - `pnpm --filter @easyfinderai/api typecheck`
-  - `pnpm --filter @easyfinderai/web typecheck`
-- Keep Docker build order deterministic: install dependencies, remove stale shared artifacts, build shared, build API, then produce runtime bundle.
-- Preserve Fly runtime assumptions unless explicitly changing infrastructure:
-  - API listens on port `8080`
-  - health endpoint remains available
-  - app process runs `node dist/index.js`
-- Run workspace-level verification before deploy:
-  - `pnpm -w typecheck`
-  - `pnpm -w build`
-
-## OpenAPI type generation workflow
-
-When you modify `openapi.yml`, regenerate and commit the generated client types in the same change:
-
-- Run `pnpm -w openapi:types`.
-- Commit `apps/web/src/generated/openapi.ts`.
-
-CI verifies OpenAPI consistency by running validation/type generation and failing if that generated file differs.
-
-
-**⚙️ Tech Stack**
-
-Backend
-
-Node.js
-
-Fastify
-
-TypeScript
-
-JWT Authentication
-
-MongoDB
-
-Docker
-
-Fly.io
-
-Frontend
-
-React
-
-Vite
-
-TypeScript
-
-Vercel
-
-Tooling
-
-pnpm workspaces
-
-ESLint
-
-TypeScript strict mode
-
-GitHub Actions (CI)
-
-
-
-**🔌 Live Endpoints (Current)**
-+
-+
-**Health**
-**GET** /api/health
-**✔ API up**
-**✔ Database connected**
-+
-+
-+
-Listings (Core Feature)
-GET /api/listings
-
-
-Returns:
-
-Equipment listings
-
-Total score
-
-Score breakdown
-
-Human-readable rationale
-
-Scoring Configuration
-GET /api/scoring-configs
-
-
-Shows:
-
-Active weights
-
-Preferred states
-
-Price & hour thresholds
-
-Watchlist
-GET /api/watchlist
-
-
-(Currently stubbed for future expansion)
-
-🧮 Scoring Engine
-
-The scoring engine is the heart of EasyFinder.
-
-What It Does
-
-Evaluates each listing
-
-Applies configurable weights
-
-Produces:
-
-totalScore
-
-Component scores
-
-Clear explanations
-
-Why It Matters
-
-No black boxes
-
-Buyers understand recommendations
-
-Admins can tune behavior without redeploying code
-
-🔐 Authentication (Planned, Partially Wired)
-
-Role system exists:
-
-demo
-
-buyer
-
-seller
-
-admin
-
-JWT infrastructure is in place.
-Routes will be enabled after product vision is finalized.
-
-🚀 Deployment
-Backend (Fly.io)
-
-Dockerized
-
-Internal port: 8080
-
-HTTPS via Fly proxy
-
-## 🔐 Environment Variables
-
-EasyFinder uses environment variables for configuration.
-
-**Never commit real secrets** to the repository.  
-Use `.env` files locally and **Fly/Vercel secrets** in production.
-
-### Backend (Fly.io / `apps/api`)
-
-Required:
-
-| Variable | Description | Example |
-|---|---|---|
-| `MONGO_URL` | Mongo connection string | `mongodb+srv://user:pass@cluster...` |
-| `DB_NAME` | Database name | `easyfinder` |
-| `JWT_SECRET` | JWT signing secret (**min 16 chars**) | `a-very-long-random-string` |
-| `CORS_ORIGINS` | Comma-separated allowed origins | `https://easyfinderai.vercel.app,http://localhost:5173` |
-| `PORT` | API port (default 8080) | `8080` |
-
-Set Fly secrets:
+Common verification:
 
 ```bash
-fly secrets set \
-  MONGO_URL="..." \
-  DB_NAME="easyfinder" \
-  JWT_SECRET="..." \
-  CORS_ORIGINS="https://easyfinderai.vercel.app"
+pnpm -w lint
+pnpm -w typecheck
+pnpm -w test
+pnpm -w build
+```
 
+## OpenAPI workflow
 
-**Frontend (Vercel)**
+`openapi.yml` is the single API source of truth.
 
-Root directory: apps/web
+When API contract changes:
 
-Build output: dist
+1. Update `openapi.yml`.
+2. Regenerate web types:
+   ```bash
+   pnpm -w openapi:types
+   ```
+3. Commit the generated file changes together.
 
-Variable: VITE_API_BASE_URL
+## Safety checklist before merge/deploy
 
-Description: API base URL (host-only, no `/api`)
-
-Example: https://easyfinder.fly.dev
-		
-
-
-**🧪 CI / Quality Gates**
-
-CI runs on every PR and main branch push.
-
-Checks include:
-
-Linting
-
-Type checking
-
-Build validation
-
-The goal: keep the codebase clean and predictable.
-
-**📌 Current Project Status**
-
-**✅ Backend live**
-**✅ Frontend live**
-**✅ Scoring engine operational**
-**✅ CI configured**
-**⚠️ Auth & transactions intentionally deferred**
-
-This is a stable foundation, not a prototype.
-
-🛣️ Roadmap (High Level)
-
-Phase 1 — Vision Lock
-
-Finalize buyer/seller flows
-
-Define commission model
-
-Lock scoring philosophy
-
-Phase 2 — Core Expansion
-
-Seller onboarding
-
-Auth flows
-
-Admin dashboards
-
-Phase 3 — Intelligence
-
-Smarter scoring
-
-Market trend analysis
-
-Deal recommendations
-
-📄 Documentation Index
-
-README.md → This file
-
-PRODUCT_VISION.md → Product direction & goals
-
-SYSTEM_OVERVIEW.md → Architecture & internals
-
-(Planned) SCORING_MODEL.md
-
-(Planned) API_REFERENCE.md
-
-🤝 Contribution Philosophy
-
-Clean code > fast hacks
-
-Explainability > cleverness
-
-Architecture before scale
-
-No noise, no bloat
-
-🧠 Final Note
-
-EasyFinder is built to become the intelligent layer between buyers, sellers, and the heavy-equipment market.
-
-Not a listing site.
-Not an auction clone.
-A decision engine.
+- Import shared modules only through `@easyfinderai/shared` (no deep imports from `packages/shared/src`).
+- Keep Docker build sequence deterministic (shared build before dependent app builds).
+- Preserve Fly runtime assumptions unless intentionally changing infra:
+  - API port `8080`
+  - health endpoint available
+  - runtime entry `node dist/index.js`
+- Run full workspace gates:
+  - `pnpm -w lint`
+  - `pnpm -w typecheck`
+  - `pnpm -w test`
+  - `pnpm -w build`
