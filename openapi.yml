@@ -504,116 +504,249 @@ paths:
         "401": { $ref: "#/components/responses/UnauthorizedError" }
         "404": { $ref: "#/components/responses/NotFoundError" }
 
-  /api/admin/ingest/csv:
+  /api/admin/overview:
+    get:
+      tags: [Admin]
+      summary: Admin platform overview
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Overview payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminOverviewResponse"
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "403": { $ref: "#/components/responses/ForbiddenError" }
+
+  /api/admin/listings:
+    get:
+      tags: [Admin]
+      summary: List and filter listings for moderation
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: string, enum: [active, paused, removed, pending_review] }
+        - in: query
+          name: source
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: pageSize
+          schema: { type: integer, minimum: 1, maximum: 100 }
+      responses:
+        "200":
+          description: Listings page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminListingsResponse"
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "403": { $ref: "#/components/responses/ForbiddenError" }
+
+  /api/admin/listings/{id}:
+    patch:
+      tags: [Admin]
+      summary: Moderate listing status
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ListingId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [active, paused, removed]
+                reason: { type: string }
+      responses:
+        "200":
+          description: Listing updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      listing: { $ref: "#/components/schemas/Listing" }
+                  requestId: { type: string }
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "403": { $ref: "#/components/responses/ForbiddenError" }
+        "404": { $ref: "#/components/responses/NotFoundError" }
+    delete:
+      tags: [Admin]
+      summary: Hard delete listing
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ListingId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [confirm, reason]
+              properties:
+                confirm: { type: boolean, enum: [true] }
+                reason: { type: string }
+      responses:
+        "200":
+          description: Listing hard deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RemovedResponse"
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "403": { $ref: "#/components/responses/ForbiddenError" }
+        "404": { $ref: "#/components/responses/NotFoundError" }
+
+  /api/admin/inquiries:
+    get:
+      tags: [Admin]
+      summary: List inquiries for moderation
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: pageSize
+          schema: { type: integer, minimum: 1, maximum: 100 }
+        - in: query
+          name: status
+          schema: { type: string, enum: [open, closed, spam] }
+      responses:
+        "200":
+          description: Inquiry page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminInquiriesResponse"
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "403": { $ref: "#/components/responses/ForbiddenError" }
+
+  /api/admin/inquiries/{id}:
+    patch:
+      tags: [Admin]
+      summary: Update inquiry status
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [open, closed, spam] }
+                reason: { type: string }
+      responses:
+        "200":
+          description: Inquiry updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      inquiry: { $ref: "#/components/schemas/Inquiry" }
+                  requestId: { type: string }
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "403": { $ref: "#/components/responses/ForbiddenError" }
+        "404": { $ref: "#/components/responses/NotFoundError" }
+
+  /api/admin/scoring-config:
+    get:
+      tags: [Admin]
+      summary: Get active scoring config
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Active config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScoringConfigEnvelope"
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "403": { $ref: "#/components/responses/ForbiddenError" }
     post:
       tags: [Admin]
-      summary: Ingest listings from CSV
+      summary: Replace scoring config
       security:
         - bearerAuth: []
       requestBody:
         required: true
         content:
-          multipart/form-data:
+          application/json:
             schema:
-              type: object
-              required: [file]
-              properties:
-                file:
-                  type: string
-                  format: binary
+              $ref: "#/components/schemas/ScoringConfigInput"
       responses:
         "200":
-          description: Ingest completed
+          description: Config replaced
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    type: object
-                    properties:
-                      ingested: { type: integer }
-                  requestId: { type: string }
-        "400":
-          description: Missing file
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorEnvelope"
+                $ref: "#/components/schemas/ScoringConfigEnvelope"
         "401": { $ref: "#/components/responses/UnauthorizedError" }
-        "402": { $ref: "#/components/responses/PaymentRequiredError" }
         "403": { $ref: "#/components/responses/ForbiddenError" }
-        "422": { $ref: "#/components/responses/ValidationError" }
 
-  /api/admin/sources/sync:
+  /api/admin/scrape/ironplanet:
     post:
       tags: [Admin]
-      summary: Trigger source sync (not guaranteed implemented)
-      description: >
-        Present in some specs; ensure route exists in apps/api before relying on it.
+      summary: Trigger IronPlanet scrape
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url: { type: string }
       responses:
         "200":
-          description: Sync started
+          description: Scrape summary
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    type: object
-                    properties:
-                      status: { type: string }
-                      syncedAt: { type: string, format: date-time }
-                  requestId: { type: string }
-        "401": { $ref: "#/components/responses/UnauthorizedError" }
-        "402": { $ref: "#/components/responses/PaymentRequiredError" }
-        "403": { $ref: "#/components/responses/ForbiddenError" }
-        "501":
-          description: Not implemented
+                $ref: "#/components/schemas/ScrapeIronPlanetResponse"
+        "400":
+          description: Invalid URL
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorEnvelope"
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "403": { $ref: "#/components/responses/ForbiddenError" }
 
-  /api/admin/sources:
-    get:
-      tags: [Admin]
-      summary: List ingestion sources (not guaranteed implemented)
-      description: >
-        Present in some specs; ensure route exists in apps/api before relying on it.
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: Source health list
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: object
-                    properties:
-                      sources:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            name: { type: string }
-                            status: { type: string }
-                            lastSync: { type: string, format: date-time, nullable: true }
-                  requestId: { type: string }
-        "401": { $ref: "#/components/responses/UnauthorizedError" }
-        "402": { $ref: "#/components/responses/PaymentRequiredError" }
-        "403": { $ref: "#/components/responses/ForbiddenError" }
-        "501":
-          description: Not implemented
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorEnvelope"
 
   /api/seller/inquiries:
     get:
@@ -1244,6 +1377,65 @@ components:
                         maxActiveListings: { type: integer, nullable: true }
                         csvUpload: { type: boolean }
                         marketplaceIntegrations: { type: boolean }
+
+    AdminOverviewResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            listings:
+              type: object
+              properties:
+                active: { type: integer }
+                paused: { type: integer }
+                removed: { type: integer }
+                pending_review: { type: integer }
+            bySource:
+              type: object
+              additionalProperties: { type: integer }
+            inquiries:
+              type: object
+              properties:
+                total: { type: integer }
+                open: { type: integer }
+                closed: { type: integer }
+            lastIngestion:
+              type: object
+              additionalProperties:
+                type: string
+                nullable: true
+            demoMode: { type: boolean }
+            billingEnabled: { type: boolean }
+        requestId: { type: string }
+
+    AdminListingsResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items: { $ref: "#/components/schemas/Listing" }
+            total: { type: integer }
+            page: { type: integer }
+            pageSize: { type: integer }
+        requestId: { type: string }
+
+    AdminInquiriesResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items: { $ref: "#/components/schemas/Inquiry" }
+            total: { type: integer }
+            page: { type: integer }
+            pageSize: { type: integer }
+        requestId: { type: string }
 
     ScrapeIronPlanetResponse:
       type: object
