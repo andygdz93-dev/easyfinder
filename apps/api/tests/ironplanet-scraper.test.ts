@@ -75,11 +75,21 @@ describe("scrapeIronPlanetSearch", () => {
     const summary = await scrapeIronPlanetSearch(searchUrl);
 
     expect(summary.scraped).toBe(2);
-    expect(summary.sampleListings.length).toBeLessThanOrEqual(2);
-    expect(summary.sampleListings[0]?.description).toBe("Well maintained excavator");
-    expect(summary.sampleListings[0]?.images.length).toBe(5);
-    expect(summary.sampleListings[0]?.images.every((image) => image.startsWith("https://www.ironplanet.com/"))).toBe(true);
-    expect(summary.sampleListings[0]?.images.some((image) => image.includes("logo") || image.includes("icon") || image.includes("pixel"))).toBe(false);
+    expect(summary.sampleListings).toHaveLength(2);
+
+    const first = summary.sampleListings[0];
+    expect(first).toBeDefined();
+
+    const listing = first!;
+    expect(listing.description).toBe("Well maintained excavator");
+
+    const images = listing.images;
+    expect(images).toBeDefined();
+
+    const listingImages = images!;
+    expect(listingImages).toHaveLength(5);
+    expect(listingImages.every((image) => image.startsWith("https://www.ironplanet.com/"))).toBe(true);
+    expect(listingImages.some((image) => image.includes("logo") || image.includes("icon") || image.includes("pixel"))).toBe(false);
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 });
