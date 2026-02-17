@@ -305,7 +305,22 @@ const parseJsonLd = ($: CheerioAPI): Record<string, unknown>[] => {
   return records;
 };
 
-const isJunkImage = (url: string): boolean => /\/n_images\/|avatar|ritchielist\.png/i.test(url);
+const isJunkImage = (url: string): boolean => {
+  const lower = url.toLowerCase();
+  if (/\/n_images\/|avatar|ritchielist\.png/i.test(lower)) return true;
+  if (lower.endsWith(".gif")) return true;
+
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname.toLowerCase() === "www.ironplanet.com" && parsed.pathname.toLowerCase().startsWith("/images/")) {
+      return true;
+    }
+  } catch {
+    // ignore parse failures
+  }
+
+  return false;
+};
 
 const findLabeledValue = ($: CheerioAPI, labels: string[]): string => {
   const normalizedLabels = labels.map((label) => label.trim().toLowerCase());
@@ -356,15 +371,13 @@ const findPrice = ($: CheerioAPI, meta: Record<string, unknown>[] = []): number 
     const offers = entry.offers;
     if (offers && typeof offers === "object" && !Array.isArray(offers)) {
       const offersPrice = (offers as Record<string, unknown>).price;
-      if (typeof offersPrice === "number") return offersPrice;
       if (typeof offersPrice === "string") {
-        const parsed = parseCurrency(offersPrice) ?? findNumberInText(offersPrice);
+        const parsed = parseCurrency(offersPrice);
         if (parsed !== undefined) return parsed;
       }
     }
 
     const directPrice = entry.price;
-    if (typeof directPrice === "number") return directPrice;
     if (typeof directPrice === "string") {
       const parsed = parseCurrency(directPrice);
       if (parsed !== undefined) return parsed;
