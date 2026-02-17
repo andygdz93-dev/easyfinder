@@ -145,6 +145,16 @@ const cleanHtmlToText = (html: string): string => {
   return lines.join("\n");
 };
 
+function sanitizeDescription(raw: string): string {
+  if (!raw) return "";
+
+  return raw
+    .replace(/<\/?li>/gi, " • ")
+    .replace(/<\/?[^>]+(>|$)/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 const findNumberInText = (text: string): number | undefined => {
   const normalized = Number(text.replaceAll(",", ""));
   return Number.isFinite(normalized) ? normalized : undefined;
@@ -601,8 +611,9 @@ const buildListingDocument = (
   const imageUrl = normalizedImages.find((image) => image.trim().length > 0 && !isJunkImage(image)) ?? "";
   const { make, model } = inferMakeAndModel(title);
   const rawDescription =
-    detail$("meta[name='description']").attr("content")?.trim() ?? firstText(detail$, ["main p", ".description"]);
-  const description = cleanHtmlToText(rawDescription);
+    detail$("meta[name='description']").attr("content")?.trim() ??
+    firstText(detail$, ["main p", ".description"]);
+  const description = sanitizeDescription(rawDescription);
 
   return {
     id: `ironplanet:${sourceExternalId}`,
