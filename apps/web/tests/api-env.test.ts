@@ -143,6 +143,23 @@ describe("api env handling", () => {
     );
   });
 
+
+  it("buildApiUrl handles relative and absolute /api bases", async () => {
+    vi.resetModules();
+
+    vi.doMock("../src/env", () => ({
+      getApiBaseUrl: () => "https://example.com",
+      requireApiBaseUrl: () => "https://example.com",
+      getApiUrl: () => "https://example.com",
+      requireApiUrl: () => "https://example.com",
+    }));
+
+    const apiModule = await import("../src/lib/api");
+
+    expect(apiModule.buildApiUrl("/seller/listings", "/api")).toBe("/api/seller/listings");
+    expect(apiModule.buildApiUrl("/seller/listings", "https://x.com/api")).toBe("https://x.com/api/seller/listings");
+    expect(apiModule.buildApiUrl("/seller/listings", "https://x.com")).toBe("https://x.com/api/seller/listings");
+  });
   it("does not double-prefix when base URL is relative /api", async () => {
     vi.resetModules();
 
