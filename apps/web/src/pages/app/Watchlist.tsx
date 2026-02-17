@@ -10,6 +10,7 @@ import {
   removeFromWatchlist,
 } from "../../lib/api";
 import { WatchlistItem } from "@easyfinderai/shared";
+import { formatListingHours, formatListingPrice } from "../../lib/formatters";
 
 export const Watchlist = () => {
   const watchlistQuery = useQuery<{ items: WatchlistItem[] }>({
@@ -68,11 +69,9 @@ export const Watchlist = () => {
           </div>
           <div className="flex flex-wrap gap-3 text-xs text-slate-400">
             <span>
-              {listing.price ? `$${listing.price.toLocaleString()}` : "—"}
+              {formatListingPrice(listing.price)}
             </span>
-            <span>
-              {listing.hours ? `${listing.hours.toLocaleString()} hrs` : "—"}
-            </span>
+            {formatListingHours(listing.hours) && <span>{formatListingHours(listing.hours)}</span>}
             <span>
               {listing.operable === undefined
                 ? "—"

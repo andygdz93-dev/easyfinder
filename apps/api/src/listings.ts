@@ -4,7 +4,8 @@ import { env } from "./env.js";
 
 export type ListingStatus = "active" | "paused" | "removed" | "pending_review";
 
-export type ListingDocument = Listing & {
+export type ListingDocument = Omit<Listing, "createdAt"> & {
+  createdAt?: string;
   status?: string;
   isPublished?: boolean;
   publishedAt?: string;

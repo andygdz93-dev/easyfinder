@@ -28,7 +28,7 @@ export default async function listingsRoutes(app: FastifyInstance) {
     const activeListings = await getListingsCollection().findLiveListings();
 
     const scored = activeListings.map((listing) => {
-      const score = scoreListing(listing, defaultScoringConfig);
+      const score = scoreListing({ ...listing, createdAt: listing.createdAt ?? new Date(0).toISOString() }, defaultScoringConfig);
       return {
         ...listing,
         totalScore: score.total,
@@ -78,7 +78,7 @@ export default async function listingsRoutes(app: FastifyInstance) {
       return fail(request, reply, "NOT_FOUND", "Listing not found", 404);
     }
 
-    const score = scoreListing(listing, defaultScoringConfig);
+    const score = scoreListing({ ...listing, createdAt: listing.createdAt ?? new Date(0).toISOString() }, defaultScoringConfig);
 
     return ok(request, {
       ...listing,

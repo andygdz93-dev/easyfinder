@@ -31,8 +31,8 @@ export const listingSchema = z.object({
   title: z.string(),
   description: z.string(),
   state: z.string(),
-  price: z.number(),
-  hours: z.number(),
+  price: z.number().nullable().optional(),
+  hours: z.number().nullable().optional(),
   operable: z.boolean(),
   is_operable: z.boolean().optional(),
   year: z.number().optional(),
@@ -61,7 +61,34 @@ export const listingSchema = z.object({
     imageUrl: listing.imageUrl ?? listing.images[0],
   }));
 
-export type Listing = z.infer<typeof listingSchema>;
+export type Listing = {
+  id: string;
+  title: string;
+  description: string;
+  state: string;
+  price: number | null;
+  hours: number | null;
+  operable: boolean;
+  is_operable?: boolean;
+  year?: number;
+  condition?: number;
+  sellerType?: "dealer" | "auction" | "private" | "unknown";
+  shippingAvailable?: boolean;
+  availability?: "in_stock" | "scheduled_auction" | "unknown";
+  lastSeenAt?: string;
+  listingUpdatedAt?: string;
+  photoCount?: number;
+  hasInspectionReport?: boolean;
+  hasServiceHistory?: boolean;
+  verifiedSeller?: boolean;
+  city?: string;
+  country?: string;
+  category: string;
+  imageUrl?: string;
+  images: string[];
+  source: string;
+  createdAt: string;
+};
 
 export const scoringConfigSchema = z.object({
   id: z.string(),
