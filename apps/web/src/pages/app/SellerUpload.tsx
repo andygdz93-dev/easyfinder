@@ -8,32 +8,24 @@ import { useAuth } from "../../lib/auth";
 import { getMe, importSellerListings, ApiError } from "../../lib/api";
 import { canUseSellerCsvUpload } from "../../lib/billing";
 
-const REQUIRED_HEADERS = [
-  "title",
-  "make",
-  "model",
-  "year",
-  "hours",
+const REQUIRED_HEADERS = ["title", "description", "location", "condition", "contactName", "contactEmail"] as const;
+const OPTIONAL_HEADERS = [
   "price",
-  "condition",
-  "state",
-  "description",
-  "image1",
-  "image2",
-  "image3",
-  "image4",
-  "image5",
-] as const;
-
-const REQUIRED_FIELDS = [
-  "title",
+  "hours",
+  "year",
   "make",
   "model",
-  "year",
+  "category",
+  "imageUrl",
+  "imageUrl2",
+  "imageUrl3",
+  "imageUrl4",
+  "imageUrl5",
+  "contactPhone",
   "state",
-  "condition",
-  "description",
 ] as const;
+const ALLOWED_HEADERS = new Set([...REQUIRED_HEADERS, ...OPTIONAL_HEADERS]);
+
 const REQUIRED_HEADERS_DISPLAY = REQUIRED_HEADERS.join(",");
 
 type UploadValidationResult = {
@@ -46,10 +38,10 @@ type UploadValidationResult = {
 type UploadResult = {
   created: number;
   failed: number;
-  errors: Array<{ row: number; message: string }>;
+  errors: Array<{ row: number; field?: string; code: string; message: string }>;
 };
 
-const isValidUrlLike = (value: string) => value.startsWith("http");
+const isValidUrlLike = (value: string) => /^https?:\/\//i.test(value);
 
 const parseCsvLine = (line: string): string[] => {
   const cells: string[] = [];
@@ -116,9 +108,7 @@ export const SellerUpload = () => {
   const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [parsedRows, setParsedRows] = useState<Record<string, string>[]>([]);
-  const [validation, setValidation] = useState<UploadValidationResult | null>(
-    null,
-  );
+  const [validation, setValidation] = useState<UploadValidationResult | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -145,11 +135,7 @@ export const SellerUpload = () => {
 
   const plan = meQuery.data?.billing?.plan ?? "free";
   const role = user?.role ?? null;
-  const canUseCsvUpload = canUseSellerCsvUpload(
-    role,
-    plan,
-    meQuery.data?.billing?.entitlements?.csvUpload
-  );
+  const canUseCsvUpload = canUseSellerCsvUpload(role, plan, meQuery.data?.billing?.entitlements?.csvUpload);
 
   if (!canUseCsvUpload) {
     return <Navigate to="/app/upgrade" replace />;
@@ -157,40 +143,28 @@ export const SellerUpload = () => {
 
   const downloadTemplate = () => {
     const BOM = "\uFEFF";
-    const header = [
-      "title",
-      "make",
-      "model",
-      "year",
-      "hours",
-      "price",
-      "condition",
-      "state",
-      "description",
-      "image1",
-      "image2",
-      "image3",
-      "image4",
-      "image5",
-    ]
-      .map(quoteCsvValue)
-      .join(",");
+    const header = [...REQUIRED_HEADERS, ...OPTIONAL_HEADERS].map(quoteCsvValue).join(",");
 
     const sample = [
-      "Example title",
+      "2020 Caterpillar D6T",
+      "Well-maintained dozer with service records",
+      "Sacramento, CA",
+      "used",
+      "Alex Seller",
+      "alex@example.com",
+      "178000",
+      "1800",
+      "2020",
       "Caterpillar",
       "D6T",
-      "2020",
-      "1800",
-      "178000",
-      "good",
-      "CA",
-      "Example description",
+      "Dozer",
       "https://example.com/img1.jpg",
       "",
       "",
       "",
       "",
+      "555-555-0101",
+      "CA",
     ]
       .map(quoteCsvValue)
       .join(",");
@@ -201,7 +175,7 @@ export const SellerUpload = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "easyfinder_template.csv";
+    a.download = "easyfinder_seller_template.csv";
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -214,12 +188,7 @@ export const SellerUpload = () => {
 
     if (!file) {
       setParsedRows([]);
-      setValidation({
-        rowsDetected: 0,
-        validRows: 0,
-        invalidRows: 0,
-        errors: ["Please choose a CSV file before validation."],
-      });
+      setValidation({ rowsDetected: 0, validRows: 0, invalidRows: 0, errors: ["Please choose a CSV file before validation."] });
       return;
     }
 
@@ -227,14 +196,14 @@ export const SellerUpload = () => {
     const parsed = parseCsv(raw);
     const errors: string[] = [];
 
-    const headerMatches =
-      parsed.header.length === REQUIRED_HEADERS.length &&
-      REQUIRED_HEADERS.every(
-        (header, index) => parsed.header[index] === header,
-      );
+    const missingHeaders = REQUIRED_HEADERS.filter((header) => !parsed.header.includes(header));
+    const unknownHeaders = parsed.header.filter((header) => !ALLOWED_HEADERS.has(header as (typeof REQUIRED_HEADERS)[number]));
 
-    if (!headerMatches) {
-      errors.push(`Header mismatch. Expected: ${REQUIRED_HEADERS.join(",")}`);
+    if (missingHeaders.length > 0) {
+      errors.push(`Missing required columns: ${missingHeaders.join(", ")}`);
+    }
+    if (unknownHeaders.length > 0) {
+      errors.push(`Unsupported columns found: ${unknownHeaders.join(", ")}`);
     }
 
     let validRows = 0;
@@ -242,52 +211,36 @@ export const SellerUpload = () => {
 
     parsed.rows.forEach((row, rowIndex) => {
       const rowErrors: string[] = [];
-
-      REQUIRED_FIELDS.forEach((field) => {
+      REQUIRED_HEADERS.forEach((field) => {
         if (!String(row[field] ?? "").trim()) {
-          rowErrors.push(`Row ${rowIndex + 2}: ${field} is required.`);
+          rowErrors.push(`Row ${rowIndex + 2} • ${field}: required.`);
         }
       });
 
-      if (row.year && !/^\d+$/.test(String(row.year).trim())) {
-        rowErrors.push(`Row ${rowIndex + 2}: year must be an integer.`);
+      if (row.contactEmail && !/^\S+@\S+\.\S+$/.test(String(row.contactEmail).trim())) {
+        rowErrors.push(`Row ${rowIndex + 2} • contactEmail: must be a valid email.`);
       }
 
-      if (row.hours && Number.isNaN(Number(row.hours))) {
-        rowErrors.push(
-          `Row ${rowIndex + 2}: hours must be numeric when provided.`,
-        );
+      if (row.hours && Number.isNaN(Number(String(row.hours).replace(/[$,]/g, "").trim()))) {
+        rowErrors.push(`Row ${rowIndex + 2} • hours: must be numeric when provided.`);
       }
 
-      if (row.price && Number.isNaN(Number(row.price))) {
-        rowErrors.push(
-          `Row ${rowIndex + 2}: price must be numeric when provided.`,
-        );
+      if (row.price && Number.isNaN(Number(String(row.price).replace(/[$,]/g, "").trim()))) {
+        rowErrors.push(`Row ${rowIndex + 2} • price: must be numeric when provided.`);
       }
 
-      if (
-        row.condition &&
-        !["excellent", "good", "fair", "needs_repair"].includes(
-          String(row.condition).trim(),
-        )
-      ) {
-        rowErrors.push(
-          `Row ${rowIndex + 2}: condition must be one of excellent|good|fair|needs_repair.`,
-        );
+      if (row.year && !Number.isInteger(Number(row.year))) {
+        rowErrors.push(`Row ${rowIndex + 2} • year: must be an integer when provided.`);
       }
 
-      ["image1", "image2", "image3", "image4", "image5"].forEach(
-        (imageField) => {
-          const value = String(row[imageField] ?? "").trim();
-          if (value && !isValidUrlLike(value)) {
-            rowErrors.push(
-              `Row ${rowIndex + 2}: ${imageField} must start with http when provided.`,
-            );
-          }
-        },
-      );
+      ["imageUrl", "imageUrl2", "imageUrl3", "imageUrl4", "imageUrl5"].forEach((imageField) => {
+        const value = String(row[imageField] ?? "").trim();
+        if (value && !isValidUrlLike(value)) {
+          rowErrors.push(`Row ${rowIndex + 2} • ${imageField}: must start with http(s).`);
+        }
+      });
 
-      if (rowErrors.length > 0 || !headerMatches) {
+      if (rowErrors.length > 0 || missingHeaders.length > 0 || unknownHeaders.length > 0) {
         invalidRows += 1;
         errors.push(...rowErrors);
       } else {
@@ -295,21 +248,11 @@ export const SellerUpload = () => {
       }
     });
 
-    setParsedRows(headerMatches ? parsed.rows : []);
-    setValidation({
-      rowsDetected: parsed.rows.length,
-      validRows,
-      invalidRows,
-      errors,
-    });
+    setParsedRows(missingHeaders.length === 0 && unknownHeaders.length === 0 ? parsed.rows : []);
+    setValidation({ rowsDetected: parsed.rows.length, validRows, invalidRows, errors });
   };
 
-  const canUpload = Boolean(
-    validation &&
-    validation.validRows > 0 &&
-    validation.invalidRows === 0 &&
-    rows.length > 0,
-  );
+  const canUpload = Boolean(validation && validation.validRows > 0 && validation.invalidRows === 0 && rows.length > 0);
 
   const onUpload = async () => {
     if (!canUpload) return;
@@ -327,11 +270,7 @@ export const SellerUpload = () => {
       }
     } catch (error) {
       const message =
-        error instanceof ApiError
-          ? error.message
-          : error instanceof Error
-            ? error.message
-            : String(error);
+        error instanceof ApiError ? error.message : error instanceof Error ? error.message : String(error);
       setUploadError(message);
     } finally {
       setUploading(false);
@@ -342,9 +281,7 @@ export const SellerUpload = () => {
     <div className="space-y-6">
       <Card>
         <h2 className="text-xl font-semibold">Upload inventory</h2>
-        <p className="mt-2 text-sm text-slate-400">
-          Bulk upload listings using a CSV template.
-        </p>
+        <p className="mt-2 text-sm text-slate-400">Bulk upload listings using a CSV template.</p>
       </Card>
 
       <Card>
@@ -352,22 +289,9 @@ export const SellerUpload = () => {
         <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-300">
           <li>Download the template.</li>
           <li>Each row is one listing.</li>
-          <li>Images are optional via columns image1..image5 (URLs).</li>
-          <li>
-            Manual image upload will be supported later if not implemented
-            today.
-          </li>
+          <li>Required columns: {REQUIRED_HEADERS_DISPLAY}</li>
+          <li>Optional image columns: imageUrl..imageUrl5</li>
         </ul>
-      </Card>
-
-      <Card>
-        <h3 className="text-lg font-semibold">Required columns</h3>
-        <p className="mt-2 break-all text-sm text-slate-300">
-          {REQUIRED_HEADERS_DISPLAY}
-        </p>
-        <p className="mt-2 text-sm text-slate-300">
-          condition: excellent | good | fair | needs_repair
-        </p>
         <Button className="mt-4" onClick={downloadTemplate}>
           Download CSV template
         </Button>
@@ -396,13 +320,14 @@ export const SellerUpload = () => {
             <p>rows detected: {validation.rowsDetected}</p>
             <p>valid rows: {validation.validRows}</p>
             <p>invalid rows: {validation.invalidRows}</p>
+            <p>total validation errors: {validationErrors.length}</p>
             <div className="mt-2">
-              <p className="font-medium">first 10 validation errors</p>
+              <p className="font-medium">Top validation errors</p>
               {validationErrors.length === 0 ? (
                 <p className="mt-1 text-emerald-300">No validation errors.</p>
               ) : (
                 <ul className="mt-1 list-disc space-y-1 pl-5 text-rose-300">
-                  {validationErrors.slice(0, 10).map((error, index) => (
+                  {validationErrors.slice(0, 12).map((error, index) => (
                     <li key={`${error}-${index}`}>{error}</li>
                   ))}
                 </ul>
@@ -412,11 +337,7 @@ export const SellerUpload = () => {
         ) : null}
 
         {validation ? (
-          <Button
-            className="mt-4"
-            onClick={onUpload}
-            disabled={!canUpload || uploading}
-          >
+          <Button className="mt-4" onClick={onUpload} disabled={!canUpload || uploading}>
             {uploading ? "Uploading..." : "Upload"}
           </Button>
         ) : null}
@@ -425,11 +346,12 @@ export const SellerUpload = () => {
           <div className="mt-4 rounded-md border border-emerald-700/40 bg-emerald-950/30 p-4 text-sm text-emerald-200">
             <p>created: {uploadResult.created}</p>
             <p>failed: {uploadResult.failed}</p>
+            <p>error rows returned: {uploadErrors.length}</p>
             {uploadErrors.length > 0 ? (
               <ul className="mt-2 list-disc pl-5 text-rose-300">
-                {uploadErrors.slice(0, 10).map((error, index) => (
-                  <li key={`${error.row}-${index}`}>
-                    Row {error.row}: {error.message ?? String(error)}
+                {uploadErrors.slice(0, 12).map((error, index) => (
+                  <li key={`${error.row}-${error.field ?? "none"}-${index}`}>
+                    Row {error.row}{error.field ? ` • ${error.field}` : ""}: {error.message}
                   </li>
                 ))}
               </ul>
@@ -443,9 +365,7 @@ export const SellerUpload = () => {
         ) : null}
 
         {uploadError ? (
-          <div className="mt-4 rounded-md border border-rose-700/50 bg-rose-950/30 p-4 text-sm text-rose-200">
-            {uploadError}
-          </div>
+          <div className="mt-4 rounded-md border border-rose-700/50 bg-rose-950/30 p-4 text-sm text-rose-200">{uploadError}</div>
         ) : null}
       </Card>
     </div>
