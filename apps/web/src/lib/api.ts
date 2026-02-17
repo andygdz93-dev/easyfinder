@@ -10,7 +10,7 @@ import { Billing } from "./billing";
 
 type ApiEnvelope<T> = {
   data?: T;
-  error?: { code: string; message: string };
+  error?: { code: string; message: string; details?: unknown };
   requestId?: string;
 };
 
@@ -58,14 +58,16 @@ export class ApiError extends Error {
   status?: number;
   code?: string;
   retryAfter?: number;
+  details?: unknown;
 
-  constructor(message: string, requestId?: string, status?: number, code?: string, retryAfter?: number) {
+  constructor(message: string, requestId?: string, status?: number, code?: string, retryAfter?: number, details?: unknown) {
     super(message);
     this.name = "ApiError";
     this.requestId = requestId;
     this.status = status;
     this.code = code;
     this.retryAfter = retryAfter;
+    this.details = details;
   }
 }
 
@@ -209,7 +211,8 @@ const apiRequest = async <T>(
       payload?.requestId,
       res.status,
       payload?.error?.code,
-      Number.isFinite(retryAfter) ? retryAfter : undefined
+      Number.isFinite(retryAfter) ? retryAfter : undefined,
+      payload?.error?.details
     );
   }
 
