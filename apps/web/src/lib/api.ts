@@ -59,8 +59,19 @@ export class ApiError extends Error {
   code?: string;
   retryAfter?: number;
   details?: unknown;
+  url?: string;
+  method?: string;
 
-  constructor(message: string, requestId?: string, status?: number, code?: string, retryAfter?: number, details?: unknown) {
+  constructor(
+    message: string,
+    requestId?: string,
+    status?: number,
+    code?: string,
+    retryAfter?: number,
+    details?: unknown,
+    url?: string,
+    method?: string
+  ) {
     super(message);
     this.name = "ApiError";
     this.requestId = requestId;
@@ -68,6 +79,8 @@ export class ApiError extends Error {
     this.code = code;
     this.retryAfter = retryAfter;
     this.details = details;
+    this.url = url;
+    this.method = method;
   }
 }
 
@@ -89,7 +102,19 @@ function normalizeApiPath(path: string) {
 
 function baseHasApiPrefix(baseUrl: string) {
   const normalizedBase = baseUrl.trim().replace(/\/+$/, "");
-  if (normalizedBase === "/api" || normalizedBase.endsWith("/api")) {
+  if (!normalizedBase) {
+    return false;
+  }
+
+  if (normalizedBase === "/api" || normalizedBase.startsWith("/api?")) {
+    return true;
+  }
+
+  if (normalizedBase.startsWith("/")) {
+    return normalizedBase === "/api" || normalizedBase.startsWith("/api/");
+  }
+
+  if (normalizedBase.endsWith("/api")) {
     return true;
   }
 
@@ -155,6 +180,7 @@ const apiRequest = async <T>(
   }
 
   const url = buildApiUrl(path, baseUrl);
+  const method = (fetchOptions.method ?? "GET").toUpperCase();
   const controller = new AbortController();
   if (signal) {
     signal.addEventListener("abort", () => controller.abort(), { once: true });
@@ -176,7 +202,7 @@ const apiRequest = async <T>(
       clearTimeout(timeoutId);
     }
     if (error instanceof DOMException && error.name === "AbortError") {
-      throw new ApiError("Request timed out. Please try again.");
+      throw new ApiError("Request timed out. Please try again.", undefined, undefined, undefined, undefined, undefined, url, method);
     }
     throw error;
   } finally {
@@ -213,13 +239,16 @@ const apiRequest = async <T>(
       `Request failed (${res.status}${res.statusText ? ` ${res.statusText}` : ""}) for ${url}`;
     const retryAfterHeader = res.headers.get("retry-after");
     const retryAfter = retryAfterHeader ? Number.parseInt(retryAfterHeader, 10) : undefined;
+    const details = payload?.error?.details ?? payload ?? { statusText: res.statusText };
     throw new ApiError(
       message,
       payload?.requestId,
       res.status,
       payload?.error?.code,
       Number.isFinite(retryAfter) ? retryAfter : undefined,
-      payload?.error?.details
+      details,
+      url,
+      method
     );
   }
 
@@ -227,7 +256,12 @@ const apiRequest = async <T>(
     throw new ApiError(
       "Malformed response from server.",
       payload?.requestId,
-      res.status
+      res.status,
+      undefined,
+      undefined,
+      undefined,
+      url,
+      method
     );
   }
 
@@ -352,8 +386,13 @@ export const importSellerListings = (rows: unknown[]) =>
     }
   );
 
+export type SellerListingCreateResponse = {
+  id: string;
+  [key: string]: unknown;
+};
+
 export const createSellerListing = (payload: unknown) =>
-  apiRequest<{ id: string }>("/seller/listings", { method: "POST", body: JSON.stringify(payload) });
+  apiRequest<SellerListingCreateResponse>("/seller/listings", { method: "POST", body: JSON.stringify(payload) });
 
 export const uploadSellerCsv = importSellerListings;
 export const createInquiry = (input: { listingId: string; message: string }) =>
