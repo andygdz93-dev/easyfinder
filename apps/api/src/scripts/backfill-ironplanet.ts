@@ -248,7 +248,12 @@ const main = async () => {
   if (!args.dryRun && upserts.length > 0) {
     const listingsApi = getListingsCollection();
     for (let i = 0; i < upserts.length; i += BATCH_SIZE) {
-      const batch = upserts.slice(i, i + BATCH_SIZE);
+      const batch = upserts.slice(i, i + BATCH_SIZE).map((doc) => {
+        // listings.ts upsertManyBySourceExternalId uses $setOnInsert for insert-only fields,
+        // so strip them here to avoid bulkWrite path conflicts with $set.
+        const { createdAt: _createdAt, status: _status, isPublished: _isPublished, ...sanitized } = doc;
+        return sanitized;
+      });
       await listingsApi.upsertManyBySourceExternalId("ironplanet", batch);
     }
   }
