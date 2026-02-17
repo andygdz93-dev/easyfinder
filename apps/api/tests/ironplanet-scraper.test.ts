@@ -92,4 +92,52 @@ describe("scrapeIronPlanetSearch", () => {
     expect(listingImages.some((image) => image.includes("logo") || image.includes("icon") || image.includes("pixel"))).toBe(false);
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
+
+  it("prefers structured fields for hours, state, and price extraction", async () => {
+    const searchUrl = "https://www.ironplanet.com/search-structured";
+    const detailUrl = "https://www.ironplanet.com/for-sale/structured";
+
+    const searchHtml = `
+      <html><body>
+        <a href="/for-sale/structured">Structured Listing</a>
+      </body></html>
+    `;
+
+    const detailHtml = `
+      <html>
+        <body>
+          <h1>2021 CAT 336</h1>
+          <dl>
+            <dt>Hours</dt><dd>2,345 hrs</dd>
+            <dt>State</dt><dd>TX</dd>
+            <dt>Current Price</dt><dd>US $12,300</dd>
+          </dl>
+        </body>
+      </html>
+    `;
+
+    const fetchMock = vi.fn(async (input: string | URL) => {
+      const url = input.toString();
+      if (url === searchUrl) {
+        return new Response(searchHtml, { status: 200, headers: { "Content-Type": "text/html" } });
+      }
+
+      if (url === detailUrl) {
+        return new Response(detailHtml, { status: 200, headers: { "Content-Type": "text/html" } });
+      }
+
+      return new Response("not found", { status: 404 });
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const summary = await scrapeIronPlanetSearch(searchUrl);
+    expect(summary.scraped).toBe(1);
+    expect(summary.sampleListings).toHaveLength(1);
+
+    const listing = summary.sampleListings[0]!;
+    expect(listing.hours).toBe(2345);
+    expect(listing.state).toBe("TX");
+    expect(listing.price).toBe(12300);
+  });
 });
