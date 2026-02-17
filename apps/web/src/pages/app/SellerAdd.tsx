@@ -1,42 +1,44 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { Card } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
+import { Button } from "../../components/ui/button";
+import { ApiError, createSellerListing, getMe } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { useQuery } from "@tanstack/react-query";
-import { getMe } from "../../lib/api";
 
 type ListingFormState = {
   title: string;
-  category: string;
+  description: string;
+  location: string;
+  condition: "new" | "used" | "unknown";
+  price: string;
+  hours: string;
   year: string;
   make: string;
   model: string;
-  hours: string;
-  price: string;
-  state: string;
-  operable: boolean;
-  description: string;
+  category: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+  images: string[];
 };
-
-type ImagePreview = {
-  file: File;
-  previewUrl: string;
-};
-
-const CATEGORIES = ["Excavator", "Loader", "Dozer", "Grader", "Lift", "Truck", "Other"];
-const US_STATES = ["CA", "TX", "FL", "NY", "WA", "IL", "GA", "NC", "Other"];
 
 const INITIAL_FORM: ListingFormState = {
   title: "",
-  category: "",
+  description: "",
+  location: "",
+  condition: "unknown",
+  price: "",
+  hours: "",
   year: "",
   make: "",
   model: "",
-  hours: "",
-  price: "",
-  state: "",
-  operable: true,
-  description: "",
+  category: "",
+  contactName: "",
+  contactEmail: "",
+  contactPhone: "",
+  images: [""],
 };
 
 export const SellerAdd = () => {
@@ -48,9 +50,9 @@ export const SellerAdd = () => {
   });
 
   const [form, setForm] = useState<ListingFormState>(INITIAL_FORM);
-  const [images, setImages] = useState<ImagePreview[]>([]);
-  const [message, setMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const plan = meQuery.data?.billing?.plan ?? "free";
   const listingLimitLabel =
@@ -62,73 +64,96 @@ export const SellerAdd = () => {
           ? "200"
           : "25";
 
-  const canAddMoreImages = images.length < 5;
-
-  useEffect(() => {
-    return () => {
-      images.forEach((image) => URL.revokeObjectURL(image.previewUrl));
-    };
-  }, [images]);
-
   const planNotice = useMemo(() => {
     if (plan === "enterprise") return "Your Enterprise plan supports Unlimited active listings.";
     if (plan === "pro") return "Your Pro plan supports 200 active listings.";
     return "Your Free plan supports 25 active listings.";
   }, [plan]);
 
-  const updateField = <K extends keyof ListingFormState>(key: K, value: ListingFormState[K]) => {
+  const updateField = <K extends keyof Omit<ListingFormState, "images">>(key: K, value: ListingFormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const fileList = event.target.files;
-    if (!fileList || fileList.length === 0) return;
-
-    const incoming = Array.from(fileList);
-    const remainingSlots = 5 - images.length;
-
-    if (remainingSlots <= 0) {
-      setError("You can upload a maximum of 5 images.");
-      event.target.value = "";
-      return;
-    }
-
-    const accepted = incoming.slice(0, remainingSlots).map((file) => ({
-      file,
-      previewUrl: URL.createObjectURL(file),
-    }));
-
-    if (incoming.length > remainingSlots) {
-      setError("Only 5 images are allowed. Extra files were ignored.");
-    } else {
-      setError(null);
-    }
-
-    setImages((prev) => [...prev, ...accepted]);
-    event.target.value = "";
+  const updateImage = (index: number, value: string) => {
+    setForm((prev) => {
+      const images = [...prev.images];
+      images[index] = value;
+      return { ...prev, images };
+    });
   };
 
-  const handleRemoveImage = (index: number) => {
-    setImages((prev) => {
-      const target = prev[index];
-      if (target) {
-        URL.revokeObjectURL(target.previewUrl);
-      }
-      return prev.filter((_, i) => i !== index);
+  const addImageInput = () => {
+    setForm((prev) => {
+      if (prev.images.length >= 5) return prev;
+      return { ...prev, images: [...prev.images, ""] };
+    });
+  };
+
+  const removeImageInput = (index: number) => {
+    setForm((prev) => {
+      const next = prev.images.filter((_, i) => i !== index);
+      return { ...prev, images: next.length > 0 ? next : [""] };
     });
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
-    setMessage("Listing creation coming soon");
+    setSuccessMessage(null);
+
+    if (!form.title.trim() || !form.description.trim() || !form.location.trim() || !form.contactName.trim() || !form.contactEmail.trim()) {
+      setError("Please complete all required fields.");
+      return;
+    }
+
+    const sanitizedImages = form.images.map((image) => image.trim()).filter(Boolean).slice(0, 5);
+    const invalidImage = sanitizedImages.find((url) => !/^https?:\/\//i.test(url));
+    if (invalidImage) {
+      setError("Image URLs must start with http:// or https://.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const payload = {
+        title: form.title,
+        description: form.description,
+        location: form.location,
+        condition: form.condition,
+        contactName: form.contactName,
+        contactEmail: form.contactEmail,
+        contactPhone: form.contactPhone || undefined,
+        price: form.price || undefined,
+        hours: form.hours || undefined,
+        year: form.year || undefined,
+        make: form.make || undefined,
+        model: form.model || undefined,
+        category: form.category || undefined,
+        images: sanitizedImages,
+        imageUrl: sanitizedImages[0] || undefined,
+      };
+
+      const result = await createSellerListing(payload);
+      setSuccessMessage(`Listing created successfully (ID: ${result.id}).`);
+      setForm(INITIAL_FORM);
+    } catch (submitError) {
+      const message =
+        submitError instanceof ApiError
+          ? submitError.message
+          : submitError instanceof Error
+            ? submitError.message
+            : "Failed to create listing.";
+      setError(message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <div className="space-y-6">
       <Card>
         <h2 className="text-xl font-semibold">Add a listing</h2>
-        <p className="mt-2 text-sm text-slate-400">Complete the form below to prepare your listing.</p>
+        <p className="mt-2 text-sm text-slate-400">Create a listing manually using the form below.</p>
         <p className="mt-2 text-xs text-slate-500">
           Plan listing limit: {listingLimitLabel}. {planNotice}
         </p>
@@ -138,169 +163,105 @@ export const SellerAdd = () => {
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="grid gap-4 md:grid-cols-2">
             <label className="space-y-2 text-sm text-slate-200">
-              <span>Title</span>
-              <Input
-                value={form.title}
-                onChange={(event) => updateField("title", event.target.value)}
-                placeholder="2020 Caterpillar 320"
-                required
-              />
+              <span>Title *</span>
+              <Input value={form.title} onChange={(event) => updateField("title", event.target.value)} required />
             </label>
-
+            <label className="space-y-2 text-sm text-slate-200">
+              <span>Location *</span>
+              <Input value={form.location} onChange={(event) => updateField("location", event.target.value)} required />
+            </label>
+            <label className="space-y-2 text-sm text-slate-200">
+              <span>Condition *</span>
+              <select
+                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-100 focus:border-accent focus:outline-none"
+                value={form.condition}
+                onChange={(event) => updateField("condition", event.target.value as ListingFormState["condition"])}
+              >
+                <option value="unknown">unknown</option>
+                <option value="new">new</option>
+                <option value="used">used</option>
+              </select>
+            </label>
             <label className="space-y-2 text-sm text-slate-200">
               <span>Category</span>
-              <select
-                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-100 focus:border-accent focus:outline-none"
-                value={form.category}
-                onChange={(event) => updateField("category", event.target.value)}
-                required
-              >
-                <option value="">Select category</option>
-                {CATEGORIES.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
+              <Input value={form.category} onChange={(event) => updateField("category", event.target.value)} />
             </label>
-
-            <label className="space-y-2 text-sm text-slate-200">
-              <span>Year</span>
-              <Input
-                type="number"
-                min={1900}
-                max={2100}
-                value={form.year}
-                onChange={(event) => updateField("year", event.target.value)}
-                required
-              />
-            </label>
-
-            <label className="space-y-2 text-sm text-slate-200">
-              <span>Make</span>
-              <Input
-                value={form.make}
-                onChange={(event) => updateField("make", event.target.value)}
-                placeholder="Caterpillar"
-                required
-              />
-            </label>
-
-            <label className="space-y-2 text-sm text-slate-200">
-              <span>Model</span>
-              <Input
-                value={form.model}
-                onChange={(event) => updateField("model", event.target.value)}
-                placeholder="320"
-                required
-              />
-            </label>
-
-            <label className="space-y-2 text-sm text-slate-200">
-              <span>Hours</span>
-              <Input
-                type="number"
-                min={0}
-                value={form.hours}
-                onChange={(event) => updateField("hours", event.target.value)}
-                required
-              />
-            </label>
-
             <label className="space-y-2 text-sm text-slate-200">
               <span>Price</span>
-              <Input
-                type="number"
-                min={0}
-                step="0.01"
-                value={form.price}
-                onChange={(event) => updateField("price", event.target.value)}
-                required
-              />
+              <Input value={form.price} onChange={(event) => updateField("price", event.target.value)} placeholder="$125,000" />
             </label>
-
             <label className="space-y-2 text-sm text-slate-200">
-              <span>State</span>
-              <select
-                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-100 focus:border-accent focus:outline-none"
-                value={form.state}
-                onChange={(event) => updateField("state", event.target.value)}
-                required
-              >
-                <option value="">Select state</option>
-                {US_STATES.map((state) => (
-                  <option key={state} value={state}>
-                    {state}
-                  </option>
-                ))}
-              </select>
+              <span>Hours</span>
+              <Input value={form.hours} onChange={(event) => updateField("hours", event.target.value)} />
+            </label>
+            <label className="space-y-2 text-sm text-slate-200">
+              <span>Year</span>
+              <Input value={form.year} onChange={(event) => updateField("year", event.target.value)} />
+            </label>
+            <label className="space-y-2 text-sm text-slate-200">
+              <span>Make</span>
+              <Input value={form.make} onChange={(event) => updateField("make", event.target.value)} />
+            </label>
+            <label className="space-y-2 text-sm text-slate-200">
+              <span>Model</span>
+              <Input value={form.model} onChange={(event) => updateField("model", event.target.value)} />
+            </label>
+            <label className="space-y-2 text-sm text-slate-200">
+              <span>Contact name *</span>
+              <Input value={form.contactName} onChange={(event) => updateField("contactName", event.target.value)} required />
+            </label>
+            <label className="space-y-2 text-sm text-slate-200">
+              <span>Contact email *</span>
+              <Input type="email" value={form.contactEmail} onChange={(event) => updateField("contactEmail", event.target.value)} required />
+            </label>
+            <label className="space-y-2 text-sm text-slate-200">
+              <span>Contact phone</span>
+              <Input value={form.contactPhone} onChange={(event) => updateField("contactPhone", event.target.value)} />
             </label>
           </div>
 
-          <label className="flex items-center gap-3 text-sm text-slate-200">
-            <input
-              type="checkbox"
-              className="h-4 w-4"
-              checked={form.operable}
-              onChange={(event) => updateField("operable", event.target.checked)}
-            />
-            Operable
-          </label>
-
           <label className="space-y-2 text-sm text-slate-200">
-            <span>Description</span>
+            <span>Description *</span>
             <textarea
               className="min-h-28 w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-100 focus:border-accent focus:outline-none"
               value={form.description}
               onChange={(event) => updateField("description", event.target.value)}
-              placeholder="Add condition, maintenance history, and sale details"
               required
             />
           </label>
 
           <div className="space-y-2">
-            <label className="text-sm text-slate-200" htmlFor="listing-images">Images (max 5)</label>
-            <input
-              id="listing-images"
-              type="file"
-              accept="image/*"
-              multiple
-              disabled={!canAddMoreImages}
-              onChange={handleImageChange}
-              className="block w-full text-sm text-slate-300 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-700 file:px-3 file:py-2 file:text-sm file:text-slate-100"
-            />
-            <p className="text-xs text-slate-500">{images.length}/5 images selected.</p>
-            {images.length > 0 ? (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-                {images.map((image, index) => (
-                  <div key={`${image.file.name}-${index}`} className="rounded-lg border border-slate-700 bg-slate-900 p-2">
-                    <img
-                      src={image.previewUrl}
-                      alt={image.file.name}
-                      className="h-24 w-full rounded object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveImage(index)}
-                      className="mt-2 w-full rounded-md border border-rose-500/60 px-2 py-1 text-xs text-rose-300 hover:bg-rose-500/10"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
+            <p className="text-sm text-slate-200">Image URLs (up to 5)</p>
+            {form.images.map((image, index) => (
+              <div key={`image-url-${index}`} className="flex gap-2">
+                <Input
+                  value={image}
+                  onChange={(event) => updateImage(index, event.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                />
+                <Button type="button" variant="outline" onClick={() => removeImageInput(index)}>
+                  Remove
+                </Button>
               </div>
-            ) : null}
+            ))}
+            <Button type="button" variant="outline" onClick={addImageInput} disabled={form.images.length >= 5}>
+              Add image URL
+            </Button>
           </div>
 
           {error ? <p className="text-sm text-rose-400">{error}</p> : null}
-          {message ? <p className="text-sm text-emerald-400">{message}</p> : null}
+          {successMessage ? (
+            <div className="rounded-md border border-emerald-700/40 bg-emerald-950/30 p-3 text-sm text-emerald-200">
+              <p>{successMessage}</p>
+              <Link className="mt-2 inline-block underline" to="/app/seller/listings">
+                Go to seller listings
+              </Link>
+            </div>
+          ) : null}
 
-          <button
-            type="submit"
-            className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
-          >
-            Submit listing
-          </button>
+          <Button type="submit" disabled={submitting}>
+            {submitting ? "Creating..." : "Create listing"}
+          </Button>
         </form>
       </Card>
     </div>

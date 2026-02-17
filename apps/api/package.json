@@ -15,7 +15,8 @@
     "test": "vitest run",
     "promote-admin": "tsx scripts/promote-admin.ts",
     "backfill:ironplanet": "node --enable-source-maps dist/scripts/backfill-ironplanet-listings.js",
-    "backfill-ironplanet": "tsx scripts/backfill-ironplanet.ts"
+    "backfill-ironplanet": "tsx scripts/backfill-ironplanet.ts",
+    "seed-seller-listings": "tsx src/scripts/seed-seller-listings.ts"
   },
   "dependencies": {
     "@easyfinderai/shared": "workspace:*",

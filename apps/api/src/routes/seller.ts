@@ -3,6 +3,7 @@ import { ObjectId } from "mongodb";
 import { z } from "zod";
 import { listings } from "../store.js";
 import { getListingsCollection } from "../listings.js";
+import { insertAuditEvent } from "../audit.js";
 import { fail, ok } from "../response.js";
 import { requireNDA } from "../middleware/requireNDA.js";
 import { requirePlan } from "../middleware/requirePlan.js";
@@ -16,35 +17,56 @@ import { env } from "../env.js";
 const sellerOnly = new Set(["seller", "admin"]);
 const uploadRoleAllowed = new Set(["seller", "enterprise", "admin"]);
 
-const importRowSchema = z.object({
-  title: z.string().trim().min(1),
-  make: z.string().trim().min(1),
-  model: z.string().trim().min(1),
-  year: z.union([z.string(), z.number()]).optional(),
-  hours: z.union([z.string(), z.number()]).optional(),
-  price: z.union([z.string(), z.number()]).optional(),
-  condition: z.string().trim().min(1),
-  state: z.string().trim().min(1),
-  description: z.string().trim().min(1),
-  image1: z.string().optional(),
-  image2: z.string().optional(),
-  image3: z.string().optional(),
-  image4: z.string().optional(),
-  image5: z.string().optional(),
-});
+const requiredImportFields = ["title", "description", "location", "condition", "contactName", "contactEmail"] as const;
+const importImageFields = ["imageUrl", "imageUrl2", "imageUrl3", "imageUrl4", "imageUrl5"] as const;
+
+const importRowSchema = z
+  .object({
+    title: z.string().trim().min(1),
+    description: z.string().trim().min(1),
+    location: z.string().trim().min(1),
+    condition: z.string().trim().min(1),
+    contactName: z.string().trim().min(1),
+    contactEmail: z.string().trim().email(),
+    price: z.union([z.string(), z.number()]).optional(),
+    hours: z.union([z.string(), z.number()]).optional(),
+    year: z.union([z.string(), z.number()]).optional(),
+    make: z.string().optional(),
+    model: z.string().optional(),
+    category: z.string().optional(),
+    imageUrl: z.string().optional(),
+    imageUrl2: z.string().optional(),
+    imageUrl3: z.string().optional(),
+    imageUrl4: z.string().optional(),
+    imageUrl5: z.string().optional(),
+    contactPhone: z.string().optional(),
+    state: z.string().optional(),
+  })
+  .passthrough();
 
 const listingsImportSchema = z.object({
   rows: z.array(importRowSchema).min(1),
 });
 
-const conditionScoreByLabel: Record<string, number> = {
-  excellent: 4,
-  good: 3,
-  fair: 2,
-  needs_repair: 1,
-};
+const manualListingSchema = z.object({
+  title: z.string().trim().min(1),
+  description: z.string().trim().min(1),
+  location: z.string().trim().min(1),
+  condition: z.string().trim().min(1),
+  contactName: z.string().trim().min(1),
+  contactEmail: z.string().trim().email(),
+  price: z.union([z.string(), z.number()]).optional(),
+  hours: z.union([z.string(), z.number()]).optional(),
+  year: z.union([z.string(), z.number()]).optional(),
+  make: z.string().optional(),
+  model: z.string().optional(),
+  category: z.string().optional(),
+  images: z.array(z.string()).optional(),
+  imageUrl: z.string().optional(),
+  contactPhone: z.string().optional(),
+});
 
-const requiredFields = ["title", "make", "model", "year", "state", "condition", "description"] as const;
+type IngestionError = { row: number; field?: string; code: string; message: string };
 
 type SellerImportListing = (typeof listings)[number] & {
   id: string;
@@ -52,64 +74,113 @@ type SellerImportListing = (typeof listings)[number] & {
   isPublished: boolean;
   publishedAt: string;
   updatedAt: string;
-  make: string;
-  model: string;
+  make?: string;
+  model?: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  location?: string;
+  sourceUrl?: string;
 };
 
 const toStringValue = (value: unknown) => String(value ?? "").trim();
+
+const parseOptionalNumeric = (value: unknown, field: "price" | "hours", row: number): { value?: number; error?: IngestionError } => {
+  if (value === undefined || value === null) {
+    return {};
+  }
+
+  const raw = toStringValue(value);
+  if (!raw) {
+    return {};
+  }
+
+  const normalized = raw.replace(/[$,]/g, "").trim();
+  const parsed = Number(normalized);
+  if (!Number.isFinite(parsed)) {
+    return {
+      error: {
+        row,
+        field,
+        code: "INVALID_NUMBER",
+        message: `${field} must be numeric when provided.`,
+      },
+    };
+  }
+
+  return { value: parsed };
+};
+
+const parseOptionalYear = (value: unknown, row: number): { value?: number; error?: IngestionError } => {
+  if (value === undefined || value === null) return {};
+  const raw = toStringValue(value);
+  if (!raw) return {};
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isInteger(parsed)) {
+    return {
+      error: {
+        row,
+        field: "year",
+        code: "INVALID_INTEGER",
+        message: "year must be an integer when provided.",
+      },
+    };
+  }
+  return { value: parsed };
+};
+
+const sanitizeImageUrls = (input: unknown[]): string[] => {
+  const urls = input
+    .map((item) => toStringValue(item))
+    .filter((url) => url.length > 0)
+    .filter((url) => /^https?:\/\//i.test(url));
+
+  return Array.from(new Set(urls)).slice(0, 5);
+};
 
 const createSellerListingFromRow = (
   sellerId: string,
   row: Record<string, unknown>,
   rowNumber: number
-): { listing?: SellerImportListing; error?: { row: number; message: string } } => {
-  for (const field of requiredFields) {
+): { listing?: SellerImportListing; error?: IngestionError } => {
+  for (const field of requiredImportFields) {
     if (!toStringValue(row[field])) {
-      return { error: { row: rowNumber, message: `${field} is required.` } };
+      return {
+        error: {
+          row: rowNumber,
+          field,
+          code: "REQUIRED",
+          message: `${field} is required.`,
+        },
+      };
     }
   }
 
-  const year = Number.parseInt(toStringValue(row.year), 10);
-  if (!Number.isInteger(year)) {
-    return { error: { row: rowNumber, message: "year must be an integer." } };
-  }
-
-  const hoursRaw = toStringValue(row.hours);
-  const priceRaw = toStringValue(row.price);
-  const hours = hoursRaw ? Number(hoursRaw) : 0;
-  const price = priceRaw ? Number(priceRaw) : 0;
-  if (Number.isNaN(hours)) {
-    return { error: { row: rowNumber, message: "hours must be numeric when provided." } };
-  }
-  if (Number.isNaN(price)) {
-    return { error: { row: rowNumber, message: "price must be numeric when provided." } };
-  }
-
-  const conditionLabel = toStringValue(row.condition);
-  const condition = conditionScoreByLabel[conditionLabel];
-  if (!condition) {
+  const parsedContact = z.string().trim().email().safeParse(toStringValue(row.contactEmail));
+  if (!parsedContact.success) {
     return {
       error: {
         row: rowNumber,
-        message: "condition must be one of excellent|good|fair|needs_repair.",
+        field: "contactEmail",
+        code: "INVALID_EMAIL",
+        message: "contactEmail must be a valid email address.",
       },
     };
   }
 
-  const imageFields = ["image1", "image2", "image3", "image4", "image5"] as const;
-  const providedImages = imageFields
-    .map((key) => toStringValue(row[key]))
-    .filter((value) => value.length > 0);
+  const parsedPrice = parseOptionalNumeric(row.price, "price", rowNumber);
+  if (parsedPrice.error) return { error: parsedPrice.error };
 
-  const fallbackImages = [
-    "/demo-images/placeholder-1.jpg",
-    "/demo-images/placeholder-2.jpg",
-    "/demo-images/placeholder-3.jpg",
-    "/demo-images/placeholder-4.jpg",
-    "/demo-images/placeholder-5.jpg",
-  ];
+  const parsedHours = parseOptionalNumeric(row.hours, "hours", rowNumber);
+  if (parsedHours.error) return { error: parsedHours.error };
 
-  const images = [...providedImages, ...fallbackImages].slice(0, 5);
+  const parsedYear = parseOptionalYear(row.year, rowNumber);
+  if (parsedYear.error) return { error: parsedYear.error };
+
+  const imageValues = importImageFields.map((key) => row[key]);
+  const images = sanitizeImageUrls(imageValues);
+  const imageUrl = toStringValue(row.imageUrl) || images[0] || "";
+
   const now = new Date().toISOString();
   const listingId = new ObjectId().toHexString();
 
@@ -117,24 +188,29 @@ const createSellerListingFromRow = (
     id: listingId,
     title: toStringValue(row.title),
     description: toStringValue(row.description),
-    state: toStringValue(row.state),
-    price,
-    hours,
+    state: toStringValue(row.state) || toStringValue(row.location),
+    price: parsedPrice.value ?? null,
+    hours: parsedHours.value ?? null,
     operable: true,
     is_operable: true,
-    year,
-    condition,
-    category: toStringValue(row.make) || "equipment",
-    imageUrl: images[0],
+    year: parsedYear.value,
+    condition: 0,
+    category: toStringValue(row.category) || "equipment",
+    imageUrl,
     images,
     source: `seller:${sellerId}`,
+    sourceUrl: "",
     status: "active",
     isPublished: true,
     publishedAt: now,
     createdAt: now,
     updatedAt: now,
-    make: toStringValue(row.make),
-    model: toStringValue(row.model),
+    make: toStringValue(row.make) || undefined,
+    model: toStringValue(row.model) || undefined,
+    location: toStringValue(row.location),
+    contactName: toStringValue(row.contactName),
+    contactEmail: parsedContact.data,
+    contactPhone: toStringValue(row.contactPhone) || undefined,
   };
 
   return { listing };
@@ -160,6 +236,87 @@ export default async function sellerRoutes(app: FastifyInstance) {
 
     return ok(request, sellerListings);
   });
+
+  app.post(
+    "/listings",
+    {
+      preHandler: [app.authenticate, requireNDA, requirePlan(["pro", "enterprise"]), disableWritesInDemo],
+    },
+    async (request, reply) => {
+      const payload = manualListingSchema.safeParse(request.body);
+      if (!payload.success) {
+        return fail(request, reply, "BAD_REQUEST", "Invalid listing payload.", 400);
+      }
+
+      const userId = request.user?.id;
+      if (!userId) {
+        return fail(request, reply, "UNAUTHORIZED", "Authentication required.", 401);
+      }
+
+      const parsedPrice = parseOptionalNumeric(payload.data.price, "price", 1);
+      if (parsedPrice.error) {
+        return fail(request, reply, "BAD_REQUEST", parsedPrice.error.message, 400);
+      }
+
+      const parsedHours = parseOptionalNumeric(payload.data.hours, "hours", 1);
+      if (parsedHours.error) {
+        return fail(request, reply, "BAD_REQUEST", parsedHours.error.message, 400);
+      }
+
+      const parsedYear = parseOptionalYear(payload.data.year, 1);
+      if (parsedYear.error) {
+        return fail(request, reply, "BAD_REQUEST", parsedYear.error.message, 400);
+      }
+
+      const images = sanitizeImageUrls(payload.data.images ?? []);
+      const imageUrl = toStringValue(payload.data.imageUrl) || images[0] || "";
+      const now = new Date().toISOString();
+      const id = new ObjectId().toHexString();
+
+      const listing: SellerImportListing = {
+        id,
+        title: payload.data.title.trim(),
+        description: payload.data.description.trim(),
+        state: payload.data.location.trim(),
+        price: parsedPrice.value ?? null,
+        hours: parsedHours.value ?? null,
+        operable: true,
+        is_operable: true,
+        year: parsedYear.value,
+        condition: 0,
+        category: toStringValue(payload.data.category) || "equipment",
+        imageUrl,
+        images,
+        source: `seller:${userId}`,
+        sourceUrl: "",
+        status: "active",
+        isPublished: true,
+        publishedAt: now,
+        createdAt: now,
+        updatedAt: now,
+        make: toStringValue(payload.data.make) || undefined,
+        model: toStringValue(payload.data.model) || undefined,
+        location: payload.data.location.trim(),
+        contactName: payload.data.contactName.trim(),
+        contactEmail: payload.data.contactEmail.trim(),
+        contactPhone: toStringValue(payload.data.contactPhone) || undefined,
+      };
+
+      await getListingsCollection().insertMany([listing]);
+
+      await insertAuditEvent({
+        actorUserId: userId,
+        actorEmail: request.user.email,
+        action: "SELLER_LISTING_CREATED",
+        targetType: "ingestion",
+        targetId: `seller:${userId}`,
+        after: { id, source: listing.source },
+        requestId: request.id,
+      });
+
+      return ok(request, { id });
+    }
+  );
 
   app.get("/inquiries", { preHandler: app.authenticate }, async (request, reply) => {
     if (!sellerOnly.has(request.user.role)) {
@@ -250,7 +407,7 @@ export default async function sellerRoutes(app: FastifyInstance) {
       );
     }
 
-    const errors: Array<{ row: number; message: string }> = [];
+    const errors: IngestionError[] = [];
     const createdIds: string[] = [];
     const createdListings: SellerImportListing[] = [];
 
@@ -273,6 +430,21 @@ export default async function sellerRoutes(app: FastifyInstance) {
     const liveListingIds = createdListings
       .filter((listing) => String(listing.status ?? "").toLowerCase() === "active" && listing.isPublished !== false)
       .map((listing) => listing.id);
+
+    await insertAuditEvent({
+      actorUserId: userId,
+      actorEmail: request.user.email,
+      action: "SELLER_LISTINGS_IMPORTED",
+      targetType: "ingestion",
+      targetId: `seller:${userId}`,
+      after: {
+        created: createdListings.length,
+        failed: errors.length,
+        createdIds,
+        liveListingIds,
+      },
+      requestId: request.id,
+    });
 
     return ok(request, {
       created: createdListings.length,
