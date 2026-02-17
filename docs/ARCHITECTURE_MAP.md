@@ -1,3 +1,3 @@
 # EasyFinder Architecture Map
 
-Canonical architecture doc is `docs/ARCHITECTURE.md`.
+Compatibility pointer: see [docs/ARCHITECTURE.md](./ARCHITECTURE.md).

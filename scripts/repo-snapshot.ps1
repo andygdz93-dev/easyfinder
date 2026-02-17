@@ -100,8 +100,8 @@ function Test-IgnoredFullPath {
   return [bool]($ignoreTokens | Where-Object { $normalized -like "*$_*" })
 }
 
-$docsDir = Join-Path $repoRoot 'docs'
-$generatedDocsDir = Join-Path $docsDir '_generated'
+$opsDir = Join-Path $repoRoot 'ops'
+$generatedDocsDir = Join-Path $opsDir 'snapshots'
 if (-not (Test-Path -LiteralPath $generatedDocsDir)) {
   New-Item -ItemType Directory -Path $generatedDocsDir -Force | Out-Null
 }
@@ -294,8 +294,8 @@ if ($CreateArchive) {
   }
 
   $archiveCandidates = @(
-    'docs/_generated/REPO_SNAPSHOT.md',
-    'docs/_generated/FILE_INDEX.json',
+    'ops/snapshots/REPO_SNAPSHOT.md',
+    'ops/snapshots/FILE_INDEX.json',
     'openapi.yml',
     'README.md',
     '.easyfinder-context.md'
@@ -317,7 +317,7 @@ if ($CreateArchive) {
   }
 }
 
-Write-Host "Snapshot written to docs/_generated/REPO_SNAPSHOT.md and docs/_generated/FILE_INDEX.json"
+Write-Host "Snapshot written to ops/snapshots/REPO_SNAPSHOT.md and ops/snapshots/FILE_INDEX.json"
 if ($CreateArchive) {
   Write-Host 'Archive written to easyfinder-snapshot.tar.gz'
 }
