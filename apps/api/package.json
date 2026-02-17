@@ -14,7 +14,8 @@
     "typecheck": "tsc -p tsconfig.test.json --noEmit",
     "test": "vitest run",
     "promote-admin": "tsx scripts/promote-admin.ts",
-    "backfill:ironplanet": "node --enable-source-maps dist/scripts/backfill-ironplanet-listings.js"
+    "backfill:ironplanet": "node --enable-source-maps dist/scripts/backfill-ironplanet-listings.js",
+    "backfill-ironplanet": "tsx scripts/backfill-ironplanet.ts"
   },
   "dependencies": {
     "@easyfinderai/shared": "workspace:*",
