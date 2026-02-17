@@ -19,7 +19,9 @@ export type IronPlanetScrapeSummary = {
   sampleListings: ListingDocument[];
 };
 
-type IronPlanetScrapedListing = ListingDocument & {
+type IronPlanetScrapedListing = Omit<ListingDocument, "price" | "hours" | "source"> & {
+  price: number | null;
+  hours: number | null;
   source: "ironplanet";
   sourceExternalId: string;
   sourceUrl: string;
@@ -145,15 +147,6 @@ const cleanHtmlToText = (html: string): string => {
   return lines.join("\n");
 };
 
-function sanitizeDescription(raw: string): string {
-  if (!raw) return "";
-
-  return raw
-    .replace(/<\/?li>/gi, " • ")
-    .replace(/<\/?[^>]+(>|$)/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
 
 const findNumberInText = (text: string): number | undefined => {
   const normalized = Number(text.replaceAll(",", ""));
@@ -371,27 +364,6 @@ const findLabeledValue = ($: CheerioAPI, labels: string[]): string => {
     if (value) return value;
   }
 
-  for (const node of $("body *").toArray()) {
-    const label = $(node).text().trim();
-    if (!isMatch(label)) continue;
-
-    const nextSiblingText = $(node).next().first().text().trim();
-    if (nextSiblingText) return nextSiblingText;
-
-    const parentNextText = $(node).parent().next().first().text().trim();
-    if (parentNextText) return parentNextText;
-
-    const container = $(node).closest("li, tr, .row, .field, .detail, .spec, .attribute, .info");
-    if (container.length) {
-      const siblingValue =
-        container.find("dd, td, .value, [data-value]").first().text().trim() ||
-        container.next().find("dd, td, .value, [data-value]").first().text().trim() ||
-        container.next().first().text().trim();
-
-      if (siblingValue) return siblingValue;
-    }
-  }
-
   return "";
 };
 
@@ -451,14 +423,8 @@ const findPrice = ($: CheerioAPI, meta: Record<string, unknown>[] = []): number 
 const findHours = ($: CheerioAPI): number | undefined => {
   const labeledValue = findLabeledValue($, ["Hours", "Hour Meter", "Meter Hours", "Usage"]);
   const labeledMatch = labeledValue.match(/([\d,]+(?:\.\d+)?)/);
-  if (labeledMatch?.[1]) {
-    return findNumberInText(labeledMatch[1]);
-  }
-
-  const text = $("body").text();
-  const match = text.match(/([\d,]+(?:\.\d+)?)\s*(?:hours?|hrs?)\b/i);
-  if (!match?.[1]) return undefined;
-  return findNumberInText(match[1]);
+  if (!labeledMatch?.[1]) return undefined;
+  return findNumberInText(labeledMatch[1]);
 };
 
 const findState = ($: CheerioAPI, url: string): string => {
@@ -613,15 +579,18 @@ const buildListingDocument = (
   const rawDescription =
     detail$("meta[name='description']").attr("content")?.trim() ??
     firstText(detail$, ["main p", ".description"]);
-  const description = sanitizeDescription(rawDescription);
+  const description = cleanHtmlToText(rawDescription);
+
+  const extractedPrice = findPrice(detail$, jsonLdEntries);
+  const price = typeof extractedPrice === "number" && extractedPrice >= 100 ? extractedPrice : null;
 
   return {
     id: `ironplanet:${sourceExternalId}`,
     title,
     description,
     state: findState(detail$, url),
-    price: findPrice(detail$, jsonLdEntries) ?? 0,
-    hours: findHours(detail$) ?? 0,
+    price,
+    hours: findHours(detail$) ?? null,
     year: inferYearFromTitle(title),
     make,
     model,

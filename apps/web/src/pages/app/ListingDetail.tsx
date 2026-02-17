@@ -17,6 +17,7 @@ import {
 import { WatchlistItem } from "@easyfinderai/shared";
 import { useAuth } from "../../lib/auth";
 import { useRuntime } from "../../lib/runtime";
+import { formatListingHours, formatListingPrice, toPlainText } from "../../lib/formatters";
 
 export const ListingDetail = () => {
   const { id } = useParams();
@@ -96,8 +97,8 @@ export const ListingDetail = () => {
     : data.imageUrl
     ? [data.imageUrl]
     : [];
-  const displayPrice = data.price ? `$${data.price.toLocaleString()}` : "—";
-  const displayHours = data.hours ? `${data.hours.toLocaleString()} hrs` : "—";
+  const displayPrice = formatListingPrice(data.price);
+  const displayHours = formatListingHours(data.hours);
   const score = data.score;
   const scores = score?.breakdown ?? {};
   const rationale = score?.reasons ?? [];
@@ -161,10 +162,10 @@ export const ListingDetail = () => {
           />
         )}
 
-        <p className="text-sm text-slate-300">{data.description}</p>
+        <p className="text-sm text-slate-300">{toPlainText(data.description)}</p>
         <div className="flex flex-wrap gap-4 text-xs text-slate-400">
           <span>{displayPrice}</span>
-          <span>{displayHours}</span>
+          {displayHours && <span>{displayHours}</span>}
           <span>{data.state ?? "—"}</span>
           <span>{data.category ?? "—"}</span>
           <span>{data.source ?? "—"}</span>
