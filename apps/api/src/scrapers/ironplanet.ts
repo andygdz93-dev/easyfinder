@@ -131,6 +131,182 @@ const findNumberInText = (text: string): number | undefined => {
   return Number.isFinite(normalized) ? normalized : undefined;
 };
 
+const parseCurrency = (text: string): number | undefined => {
+  const match = text.match(/(?:\bUS\s*\$|\bUSD\b|\$)\s*([\d,]+(?:\.\d{2})?)/i);
+  if (!match?.[1]) return undefined;
+  return findNumberInText(match[1]);
+};
+
+const US_STATE_MAP: Record<string, string> = {
+  al: "AL",
+  alabama: "AL",
+  ak: "AK",
+  alaska: "AK",
+  az: "AZ",
+  arizona: "AZ",
+  ar: "AR",
+  arkansas: "AR",
+  ca: "CA",
+  california: "CA",
+  co: "CO",
+  colorado: "CO",
+  ct: "CT",
+  connecticut: "CT",
+  de: "DE",
+  delaware: "DE",
+  fl: "FL",
+  florida: "FL",
+  ga: "GA",
+  georgia: "GA",
+  hi: "HI",
+  hawaii: "HI",
+  id: "ID",
+  idaho: "ID",
+  il: "IL",
+  illinois: "IL",
+  in: "IN",
+  indiana: "IN",
+  ia: "IA",
+  iowa: "IA",
+  ks: "KS",
+  kansas: "KS",
+  ky: "KY",
+  kentucky: "KY",
+  la: "LA",
+  louisiana: "LA",
+  me: "ME",
+  maine: "ME",
+  md: "MD",
+  maryland: "MD",
+  ma: "MA",
+  massachusetts: "MA",
+  mi: "MI",
+  michigan: "MI",
+  mn: "MN",
+  minnesota: "MN",
+  ms: "MS",
+  mississippi: "MS",
+  mo: "MO",
+  missouri: "MO",
+  mt: "MT",
+  montana: "MT",
+  ne: "NE",
+  nebraska: "NE",
+  nv: "NV",
+  nevada: "NV",
+  nh: "NH",
+  "new hampshire": "NH",
+  newhampshire: "NH",
+  nj: "NJ",
+  "new jersey": "NJ",
+  newjersey: "NJ",
+  nm: "NM",
+  "new mexico": "NM",
+  newmexico: "NM",
+  ny: "NY",
+  "new york": "NY",
+  newyork: "NY",
+  nc: "NC",
+  "north carolina": "NC",
+  northcarolina: "NC",
+  nd: "ND",
+  "north dakota": "ND",
+  northdakota: "ND",
+  oh: "OH",
+  ohio: "OH",
+  ok: "OK",
+  oklahoma: "OK",
+  or: "OR",
+  oregon: "OR",
+  pa: "PA",
+  pennsylvania: "PA",
+  ri: "RI",
+  "rhode island": "RI",
+  rhodeisland: "RI",
+  sc: "SC",
+  "south carolina": "SC",
+  southcarolina: "SC",
+  sd: "SD",
+  "south dakota": "SD",
+  southdakota: "SD",
+  tn: "TN",
+  tennessee: "TN",
+  tx: "TX",
+  texas: "TX",
+  ut: "UT",
+  utah: "UT",
+  vt: "VT",
+  vermont: "VT",
+  va: "VA",
+  virginia: "VA",
+  wa: "WA",
+  washington: "WA",
+  wv: "WV",
+  "west virginia": "WV",
+  westvirginia: "WV",
+  wi: "WI",
+  wisconsin: "WI",
+  wy: "WY",
+  wyoming: "WY",
+};
+
+const normalizeStateCode = (value: string): string => {
+  const compact = value.trim().toLowerCase();
+  if (!compact) return "";
+
+  const cleaned = compact.replace(/[^a-z\s]/g, " ").replace(/\s+/g, " ").trim();
+  if (!cleaned) return "";
+
+  const direct = US_STATE_MAP[cleaned] ?? US_STATE_MAP[cleaned.replaceAll(" ", "")];
+  if (direct) return direct;
+
+  const parts = cleaned.split(" ").filter(Boolean);
+  for (let i = parts.length - 1; i >= 0; i -= 1) {
+    const mapped = US_STATE_MAP[parts[i]!];
+    if (mapped) return mapped;
+  }
+
+  return "";
+};
+
+const parseJsonLd = ($: CheerioAPI): Record<string, unknown>[] => {
+  const records: Record<string, unknown>[] = [];
+
+  $("script[type='application/ld+json']").each((_i: number, el: AnyNode) => {
+    const raw = $(el).text().trim();
+    if (!raw) return;
+
+    try {
+      const parsed = JSON.parse(raw);
+
+      if (Array.isArray(parsed)) {
+        for (const item of parsed) {
+          if (item && typeof item === "object") records.push(item as Record<string, unknown>);
+        }
+        return;
+      }
+
+      if (parsed && typeof parsed === "object") {
+        const graph = (parsed as Record<string, unknown>)["@graph"];
+        if (Array.isArray(graph)) {
+          for (const item of graph) {
+            if (item && typeof item === "object") records.push(item as Record<string, unknown>);
+          }
+          return;
+        }
+
+        records.push(parsed as Record<string, unknown>);
+      }
+    } catch {
+      // ignore malformed json-ld
+    }
+  });
+
+  return records;
+};
+
+const isJunkImage = (url: string): boolean => /\/n_images\/|avatar|ritchielist\.png/i.test(url);
+
 const findLabeledValue = ($: CheerioAPI, labels: string[]): string => {
   const normalizedLabels = labels.map((label) => label.trim().toLowerCase());
   const isMatch = (value: string): boolean => normalizedLabels.includes(value.trim().toLowerCase());
@@ -175,26 +351,38 @@ const findLabeledValue = ($: CheerioAPI, labels: string[]): string => {
   return "";
 };
 
-const findPrice = ($: CheerioAPI): number | undefined => {
-  const labeledValue = findLabeledValue($, ["Current Price", "Price", "Bid", "Winning Bid", "High Bid"]);
-  const labeledMatch = labeledValue.match(/(?:US\s*)?\$\s?([\d,.]+(?:\.\d{2})?)/i);
-  if (labeledMatch?.[1]) {
-    return findNumberInText(labeledMatch[1]);
+const findPrice = ($: CheerioAPI, meta: Record<string, unknown>[] = []): number | undefined => {
+  for (const entry of meta) {
+    const offers = entry.offers;
+    if (offers && typeof offers === "object" && !Array.isArray(offers)) {
+      const offersPrice = (offers as Record<string, unknown>).price;
+      if (typeof offersPrice === "number") return offersPrice;
+      if (typeof offersPrice === "string") {
+        const parsed = parseCurrency(offersPrice) ?? findNumberInText(offersPrice);
+        if (parsed !== undefined) return parsed;
+      }
+    }
+
+    const directPrice = entry.price;
+    if (typeof directPrice === "number") return directPrice;
+    if (typeof directPrice === "string") {
+      const parsed = parseCurrency(directPrice);
+      if (parsed !== undefined) return parsed;
+    }
   }
+
+  const labeledValue = findLabeledValue($, ["Current Price", "Price", "Bid", "Winning Bid", "High Bid"]);
+  const labeledPrice = parseCurrency(labeledValue);
+  if (labeledPrice !== undefined) return labeledPrice;
 
   const selectorValue =
     $("[itemprop='price']").first().attr("content")?.trim() ||
     $("[itemprop='price']").first().text().trim() ||
-    $("[class*='price' i]").first().text().trim();
-  const selectorMatch = selectorValue.match(/(?:US\s*)?\$\s?([\d,.]+(?:\.\d{2})?)/i);
-  if (selectorMatch?.[1]) {
-    return findNumberInText(selectorMatch[1]);
-  }
+    $(".price, [class*='price' i], [data-price]").first().text().trim();
+  const selectorPrice = parseCurrency(selectorValue);
+  if (selectorPrice !== undefined) return selectorPrice;
 
-  const text = $("body").text();
-  const match = text.match(/\$\s?([\d,.]+(?:\.\d{2})?)/);
-  if (!match?.[1]) return undefined;
-  return findNumberInText(match[1]);
+  return parseCurrency($("body").text());
 };
 
 const findHours = ($: CheerioAPI): number | undefined => {
@@ -210,10 +398,10 @@ const findHours = ($: CheerioAPI): number | undefined => {
   return findNumberInText(match[1]);
 };
 
-const findState = ($: CheerioAPI): string => {
+const findState = ($: CheerioAPI, url: string): string => {
   const labeledValue = findLabeledValue($, ["State", "Item Location", "Location"]);
-  const labeledMatch = labeledValue.match(/\b([A-Z]{2})\b/);
-  if (labeledMatch?.[1]) return labeledMatch[1];
+  const labeledState = normalizeStateCode(labeledValue);
+  if (labeledState) return labeledState;
 
   const labels = ["State", "Location", "Item Location"];
   for (const label of labels) {
@@ -225,8 +413,24 @@ const findState = ($: CheerioAPI): string => {
     const sibling = node.next().text().trim() || node.parent().next().text().trim();
     if (!sibling) continue;
 
-    const stateMatch = sibling.match(/\b([A-Z]{2})\b/);
-    if (stateMatch?.[1]) return stateMatch[1];
+    const siblingState = normalizeStateCode(sibling);
+    if (siblingState) return siblingState;
+  }
+
+  try {
+    const parsed = new URL(url);
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    const idIndex = parts.findIndex((part) => /^\d+$/.test(part));
+    if (idIndex > 0) {
+      const slug = parts[idIndex - 1];
+      const token = slug?.split("-").filter(Boolean).pop();
+      if (token) {
+        const slugState = normalizeStateCode(decodeURIComponent(token));
+        if (slugState) return slugState;
+      }
+    }
+  } catch {
+    // ignore url parse failures
   }
 
   return "";
@@ -253,10 +457,32 @@ const inferMakeAndModel = (title: string): { make?: string; model?: string } => 
 
 const findImages = ($: CheerioAPI): string[] => {
   const images = new Set<string>();
-  const junkTokens = ["icon", "logo", "pixel", "placeholder", "sprite", "blank"];
+
+  for (const entry of parseJsonLd($)) {
+    const image = entry.image;
+    const candidates: string[] = [];
+
+    if (typeof image === "string") candidates.push(image);
+    if (Array.isArray(image)) {
+      for (const item of image) {
+        if (typeof item === "string") candidates.push(item);
+      }
+    }
+
+    for (const candidate of candidates) {
+      const absolute = toAbsoluteUrl(candidate.trim());
+      if (!absolute || isJunkImage(absolute)) continue;
+      images.add(absolute);
+    }
+  }
+
+  if (images.size > 0) return Array.from(images).slice(0, 5);
+
+  const junkTokens = ["icon", "logo", "pixel", "placeholder", "sprite", "blank", "avatar"];
+  const scoredImages: Array<{ url: string; score: number }> = [];
 
   $("img").each((_i: number, el: AnyNode) => {
-    const raw = $(el).attr("src") || $(el).attr("data-src");
+    const raw = $(el).attr("src") || $(el).attr("data-src") || $(el).attr("data-original");
     if (!raw) return;
 
     const trimmed = raw.trim();
@@ -266,12 +492,26 @@ const findImages = ($: CheerioAPI): string[] => {
     if (!absolute) return;
 
     const lower = absolute.toLowerCase();
-    if (lower.includes(".svg") || junkTokens.some((token) => lower.includes(token))) return;
+    if (lower.includes(".svg") || junkTokens.some((token) => lower.includes(token)) || isJunkImage(lower)) return;
 
-    images.add(absolute);
+    const dimensions = [$(el).attr("width"), $(el).attr("height")]
+      .map((value) => Number(value))
+      .filter((value) => Number.isFinite(value)) as number[];
+    const dimensionScore = dimensions.reduce((sum, value) => sum + value, 0);
+    const qualityBoost = /photo|image|full|large|original/i.test(absolute) ? 100 : 0;
+
+    scoredImages.push({
+      url: absolute,
+      score: dimensionScore + qualityBoost + absolute.length / 100,
+    });
   });
 
-  const selected = Array.from(images).slice(0, 5);
+  const selected = scoredImages
+    .sort((a, b) => b.score - a.score)
+    .map((entry) => entry.url)
+    .filter((url, index, arr) => arr.indexOf(url) === index)
+    .slice(0, 5);
+
   if (selected.length === 0) return [FALLBACK_IMAGE_URL];
 
   return selected;
@@ -300,19 +540,20 @@ const buildListingDocument = (
   nowIso: string
 ): IronPlanetScrapedListing | null => {
   const detail$ = cheerio.load(detailHtml);
+  const jsonLdEntries = parseJsonLd(detail$);
   const title = firstText(detail$, ["h1", "main h1", "title"]);
   if (!title) return null;
 
   const normalizedImages = normalizeImages(findImages(detail$));
-  const imageUrl = normalizedImages[0] && normalizedImages[0].trim().length > 0 ? normalizedImages[0] : FALLBACK_IMAGE_URL;
+  const imageUrl = normalizedImages.find((image) => image.trim().length > 0 && !isJunkImage(image)) ?? "";
   const { make, model } = inferMakeAndModel(title);
 
   return {
     id: `ironplanet:${sourceExternalId}`,
     title,
     description: detail$("meta[name='description']").attr("content")?.trim() ?? firstText(detail$, ["main p", ".description"]),
-    state: findState(detail$),
-    price: findPrice(detail$) ?? 0,
+    state: findState(detail$, url),
+    price: findPrice(detail$, jsonLdEntries) ?? 0,
     hours: findHours(detail$) ?? 0,
     year: inferYearFromTitle(title),
     make,
