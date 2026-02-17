@@ -133,7 +133,11 @@ const firstText = ($: CheerioAPI, selectors: string[]): string => {
 const cleanHtmlToText = (html: string): string => {
   if (!html) return "";
 
-  const $ = cheerio.load(html);
+  const normalizedInput = html
+    .replace(/<\/?li\b[^>]*>/gi, " ")
+    .replace(/<br\s*\/?\s*>/gi, " ");
+
+  const $ = cheerio.load(normalizedInput);
   const lines: string[] = [];
 
   $("li").each((_i, el) => {
@@ -146,7 +150,7 @@ const cleanHtmlToText = (html: string): string => {
     return text.replace(/\s+/g, " ");
   }
 
-  return lines.join("\n");
+  return lines.join(" ").replace(/\s+/g, " ").trim();
 };
 
 
@@ -331,7 +335,7 @@ const parseJsonLd = ($: CheerioAPI): Record<string, unknown>[] => {
 
 const isJunkImage = (url: string): boolean => {
   const lower = url.toLowerCase();
-  if (/\/n_images\/|avatar|ritchielist\.png/i.test(lower)) return true;
+  if (/\/n_images\/|avatar|ritchielist|logo|placeholder|sprite|blank|icon/i.test(lower)) return true;
   if (lower.endsWith(".gif")) return true;
 
   try {
@@ -370,20 +374,22 @@ const findLabeledValue = ($: CheerioAPI, labels: string[]): string => {
 };
 
 const findPrice = ($: CheerioAPI, meta: Record<string, unknown>[] = []): number | undefined => {
+  const isValidPrice = (value: number | undefined): value is number => typeof value === "number" && value >= 100;
+
   for (const entry of meta) {
     const offers = entry.offers;
     if (offers && typeof offers === "object" && !Array.isArray(offers)) {
       const offersPrice = (offers as Record<string, unknown>).price;
       if (typeof offersPrice === "string") {
         const parsed = parseCurrency(offersPrice);
-        if (parsed !== undefined) return parsed;
+        if (isValidPrice(parsed)) return parsed;
       }
     }
 
     const directPrice = entry.price;
     if (typeof directPrice === "string") {
       const parsed = parseCurrency(directPrice);
-      if (parsed !== undefined) return parsed;
+      if (isValidPrice(parsed)) return parsed;
     }
   }
 
@@ -396,7 +402,7 @@ const findPrice = ($: CheerioAPI, meta: Record<string, unknown>[] = []): number 
   for (const labels of labeledPriceGroups) {
     const labeledValue = findLabeledValue($, labels);
     const labeledPrice = parseCurrency(labeledValue);
-    if (labeledPrice !== undefined) return labeledPrice;
+    if (isValidPrice(labeledPrice)) return labeledPrice;
   }
 
   const selectorValue =
@@ -404,7 +410,7 @@ const findPrice = ($: CheerioAPI, meta: Record<string, unknown>[] = []): number 
     $("[itemprop='price']").first().text().trim() ||
     $(".price, [class*='price' i], [data-price]").first().text().trim();
   const selectorPrice = parseCurrency(selectorValue);
-  if (selectorPrice !== undefined) return selectorPrice;
+  if (isValidPrice(selectorPrice)) return selectorPrice;
 
   const fallbackSources = [
     $("main").text(),
@@ -416,7 +422,7 @@ const findPrice = ($: CheerioAPI, meta: Record<string, unknown>[] = []): number 
 
   for (const source of fallbackSources) {
     const fallbackPrice = parseCurrency(source);
-    if (fallbackPrice !== undefined) return fallbackPrice;
+    if (isValidPrice(fallbackPrice)) return fallbackPrice;
   }
 
   return undefined;
@@ -435,9 +441,9 @@ const findHours = ($: CheerioAPI): number | undefined => {
     "Meter Hours",
     "Usage",
     "Meter Reading",
-    "METER READING",
     "Hour Meter Reading",
     "Meter Reading:",
+    "Meter:",
   ]);
   const labeledHours = parseHoursFromText(labeledValue);
   if (labeledHours !== undefined) return labeledHours;
@@ -520,6 +526,15 @@ const inferMakeAndModel = (title: string): { make?: string; model?: string } => 
 
 const findImages = ($: CheerioAPI): string[] => {
   const images = new Set<string>();
+  const scoredCandidates: Array<{ url: string; score: number }> = [];
+  const scoreImageUrl = (url: string): number => {
+    let score = url.length / 100;
+    if (/cdn|cloudfront|images\./i.test(url)) score += 100;
+    if (/photo|image|full|large|original/i.test(url)) score += 75;
+    if (/\.jpe?g|\.png/i.test(url)) score += 25;
+    if (/thumb|small|icon|logo|placeholder/i.test(url)) score -= 120;
+    return score;
+  };
 
   for (const entry of parseJsonLd($)) {
     const image = entry.image;
@@ -536,12 +551,11 @@ const findImages = ($: CheerioAPI): string[] => {
       const absolute = toAbsoluteUrl(candidate.trim());
       if (!absolute || isJunkImage(absolute)) continue;
       images.add(absolute);
+      scoredCandidates.push({ url: absolute, score: scoreImageUrl(absolute) + 200 });
     }
   }
 
-  if (images.size > 0) return Array.from(images).slice(0, 5);
-
-  const junkTokens = ["icon", "logo", "pixel", "placeholder", "sprite", "blank", "avatar"];
+  const junkTokens = ["icon", "logo", "pixel", "placeholder", "sprite", "blank", "avatar", "ritchielist"];
   const scoredImages: Array<{ url: string; score: number }> = [];
 
   $("img").each((_i: number, el: AnyNode) => {
@@ -561,15 +575,15 @@ const findImages = ($: CheerioAPI): string[] => {
       .map((value) => Number(value))
       .filter((value) => Number.isFinite(value)) as number[];
     const dimensionScore = dimensions.reduce((sum, value) => sum + value, 0);
-    const qualityBoost = /photo|image|full|large|original/i.test(absolute) ? 100 : 0;
+    const qualityBoost = scoreImageUrl(absolute);
 
     scoredImages.push({
       url: absolute,
-      score: dimensionScore + qualityBoost + absolute.length / 100,
+      score: dimensionScore + qualityBoost,
     });
   });
 
-  const selected = scoredImages
+  const selected = [...scoredCandidates, ...scoredImages]
     .sort((a, b) => b.score - a.score)
     .map((entry) => entry.url)
     .filter((url, index, arr) => arr.indexOf(url) === index)
