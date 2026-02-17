@@ -2,7 +2,7 @@ import { useParams } from "react-router-dom";
 import { defaultScoringConfig, demoListings, scoreListing } from "@easyfinderai/shared";
 import ImageGallery from "../../components/ImageGallery";
 import { useDemoWatchlist } from "../../lib/demoWatchlist";
-import { formatCategory } from "../../lib/formatters";
+import { formatCategory, formatListingHours, formatListingPrice } from "../../lib/formatters";
 
 type Props = {
   listingId?: string;
@@ -36,13 +36,8 @@ export default function DemoListingDetail({ listingId }: Props) {
     ? watchlist.isInWatchlist(currentListingId)
     : false;
 
-  const displayPrice = listing.price
-    ? `$${listing.price.toLocaleString()}`
-    : "—";
-
-  const displayHours = listing.hours
-    ? `${listing.hours.toLocaleString()} hrs`
-    : "—";
+  const displayPrice = formatListingPrice(listing.price);
+  const displayHours = formatListingHours(listing.hours);
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 md:px-6">
@@ -65,10 +60,12 @@ export default function DemoListingDetail({ listingId }: Props) {
               <p className="text-xs text-slate-400">Price</p>
               <p className="mt-1 font-semibold">{displayPrice}</p>
             </div>
-            <div>
-              <p className="text-xs text-slate-400">Hours</p>
-              <p className="mt-1 font-semibold">{displayHours}</p>
-            </div>
+            {displayHours && (
+              <div>
+                <p className="text-xs text-slate-400">Hours</p>
+                <p className="mt-1 font-semibold">{displayHours}</p>
+              </div>
+            )}
           </div>
 
           <button

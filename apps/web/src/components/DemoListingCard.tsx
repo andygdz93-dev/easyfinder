@@ -1,7 +1,7 @@
 import { Listing } from "@easyfinderai/shared";
 import { useNavigate } from "react-router-dom";
 import { useDemoWatchlist } from "../lib/demoWatchlist";
-import { formatCategory } from "../lib/formatters";
+import { formatCategory, formatListingHours, formatListingPrice } from "../lib/formatters";
 import ImageGallery from "./ImageGallery";
 
 type Props = {
@@ -19,8 +19,8 @@ export default function DemoListingCard({ listing }: Props) {
     : [];
   const listingId = listing.id ?? "";
   const isSaved = listingId ? watchlist.isInWatchlist(listingId) : false;
-  const displayPrice = listing.price ? `$${listing.price.toLocaleString()}` : "—";
-  const displayHours = listing.hours ? `${listing.hours.toLocaleString()} hrs` : "—";
+  const displayPrice = formatListingPrice(listing.price);
+  const displayHours = formatListingHours(listing.hours);
 
   return (
     <div className="w-full max-w-[460px] overflow-hidden rounded-2xl border bg-white shadow-sm">
@@ -33,8 +33,8 @@ export default function DemoListingCard({ listing }: Props) {
           autoCycle
           cycleMs={2500}
           maxThumbs={4}
-          heroClassName="h-36 sm:h-40 md:h-44"
-          heroImageClassName="object-center"
+          heroClassName="h-48"
+          heroImageClassName="object-cover"
           thumbsClassName="mt-3"
           thumbClassName="h-10 sm:h-12"
           fallbackSrc="/demo-images/other/1.jpg"
@@ -53,7 +53,7 @@ export default function DemoListingCard({ listing }: Props) {
         </h3>
 
         <div className="text-sm text-gray-600">
-          {displayPrice} · {displayHours} · {listing.state ?? "—"}
+          {displayPrice} {displayHours ? `· ${displayHours}` : ""} · {listing.state ?? "—"}
         </div>
 
         <div className="mt-3 flex items-center justify-between gap-2">

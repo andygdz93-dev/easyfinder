@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import type { Listing, ScoreBreakdown } from "@easyfinderai/shared";
 import { demoListings, defaultScoringConfig, scoreListing } from "@easyfinderai/shared";
 import { useDemoWatchlist } from "../../lib/demoWatchlist";
-import { formatCategory } from "../../lib/formatters";
+import { formatCategory, formatListingHours, formatListingPrice } from "../../lib/formatters";
 import ImageGallery from "../../components/ImageGallery";
 
 export default function DemoListings() {
@@ -96,8 +96,8 @@ function ListingCard({
     : listing.imageUrl
     ? [listing.imageUrl]
     : [];
-  const displayPrice = listing.price ? `$${listing.price.toLocaleString()}` : "—";
-  const displayHours = listing.hours ? `${listing.hours.toLocaleString()} hrs` : "—";
+  const displayPrice = formatListingPrice(listing.price);
+  const displayHours = formatListingHours(listing.hours);
 
   return (
     <div
@@ -113,7 +113,7 @@ function ListingCard({
           imagesKey={listing.id ?? listing.title}
           autoCycle
           cycleMs={2500}
-          heroClassName="h-36 sm:h-40 md:h-44"
+          heroClassName="h-48"
           heroTestId="demo-card-hero"
           heroImageTestId="listing-hero"
           thumbsClassName="mt-3"
@@ -132,7 +132,7 @@ function ListingCard({
         <h3 className="text-base font-semibold leading-tight text-slate-900 md:text-lg">{listing.title}</h3>
 
         <div className="text-sm text-slate-600">
-          {displayPrice} • {displayHours} • {listing.state ?? "—"}
+          {displayPrice} {displayHours ? `• ${displayHours}` : ""} • {listing.state ?? "—"}
         </div>
 
         <div className="mt-3 space-y-2">

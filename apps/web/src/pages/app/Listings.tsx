@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
+import { formatListingHours, formatListingPrice, toPlainText } from "../../lib/formatters";
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import {
@@ -248,16 +249,14 @@ export const Listings = () => {
                 <img
                   src={(listing.images ?? [])[0] || listing.imageUrl || "/demo-images/other/1.jpg"}
                   alt={listing.title}
-                  className="h-40 w-full rounded-lg object-cover"
+                  className="h-48 w-full rounded-lg object-cover"
                 />
-                <p className="text-sm text-slate-300">{listing.description}</p>
+                <p className="text-sm text-slate-300">{toPlainText(listing.description)}</p>
                 <div className="flex flex-wrap gap-3 text-xs text-slate-400">
                   <span>
-                    {listing.price ? `$${listing.price.toLocaleString()}` : "—"}
+                    {formatListingPrice(listing.price)}
                   </span>
-                  <span>
-                    {listing.hours ? `${listing.hours.toLocaleString()} hrs` : "—"}
-                  </span>
+                  {formatListingHours(listing.hours) && <span>{formatListingHours(listing.hours)}</span>}
                   <span>{listing.state ?? "—"}</span>
                   <span>
                     {listing.operable === undefined
