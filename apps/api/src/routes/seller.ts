@@ -215,7 +215,6 @@ const createSellerListingFromRow = (
 
   const now = new Date().toISOString();
   const listingId = `seller:${sellerId}:${randomUUID()}`;
-  const sourceExternalId = randomUUID();
 
   const listing: SellerImportListing = {
     id: listingId,
@@ -232,7 +231,6 @@ const createSellerListingFromRow = (
     imageUrl,
     images,
     source: `seller:${sellerId}`,
-    sourceExternalId,
     sourceUrl: "",
     status: "active",
     isPublished: true,
@@ -315,7 +313,6 @@ export default async function sellerRoutes(app: FastifyInstance) {
         imageUrl,
         images,
         source: `seller:${userId}`,
-        sourceExternalId: externalId,
         sourceUrl: "",
         status: "active",
         isPublished: true,
