@@ -7,8 +7,7 @@ import { getListingsCollection, type ListingDocument } from "../listings.js";
 
 const BASE_URL = "https://www.ironplanet.com";
 const FALLBACK_IMAGE_URL = "https://placehold.co/600x400?text=IronPlanet";
-const SEARCH_TIMEOUT_MS = 15000;
-const DETAIL_TIMEOUT_MS = 15000;
+const FETCH_TIMEOUT_MS = 20000;
 const CONCURRENCY = 3;
 const MAX_LISTINGS = 25;
 
@@ -61,24 +60,59 @@ const extractSourceExternalId = (url: string): string => {
 
 const isListingUrl = (url: string): boolean => /\/for-sale\//i.test(url);
 
-const fetchHtml = async (url: string, timeoutMs: number): Promise<string> => {
+const fetchHtml = async (
+  url: string
+): Promise<{ html: string; meta: { url: string; status: number; contentType: string } }> => {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
   try {
     const response = await fetch(url, {
       signal: controller.signal,
+      redirect: "follow",
       headers: {
-        Accept: "text/html",
-        "User-Agent": "EasyFinderBot/1.0 (+https://easyfinder.ai)",
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
       },
     });
 
+    const contentType = response.headers.get("content-type")?.trim() ?? "unknown";
+    const isHtml = /text\/html|application\/xhtml\+xml/i.test(contentType);
+    const meta = {
+      url: response.url,
+      status: response.status,
+      contentType,
+    };
+
     if (!response.ok) {
-      throw new Error(`Failed to fetch HTML (${response.status})`);
+      let snippet = "";
+      if (isHtml) {
+        const body = (await response.text()).trim();
+        if (body.length > 0) {
+          snippet = ` bodySnippet=${JSON.stringify(body.slice(0, 300))}`;
+        }
+      }
+
+      throw new Error(
+        `Failed to fetch HTML: status=${meta.status} url=${meta.url} contentType=${meta.contentType}${snippet}`
+      );
     }
 
-    return await response.text();
+    if (!isHtml) {
+      throw new Error(`Unexpected content type: status=${meta.status} url=${meta.url} contentType=${meta.contentType}`);
+    }
+
+    const html = await response.text();
+    return { html, meta };
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error(`Timed out fetching HTML after ${FETCH_TIMEOUT_MS}ms: url=${url}`);
+    }
+    throw error;
   } finally {
     clearTimeout(timeout);
   }
@@ -325,7 +359,7 @@ const persistIronPlanetListings = async (
 };
 
 export async function scrapeIronPlanetSearch(searchUrl: string): Promise<IronPlanetScrapeSummary> {
-  const html = await fetchHtml(searchUrl, SEARCH_TIMEOUT_MS);
+  const { html } = await fetchHtml(searchUrl);
   const $ = cheerio.load(html);
 
   const listingUrls = new Set<string>();
@@ -344,11 +378,11 @@ export async function scrapeIronPlanetSearch(searchUrl: string): Promise<IronPla
     candidates.map((url) =>
       limit(async (): Promise<IronPlanetScrapedListing | null> => {
         try {
-          const detailHtml = await fetchHtml(url, DETAIL_TIMEOUT_MS);
-          const sourceExternalId = extractSourceExternalId(url);
+          const { html: detailHtml, meta } = await fetchHtml(url);
+          const sourceExternalId = extractSourceExternalId(meta.url);
           const now = new Date().toISOString();
 
-          return buildListingDocument(detailHtml, url, sourceExternalId, now);
+          return buildListingDocument(detailHtml, meta.url, sourceExternalId, now);
         } catch {
           return null;
         }

@@ -25,11 +25,16 @@ export default async function ironPlanetScraperRoutes(app: FastifyInstance) {
     try {
       const summary = await scrapeIronPlanetSearch(url);
       return reply.send(ok(request, summary));
-    } catch {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown scrape error";
       return reply.status(500).send({
         error: {
           code: "SCRAPE_FAILED",
           message: "Failed to scrape IronPlanet",
+          details: {
+            message,
+            requestUrl: url,
+          },
           requestId: request.requestId,
         },
       });
