@@ -18,7 +18,7 @@ import { env } from "../env.js";
 const sellerOnly = new Set(["seller", "admin"]);
 const uploadRoleAllowed = new Set(["seller", "enterprise", "admin"]);
 
-const requiredImportFields = ["title", "description"] as const;
+const requiredImportFields = ["title", "description", "location"] as const;
 const importImageFields = ["imageUrl", "imageUrl2", "imageUrl3", "imageUrl4", "imageUrl5"] as const;
 const SELLER_IMAGE_PLACEHOLDER = "/demo-images/other/1.jpg";
 
@@ -54,9 +54,9 @@ const manualListingSchema = z.object({
   title: z.string().trim().min(1),
   description: z.string().trim().min(1),
   location: z.string().trim().min(1),
-  price: z.union([z.number(), z.null()]).optional(),
-  hours: z.union([z.number(), z.null()]).optional(),
-  year: z.number().int().optional(),
+  price: z.union([z.number().finite(), z.null()]).optional(),
+  hours: z.union([z.number().finite(), z.null()]).optional(),
+  year: z.number().int().finite().optional(),
   make: z.string().trim().optional(),
   model: z.string().trim().optional(),
   category: z.string().trim().optional(),
@@ -117,8 +117,7 @@ const parseOptionalYear = (value: unknown, row: number): { value?: number; error
   if (value === undefined || value === null) return {};
   const raw = toStringValue(value);
   if (!raw) return {};
-  const parsed = Number.parseInt(raw, 10);
-  if (!Number.isInteger(parsed)) {
+  if (!/^-?\d+$/.test(raw)) {
     return {
       error: {
         row,
@@ -128,6 +127,7 @@ const parseOptionalYear = (value: unknown, row: number): { value?: number; error
       },
     };
   }
+  const parsed = Number.parseInt(raw, 10);
   return { value: parsed };
 };
 

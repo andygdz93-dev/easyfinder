@@ -60,12 +60,23 @@ const buildRow = (index: number) => ({
   price: "178000",
   condition: "good",
   state: "CA",
+  location: "Los Angeles, CA",
   description: "Well maintained",
   image1: "",
   image2: "",
   image3: "",
   image4: "",
   image5: "",
+});
+
+const buildRowWithImages = (index: number) => ({
+  ...buildRow(index),
+  location: `Austin, TX ${index}`,
+  imageUrl: "https://cdn.example.com/logo.svg",
+  imageUrl2: "https://cdn.example.com/equipment-hero.jpg",
+  imageUrl3: "https://cdn.example.com/equipment-hero.jpg",
+  imageUrl4: "https://cdn.example.com/favicon.png",
+  imageUrl5: "https://cdn.example.com/equipment-angle.jpg",
 });
 
 afterEach(() => {
@@ -192,6 +203,123 @@ describe("/api/seller/upload", () => {
 
       expect(res.status).toBe(400);
       expect(res.body.error.code).toBe("SELLER_CAP_EXCEEDED");
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns missingColumns details when required CSV columns are absent", async () => {
+    const app = await buildServer();
+    try {
+      const token = await login(app, "seller@easyfinder.ai", "SellerPass123!");
+      await activatePromo(app, token);
+      await acceptNda(app, token);
+
+      const withoutLocation = { ...buildRow(1) } as Record<string, unknown>;
+      delete withoutLocation.location;
+
+      const res = await supertest(app.server)
+        .post("/api/seller/upload")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ rows: [withoutLocation] });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe("VALIDATION_ERROR");
+      expect(res.body.error.details.missingColumns).toContain("location");
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns row+field validation errors for invalid contact email and numeric fields", async () => {
+    const app = await buildServer();
+    try {
+      const token = await login(app, "seller@easyfinder.ai", "SellerPass123!");
+      await activatePromo(app, token);
+      await acceptNda(app, token);
+
+      const res = await supertest(app.server)
+        .post("/api/seller/upload")
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          rows: [
+            {
+              ...buildRow(1),
+              location: "Dallas, TX",
+              contactEmail: "not-an-email",
+            },
+            {
+              ...buildRow(2),
+              location: "Houston, TX",
+              price: "12.34.99",
+            },
+            {
+              ...buildRow(3),
+              location: "San Antonio, TX",
+              year: "2020.5",
+            },
+          ],
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.created).toBe(0);
+      expect(res.body.data.failed).toBe(3);
+      expect(res.body.data.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ row: 2, field: "contactEmail", code: "INVALID_EMAIL" }),
+          expect.objectContaining({ row: 3, field: "price", code: "INVALID_NUMBER" }),
+          expect.objectContaining({ row: 4, field: "year", code: "INVALID_INTEGER" }),
+        ])
+      );
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("filters junk image URLs, dedupes, and applies placeholder when no valid images remain", async () => {
+    const app = await buildServer();
+    try {
+      const token = await login(app, "seller@easyfinder.ai", "SellerPass123!");
+      await activatePromo(app, token);
+      await acceptNda(app, token);
+
+      const res = await supertest(app.server)
+        .post("/api/seller/upload")
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          rows: [
+            buildRowWithImages(1),
+            {
+              ...buildRow(2),
+              location: "Phoenix, AZ",
+              imageUrl: "https://cdn.example.com/icon.svg",
+              imageUrl2: "https://cdn.example.com/pixel.gif",
+            },
+          ],
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.created).toBe(2);
+
+      const listingsRes = await supertest(app.server)
+        .get("/api/seller/listings")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(listingsRes.status).toBe(200);
+      const first = listingsRes.body.data.find((item: { title: string }) => item.title === "Excavator 1");
+      const second = listingsRes.body.data.find((item: { title: string }) => item.title === "Excavator 2");
+
+      expect(first.imageUrl).toBe("https://cdn.example.com/equipment-hero.jpg");
+      expect(first.images).toEqual([
+        "https://cdn.example.com/equipment-hero.jpg",
+        "https://cdn.example.com/equipment-angle.jpg",
+        "https://cdn.example.com/equipment-hero.jpg",
+        "https://cdn.example.com/equipment-hero.jpg",
+        "https://cdn.example.com/equipment-hero.jpg",
+      ]);
+
+      expect(second.imageUrl).toBe("/demo-images/other/1.jpg");
+      expect(second.images).toEqual(Array(5).fill("/demo-images/other/1.jpg"));
     } finally {
       await app.close();
     }
