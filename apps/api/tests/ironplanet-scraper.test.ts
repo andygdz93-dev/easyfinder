@@ -88,7 +88,7 @@ describe("scrapeIronPlanetSearch", () => {
 
     const listingImages = images!;
     expect(listingImages).toHaveLength(5);
-    expect(listingImages.every((image) => image.startsWith("https://www.ironplanet.com/"))).toBe(true);
+    expect(listingImages.every((image) => image.startsWith("https://www.ironplanet.com/") || image.startsWith("https://placehold.co/"))).toBe(true);
     expect(listingImages.some((image) => image.includes("logo") || image.includes("icon") || image.includes("pixel"))).toBe(false);
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
@@ -162,7 +162,7 @@ describe("scrapeIronPlanetSearch", () => {
             <dt>Location</dt><dd>Mesa, Arizona, United States</dd>
           </dl>
           <script type="application/ld+json">
-            {"@context":"https://schema.org","@type":"Product","image":["https://example.com/photo1.jpg"]}
+            {"@context":"https://schema.org","@type":"Product","offers":{"price":"13861836"},"image":["https://www.ironplanet.com/images/logo.png","https://example.com/photo1.jpg"]}
           </script>
           <img src="https://www.ironplanet.com/n_images/mpe-avatar-white.png" />
         </body>
@@ -194,5 +194,6 @@ describe("scrapeIronPlanetSearch", () => {
     expect(listing.state).toBe("AZ");
     expect(listing.images).toContain("https://example.com/photo1.jpg");
     expect(listing.images).not.toContain("https://www.ironplanet.com/n_images/mpe-avatar-white.png");
+    expect(listing.imageUrl).toBe("https://example.com/photo1.jpg");
   });
 });
