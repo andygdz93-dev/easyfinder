@@ -423,10 +423,42 @@ const findPrice = ($: CheerioAPI, meta: Record<string, unknown>[] = []): number 
 };
 
 const findHours = ($: CheerioAPI): number | undefined => {
-  const labeledValue = findLabeledValue($, ["Hours", "Hour Meter", "Meter Hours", "Usage"]);
-  const labeledMatch = labeledValue.match(/([\d,]+(?:\.\d+)?)/);
-  if (!labeledMatch?.[1]) return undefined;
-  return findNumberInText(labeledMatch[1]);
+  const parseHoursFromText = (text: string): number | undefined => {
+    const match = text.match(/([\d,]+(?:\.\d+)?)\s*(?:hours?|hrs?)?/i);
+    if (!match?.[1]) return undefined;
+    return findNumberInText(match[1]);
+  };
+
+  const labeledValue = findLabeledValue($, [
+    "Hours",
+    "Hour Meter",
+    "Meter Hours",
+    "Usage",
+    "Meter Reading",
+    "METER READING",
+    "Hour Meter Reading",
+    "Meter Reading:",
+  ]);
+  const labeledHours = parseHoursFromText(labeledValue);
+  if (labeledHours !== undefined) return labeledHours;
+
+  const fallbackSources = [
+    $("main").text(),
+    $("dl").text(),
+    $("table").text(),
+    $("meta[name='description']").attr("content") ?? "",
+  ];
+
+  for (const source of fallbackSources) {
+    const fallbackMatch = source.match(/(?:meter\s*reading|hour\s*meter|hours?|usage)\D{0,40}([\d,]+(?:\.\d+)?)/i);
+    if (!fallbackMatch?.[1]) continue;
+
+    const fallbackHours = findNumberInText(fallbackMatch[1]);
+    if (fallbackHours === undefined || fallbackHours <= 72) continue;
+    return fallbackHours;
+  }
+
+  return undefined;
 };
 
 const findState = ($: CheerioAPI, url: string): string => {
