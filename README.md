@@ -10,22 +10,27 @@ Intelligent heavy-equipment discovery and scoring in a pnpm monorepo.
 
 ## Canonical docs
 
-Docs index: `docs/README.md`
+Canonical docs in `/docs` (only these files):
 
 - `docs/ARCHITECTURE.md`
 - `docs/WORKFLOWS.md`
 - `docs/ADMIN.md`
 - `docs/SCORING.md`
-- Product vision: `docs/product/PRODUCT_VISION.md`
+- Optional compatibility pointer: `docs/ARCHITECTURE_MAP.md`
 - API contract (source of truth): `openapi.yml`
-- Generated snapshot artifact: `docs/_generated/REPO_SNAPSHOT.md` (generated; do not hand-edit)
+
+## Docs locations
+
+- Snapshots: `ops/snapshots/`
+- Archived docs: `archive/docs/`
+- Product docs: `product/docs/`
 
 ## Docs policy
 
-- The 4 canonical docs above are the maintained source of truth.
-- `docs/README.md` is the canonical docs index.
-- `docs/_generated/` contains generated snapshot artifacts and is not canonical; do not hand-edit these files.
-- `docs/archive/` is historical reference and is not actively maintained.
+- The 4 canonical docs in `/docs` are the maintained source of truth.
+- `ops/snapshots/` contains generated snapshot artifacts and is not canonical; do not hand-edit these files.
+- `archive/docs/` is historical reference and is not actively maintained.
+- `product/docs/` contains product documentation and is not canonical.
 - `project docs/` is deprecated and will be removed in a later cleanup.
 
 ## Prerequisites
