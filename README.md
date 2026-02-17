@@ -70,6 +70,20 @@ pnpm -w lint
 pnpm -w test
 ```
 
+## API route existence quick-check
+
+Before debugging frontend submit issues, verify the deployed API has seller routes:
+
+```bash
+curl -i https://<API_BASE>/api/health
+curl -i -X POST https://<API_BASE>/api/seller/listings \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer <TOKEN>' \
+  --data '{"title":"Route check","description":"Route check","location":"Austin, TX"}'
+```
+
+If `/api/health` works but `/api/seller/listings` returns 404, the deployed backend is missing seller route registration/version.
+
 ## OpenAPI workflow
 
 `openapi.yml` is the canonical contract.
@@ -111,5 +125,4 @@ Important notes:
   ```powershell
   pnpm --filter @easyfinderai/api promote-admin -- --email fernandogarciarodriguez78@gmail.com --allow-production
   ```
-
 

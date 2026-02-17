@@ -88,6 +88,11 @@ function normalizeApiPath(path: string) {
 }
 
 function baseHasApiPrefix(baseUrl: string) {
+  const normalizedBase = baseUrl.trim().replace(/\/+$/, "");
+  if (normalizedBase === "/api" || normalizedBase.endsWith("/api")) {
+    return true;
+  }
+
   let hasApiPrefix = false;
   try {
     const parsed = new URL(baseUrl);
@@ -203,7 +208,9 @@ const apiRequest = async <T>(
   }
 
   if (!res.ok) {
-    const message = payload?.error?.message ?? "Request failed";
+    const message =
+      payload?.error?.message ??
+      `Request failed (${res.status}${res.statusText ? ` ${res.statusText}` : ""}) for ${url}`;
     const retryAfterHeader = res.headers.get("retry-after");
     const retryAfter = retryAfterHeader ? Number.parseInt(retryAfterHeader, 10) : undefined;
     throw new ApiError(
