@@ -2,6 +2,11 @@
 
 Canonical engineering workflow document for delivery, validation, and operational write-policy behavior.
 
+## Documentation map
+
+- Docs index: `docs/README.md`
+- Generated snapshot: `docs/_generated/REPO_SNAPSHOT.md` (generated artifact; do not hand-edit)
+
 ## CI and local verification gates
 
 Run the required workspace checks before merge:

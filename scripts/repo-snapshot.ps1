@@ -101,8 +101,9 @@ function Test-IgnoredFullPath {
 }
 
 $docsDir = Join-Path $repoRoot 'docs'
-if (-not (Test-Path -LiteralPath $docsDir)) {
-  New-Item -ItemType Directory -Path $docsDir | Out-Null
+$generatedDocsDir = Join-Path $docsDir '_generated'
+if (-not (Test-Path -LiteralPath $generatedDocsDir)) {
+  New-Item -ItemType Directory -Path $generatedDocsDir -Force | Out-Null
 }
 
 $timestampUtc = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
@@ -129,7 +130,7 @@ foreach ($path in $filteredTracked) {
   }
 }
 
-$fileIndexPath = Join-Path $docsDir 'FILE_INDEX.json'
+$fileIndexPath = Join-Path $generatedDocsDir 'FILE_INDEX.json'
 $fileIndex | Sort-Object path | ConvertTo-Json -Depth 4 | Out-File -LiteralPath $fileIndexPath -Encoding utf8
 
 $treeItems = Get-ChildItem -LiteralPath $repoRoot -Recurse -Force |
@@ -283,7 +284,7 @@ foreach ($contextFile in $contextFiles) {
   Add-FileContentSection -Builder $builder -Root $repoRoot -Path $contextFile
 }
 
-$snapshotPath = Join-Path $docsDir 'REPO_SNAPSHOT.md'
+$snapshotPath = Join-Path $generatedDocsDir 'REPO_SNAPSHOT.md'
 $builder.ToString() | Out-File -LiteralPath $snapshotPath -Encoding utf8
 
 if ($CreateArchive) {
@@ -293,8 +294,8 @@ if ($CreateArchive) {
   }
 
   $archiveCandidates = @(
-    'docs/REPO_SNAPSHOT.md',
-    'docs/FILE_INDEX.json',
+    'docs/_generated/REPO_SNAPSHOT.md',
+    'docs/_generated/FILE_INDEX.json',
     'openapi.yml',
     'README.md',
     '.easyfinder-context.md'
@@ -316,7 +317,7 @@ if ($CreateArchive) {
   }
 }
 
-Write-Host "Snapshot written to docs/REPO_SNAPSHOT.md and docs/FILE_INDEX.json"
+Write-Host "Snapshot written to docs/_generated/REPO_SNAPSHOT.md and docs/_generated/FILE_INDEX.json"
 if ($CreateArchive) {
   Write-Host 'Archive written to easyfinder-snapshot.tar.gz'
 }
