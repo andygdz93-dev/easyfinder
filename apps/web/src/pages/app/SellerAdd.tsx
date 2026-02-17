@@ -11,16 +11,13 @@ type ListingFormState = {
   title: string;
   description: string;
   location: string;
-  condition: "new" | "used" | "unknown";
+  condition: string;
   price: string;
   hours: string;
   year: string;
   make: string;
   model: string;
   category: string;
-  contactName: string;
-  contactEmail: string;
-  contactPhone: string;
   images: string[];
 };
 
@@ -28,16 +25,13 @@ const INITIAL_FORM: ListingFormState = {
   title: "",
   description: "",
   location: "",
-  condition: "unknown",
+  condition: "",
   price: "",
   hours: "",
   year: "",
   make: "",
   model: "",
   category: "",
-  contactName: "",
-  contactEmail: "",
-  contactPhone: "",
   images: [""],
 };
 
@@ -101,7 +95,7 @@ export const SellerAdd = () => {
     setError(null);
     setSuccessMessage(null);
 
-    if (!form.title.trim() || !form.description.trim() || !form.location.trim() || !form.contactName.trim() || !form.contactEmail.trim()) {
+    if (!form.title.trim() || !form.description.trim() || !form.location.trim()) {
       setError("Please complete all required fields.");
       return;
     }
@@ -119,18 +113,14 @@ export const SellerAdd = () => {
         title: form.title,
         description: form.description,
         location: form.location,
-        condition: form.condition,
-        contactName: form.contactName,
-        contactEmail: form.contactEmail,
-        contactPhone: form.contactPhone || undefined,
-        price: form.price || undefined,
-        hours: form.hours || undefined,
-        year: form.year || undefined,
+        condition: form.condition || undefined,
+        price: form.price ? Number(form.price.replace(/[$,]/g, "")) : null,
+        hours: form.hours ? Number(form.hours.replace(/[$,]/g, "")) : null,
+        year: form.year ? Number(form.year) : undefined,
         make: form.make || undefined,
         model: form.model || undefined,
         category: form.category || undefined,
         images: sanitizedImages,
-        imageUrl: sanitizedImages[0] || undefined,
       };
 
       const result = await createSellerListing(payload);
@@ -139,7 +129,16 @@ export const SellerAdd = () => {
     } catch (submitError) {
       const message =
         submitError instanceof ApiError
-          ? submitError.message
+          ? [
+              submitError.message,
+              Array.isArray((submitError.details as { path?: string; message?: string }[] | undefined))
+                ? (submitError.details as { path?: string; message?: string }[])
+                    .map((detail) => `${detail.path || "field"}: ${detail.message || "invalid"}`)
+                    .join("; ")
+                : "",
+            ]
+              .filter(Boolean)
+              .join(" — ")
           : submitError instanceof Error
             ? submitError.message
             : "Failed to create listing.";
@@ -171,16 +170,8 @@ export const SellerAdd = () => {
               <Input value={form.location} onChange={(event) => updateField("location", event.target.value)} required />
             </label>
             <label className="space-y-2 text-sm text-slate-200">
-              <span>Condition *</span>
-              <select
-                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-100 focus:border-accent focus:outline-none"
-                value={form.condition}
-                onChange={(event) => updateField("condition", event.target.value as ListingFormState["condition"])}
-              >
-                <option value="unknown">unknown</option>
-                <option value="new">new</option>
-                <option value="used">used</option>
-              </select>
+              <span>Condition</span>
+              <Input value={form.condition} onChange={(event) => updateField("condition", event.target.value)} />
             </label>
             <label className="space-y-2 text-sm text-slate-200">
               <span>Category</span>
@@ -205,18 +196,6 @@ export const SellerAdd = () => {
             <label className="space-y-2 text-sm text-slate-200">
               <span>Model</span>
               <Input value={form.model} onChange={(event) => updateField("model", event.target.value)} />
-            </label>
-            <label className="space-y-2 text-sm text-slate-200">
-              <span>Contact name *</span>
-              <Input value={form.contactName} onChange={(event) => updateField("contactName", event.target.value)} required />
-            </label>
-            <label className="space-y-2 text-sm text-slate-200">
-              <span>Contact email *</span>
-              <Input type="email" value={form.contactEmail} onChange={(event) => updateField("contactEmail", event.target.value)} required />
-            </label>
-            <label className="space-y-2 text-sm text-slate-200">
-              <span>Contact phone</span>
-              <Input value={form.contactPhone} onChange={(event) => updateField("contactPhone", event.target.value)} />
             </label>
           </div>
 
