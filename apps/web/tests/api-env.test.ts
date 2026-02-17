@@ -142,4 +142,31 @@ describe("api env handling", () => {
       expect.objectContaining({ method: "POST" })
     );
   });
+
+  it("does not double-prefix when base URL is relative /api", async () => {
+    vi.resetModules();
+
+    vi.doMock("../src/env", () => ({
+      getApiBaseUrl: () => "/api",
+      requireApiBaseUrl: () => "/api",
+      getApiUrl: () => "/api",
+      requireApiUrl: () => "/api",
+    }));
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: {} }),
+    });
+
+    global.fetch = fetchMock as any;
+
+    const apiModule = await import("../src/lib/api");
+
+    await apiModule.apiFetch("/seller/listings", { method: "POST" });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/seller/listings",
+      expect.objectContaining({ method: "POST" })
+    );
+  });
 });
