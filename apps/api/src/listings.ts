@@ -133,7 +133,8 @@ export const getListingsCollection = (): ListingsCollection => {
             throw new Error("upsertManyBySourceExternalId requires listing.sourceExternalId to be a non-empty string");
           }
 
-          const { status: _status, ...setListing } = listing;
+          const { status, ...setListing } = listing;
+          void status;
 
           return {
             updateOne: {
