@@ -109,16 +109,81 @@ const formatNumber = (value: number | null | undefined): string => {
   return value.toString();
 };
 
-const diffSummary = (before: ListingDocument, after: ListingDocument): string => {
+type BackfillPatch = Pick<ListingDocument, "price" | "hours" | "description" | "imageUrl" | "images">;
+type ListingPatch = Partial<BackfillPatch>;
+
+const diffSummary = (before: ListingDocument, patch: ListingPatch): string => {
   const beforeDescLength = typeof before.description === "string" ? before.description.length : 0;
-  const afterDescLength = typeof after.description === "string" ? after.description.length : 0;
+  const afterDescription = patch.description ?? before.description;
+  const afterDescLength = typeof afterDescription === "string" ? afterDescription.length : 0;
+  const afterImageUrl = patch.imageUrl ?? before.imageUrl;
 
   return [
-    `price: ${formatNumber(before.price)} -> ${formatNumber(after.price)}`,
-    `hours: ${formatNumber(before.hours)} -> ${formatNumber(after.hours)}`,
-    `imageUrl: ${(before.imageUrl ?? "").slice(0, 90)} -> ${(after.imageUrl ?? "").slice(0, 90)}`,
-    `descriptionLength: ${beforeDescLength} -> ${afterDescLength}`,
-  ].join(" | ");
+    patch.price !== undefined ? `price: ${formatNumber(before.price)} -> ${formatNumber(patch.price)}` : null,
+    patch.hours !== undefined ? `hours: ${formatNumber(before.hours)} -> ${formatNumber(patch.hours)}` : null,
+    patch.imageUrl !== undefined
+      ? `imageUrl: ${(before.imageUrl ?? "").slice(0, 90)} -> ${(afterImageUrl ?? "").slice(0, 90)}`
+      : null,
+    patch.description !== undefined ? `descriptionLength: ${beforeDescLength} -> ${afterDescLength}` : null,
+    patch.images !== undefined
+      ? `images: ${(before.images ?? []).length} -> ${(patch.images ?? []).length}`
+      : null,
+  ]
+    .filter((entry): entry is string => Boolean(entry))
+    .join(" | ");
+};
+
+const isFiniteNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
+
+const isValidDescription = (value: unknown): value is string =>
+  typeof value === "string" && value.trim().length > 0 && !value.includes("<");
+
+const isValidImageUrl = (value: unknown): value is string =>
+  typeof value === "string" && value.trim().length > 0 && !hasJunkImage(value);
+
+const hasAnyFields = (patch: ListingPatch): boolean => Object.keys(patch).length > 0;
+
+const buildPatch = (existing: ListingDocument, scraped: ListingDocument): ListingPatch => {
+  const patch: ListingPatch = {};
+
+  if (isFiniteNumber(scraped.price) && scraped.price >= 100 && scraped.price !== 0) {
+    if (!isFiniteNumber(existing.price) || existing.price <= 1) {
+      patch.price = scraped.price;
+    }
+  }
+
+  if (isFiniteNumber(scraped.hours) && scraped.hours >= 100 && scraped.hours !== 0) {
+    if (!isFiniteNumber(existing.hours) || existing.hours < 100) {
+      patch.hours = scraped.hours;
+    }
+  }
+
+  if (isValidDescription(scraped.description)) {
+    if (!isValidDescription(existing.description)) {
+      patch.description = scraped.description;
+    }
+  }
+
+  if (isValidImageUrl(scraped.imageUrl)) {
+    const existingHasValidImage = isValidImageUrl(existing.imageUrl);
+    const scrapedImages = Array.isArray(scraped.images)
+      ? scraped.images.filter((image): image is string => isValidImageUrl(image))
+      : [];
+
+    if (!existingHasValidImage || hasJunkImage(existing.imageUrl)) {
+      patch.imageUrl = scraped.imageUrl;
+    }
+
+    const existingImages = Array.isArray(existing.images)
+      ? existing.images.filter((image): image is string => isValidImageUrl(image))
+      : [];
+
+    if (scrapedImages.length > 0 && (existingImages.length === 0 || (Array.isArray(existing.images) && existing.images.some((image) => hasJunkImage(image))))) {
+      patch.images = scrapedImages;
+    }
+  }
+
+  return patch;
 };
 
 const chunk = <T>(items: T[], size: number): T[][] => {
@@ -180,6 +245,7 @@ const main = async () => {
     let skipped = 0;
     let updated = 0;
     let failures = 0;
+    let noop = 0;
     const upserts: ListingDocument[] = [];
 
     await Promise.all(
@@ -200,13 +266,27 @@ const main = async () => {
               return;
             }
 
+            const patch = buildPatch(doc, scraped);
+            if (!hasAnyFields(patch)) {
+              noop += 1;
+              return;
+            }
+
+            const mergedDoc: ListingDocument = {
+              ...doc,
+              ...patch,
+              source: "ironplanet",
+              sourceExternalId: doc.sourceExternalId,
+              sourceUrl: doc.sourceUrl,
+            };
+
             if (args.dryRun) {
-              console.log(`[dry-run] ${doc.sourceExternalId} ${diffSummary(doc, scraped)}`);
+              console.log(`[dry-run] ${doc.sourceExternalId} ${diffSummary(doc, patch)}`);
               updated += 1;
               return;
             }
 
-            upserts.push(scraped);
+            upserts.push(mergedDoc);
           } catch (error) {
             failures += 1;
             const message = error instanceof Error ? error.message : String(error);
@@ -228,6 +308,7 @@ const main = async () => {
     console.log(`processed=${processed}`);
     console.log(`skipped=${skipped}`);
     console.log(`updated=${updated}`);
+    console.log(`noop=${noop}`);
     console.log(`failures=${failures}`);
   } finally {
     await closeDatabaseConnection();
