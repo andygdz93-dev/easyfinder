@@ -147,7 +147,6 @@ export const getListingsCollection = (): ListingsCollection => {
                   ...setDoc,
                   source,
                   sourceExternalId,
-                  status: normalizeStatus(listing.status),
                   updatedAt: now,
                 },
                 $setOnInsert: {
