@@ -10,12 +10,18 @@ Intelligent heavy-equipment discovery and scoring in a pnpm monorepo.
 
 ## Canonical docs
 
-- Architecture map: `docs/ARCHITECTURE_MAP.md`
-- Engineering/runtime overview: `docs/engineering/SYSTEM_OVERVIEW.md`
-- AI/dev invariants: `docs/engineering/AI_DEV_CONTEXT.md`
+- `docs/ARCHITECTURE.md`
+- `docs/WORKFLOWS.md`
+- `docs/ADMIN.md`
+- `docs/SCORING.md`
 - Product vision: `docs/product/PRODUCT_VISION.md`
-- Scoring model direction: `docs/product/SCORING_MODEL.md`
 - API contract (source of truth): `openapi.yml`
+
+## Docs policy
+
+- The 4 canonical docs above are the maintained source of truth.
+- `docs/archive/` is historical reference and is not actively maintained.
+- `project docs/` is deprecated and will be removed in a later cleanup.
 
 ## Prerequisites
 
