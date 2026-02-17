@@ -15,7 +15,7 @@ type BackfillArgs = {
 type ListingDbDoc = ListingDocument & { _id?: unknown };
 
 const USAGE =
-  "Usage: pnpm --filter @easyfinderai/api backfill-ironplanet -- [--dry-run] [--limit N] [--all] [--allow-production]";
+  "Usage: pnpm --filter @easyfinderai/api backfill-ironplanet -- [--dry-run|--no-dry-run|--write] [--limit N] [--all] [--allow-production]";
 const DEFAULT_LIMIT = 200;
 const CONCURRENCY = 3;
 const BATCH_SIZE = 50;
@@ -38,7 +38,7 @@ const parseArgs = (argv: string[]): BackfillArgs => {
       continue;
     }
 
-    if (arg === "--no-dry-run") {
+    if (arg === "--no-dry-run" || arg === "--write") {
       parsed.dryRun = false;
       continue;
     }
@@ -129,8 +129,8 @@ const toDiff = (before: ListingDbDoc, after: ListingDbDoc): string => {
 const main = async () => {
   const args = parseArgs(process.argv.slice(2));
 
-  if (env.NODE_ENV === "production" && !args.allowProduction) {
-    throw new Error("Refusing to run in production without --allow-production.");
+  if (env.NODE_ENV === "production" && !args.dryRun && !args.allowProduction) {
+    throw new Error("Refusing real writes in production without --allow-production.");
   }
 
   await connectToDatabase();
@@ -140,7 +140,7 @@ const main = async () => {
   const candidates = await listingsCollection.find(filter).limit(args.limit).toArray();
 
   console.log(
-    `Starting IronPlanet backfill | dryRun=${args.dryRun} | all=${args.all} | limit=${args.limit} | candidates=${candidates.length}`
+    `Starting IronPlanet backfill | dryRun=${args.dryRun} | all=${args.all} | limit=${args.limit} | allowProduction=${args.allowProduction} | nodeEnv=${env.NODE_ENV} | candidates=${candidates.length}`
   );
 
   let processed = 0;
