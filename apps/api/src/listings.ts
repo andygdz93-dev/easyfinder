@@ -133,15 +133,16 @@ export const getListingsCollection = (): ListingsCollection => {
             throw new Error("upsertManyBySourceExternalId requires listing.sourceExternalId to be a non-empty string");
           }
 
+          const { status: _status, ...setListing } = listing;
+
           return {
             updateOne: {
               filter: { source, sourceExternalId },
               update: {
                 $set: {
-                  ...listing,
+                  ...setListing,
                   source,
                   sourceExternalId,
-                  status: normalizeStatus(listing.status),
                   updatedAt: now,
                 },
                 $setOnInsert: {
@@ -274,19 +275,28 @@ export const getListingsCollection = (): ListingsCollection => {
             ...listing,
             source,
             sourceExternalId,
-            status: normalizeStatus(listing.status),
             updatedAt: now,
           };
 
+          if (listing.status !== undefined) {
+            normalized.status = normalizeStatus(listing.status);
+          }
+
           if (idx === -1) {
-            testListings.push({ ...normalized, createdAt: listing.createdAt ?? now });
+            testListings.push({
+              ...normalized,
+              status: normalized.status ?? "active",
+              createdAt: listing.createdAt ?? now,
+            });
             upserted += 1;
           } else {
             matched += 1;
             const existingCreatedAt = testListings[idx]?.createdAt;
+            const existingStatus = testListings[idx]?.status;
             testListings[idx] = {
               ...testListings[idx],
               ...normalized,
+              status: normalized.status ?? existingStatus,
               createdAt: existingCreatedAt ?? listing.createdAt ?? now,
             };
             modified += 1;
