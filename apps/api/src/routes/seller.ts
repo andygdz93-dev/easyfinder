@@ -1,4 +1,5 @@
 import { FastifyInstance } from "fastify";
+import { randomUUID } from "node:crypto";
 import { ObjectId } from "mongodb";
 import { z } from "zod";
 import { listings } from "../store.js";
@@ -17,17 +18,18 @@ import { env } from "../env.js";
 const sellerOnly = new Set(["seller", "admin"]);
 const uploadRoleAllowed = new Set(["seller", "enterprise", "admin"]);
 
-const requiredImportFields = ["title", "description", "location", "condition", "contactName", "contactEmail"] as const;
+const requiredImportFields = ["title", "description"] as const;
 const importImageFields = ["imageUrl", "imageUrl2", "imageUrl3", "imageUrl4", "imageUrl5"] as const;
+const SELLER_IMAGE_PLACEHOLDER = "/demo-images/other/1.jpg";
 
 const importRowSchema = z
   .object({
     title: z.string().trim().min(1),
     description: z.string().trim().min(1),
-    location: z.string().trim().min(1),
-    condition: z.string().trim().min(1),
-    contactName: z.string().trim().min(1),
-    contactEmail: z.string().trim().email(),
+    location: z.string().optional(),
+    condition: z.string().trim().optional(),
+    contactName: z.string().trim().optional(),
+    contactEmail: z.string().trim().optional(),
     price: z.union([z.string(), z.number()]).optional(),
     hours: z.union([z.string(), z.number()]).optional(),
     year: z.union([z.string(), z.number()]).optional(),
@@ -52,18 +54,14 @@ const manualListingSchema = z.object({
   title: z.string().trim().min(1),
   description: z.string().trim().min(1),
   location: z.string().trim().min(1),
-  condition: z.string().trim().min(1),
-  contactName: z.string().trim().min(1),
-  contactEmail: z.string().trim().email(),
-  price: z.union([z.string(), z.number()]).optional(),
-  hours: z.union([z.string(), z.number()]).optional(),
-  year: z.union([z.string(), z.number()]).optional(),
-  make: z.string().optional(),
-  model: z.string().optional(),
-  category: z.string().optional(),
-  images: z.array(z.string()).optional(),
-  imageUrl: z.string().optional(),
-  contactPhone: z.string().optional(),
+  price: z.union([z.number(), z.null()]).optional(),
+  hours: z.union([z.number(), z.null()]).optional(),
+  year: z.number().int().optional(),
+  make: z.string().trim().optional(),
+  model: z.string().trim().optional(),
+  category: z.string().trim().optional(),
+  condition: z.string().trim().optional(),
+  images: z.array(z.string().trim()).max(5).optional(),
 });
 
 type IngestionError = { row: number; field?: string; code: string; message: string };
@@ -85,7 +83,11 @@ type SellerImportListing = (typeof listings)[number] & {
 
 const toStringValue = (value: unknown) => String(value ?? "").trim();
 
-const parseOptionalNumeric = (value: unknown, field: "price" | "hours", row: number): { value?: number; error?: IngestionError } => {
+const parseOptionalNumeric = (
+  value: unknown,
+  field: "price" | "hours",
+  row: number
+): { value?: number; error?: IngestionError } => {
   if (value === undefined || value === null) {
     return {};
   }
@@ -129,13 +131,31 @@ const parseOptionalYear = (value: unknown, row: number): { value?: number; error
   return { value: parsed };
 };
 
-const sanitizeImageUrls = (input: unknown[]): string[] => {
-  const urls = input
-    .map((item) => toStringValue(item))
-    .filter((url) => url.length > 0)
-    .filter((url) => /^https?:\/\//i.test(url));
+const isJunkImageUrl = (url: string): boolean => {
+  if (!url) return true;
+  const normalized = url.toLowerCase();
+  if (!/^https?:\/\//i.test(url) && !url.startsWith("/")) return true;
+  if (/\.(svg|gif)(\?|#|$)/i.test(normalized)) return true;
+  return /(logo|icon|pixel|spacer|sprite|favicon)/i.test(normalized);
+};
 
-  return Array.from(new Set(urls)).slice(0, 5);
+const normalizeListingImages = (input: unknown[]): { images: string[]; imageUrl: string } => {
+  const deduped = Array.from(
+    new Set(
+      input
+        .map((item) => toStringValue(item))
+        .filter((url) => url.length > 0)
+        .filter((url) => !isJunkImageUrl(url))
+    )
+  ).slice(0, 5);
+
+  const hero = deduped[0] ?? SELLER_IMAGE_PLACEHOLDER;
+  const images = [...deduped];
+  while (images.length < 5) {
+    images.push(hero);
+  }
+
+  return { images, imageUrl: hero };
 };
 
 const createSellerListingFromRow = (
@@ -156,8 +176,21 @@ const createSellerListingFromRow = (
     }
   }
 
-  const parsedContact = z.string().trim().email().safeParse(toStringValue(row.contactEmail));
-  if (!parsedContact.success) {
+  const normalizedLocation = toStringValue(row.location) || toStringValue(row.state);
+  if (!normalizedLocation) {
+    return {
+      error: {
+        row: rowNumber,
+        field: "location",
+        code: "REQUIRED",
+        message: "location is required (location or state column).",
+      },
+    };
+  }
+
+  const rawContactEmail = toStringValue(row.contactEmail);
+  const parsedContact = rawContactEmail ? z.string().trim().email().safeParse(rawContactEmail) : null;
+  if (parsedContact && !parsedContact.success) {
     return {
       error: {
         row: rowNumber,
@@ -178,17 +211,17 @@ const createSellerListingFromRow = (
   if (parsedYear.error) return { error: parsedYear.error };
 
   const imageValues = importImageFields.map((key) => row[key]);
-  const images = sanitizeImageUrls(imageValues);
-  const imageUrl = toStringValue(row.imageUrl) || images[0] || "";
+  const { images, imageUrl } = normalizeListingImages(imageValues);
 
   const now = new Date().toISOString();
-  const listingId = new ObjectId().toHexString();
+  const listingId = `seller:${sellerId}:${randomUUID()}`;
+  const sourceExternalId = randomUUID();
 
   const listing: SellerImportListing = {
     id: listingId,
     title: toStringValue(row.title),
     description: toStringValue(row.description),
-    state: toStringValue(row.state) || toStringValue(row.location),
+    state: normalizedLocation,
     price: parsedPrice.value ?? null,
     hours: parsedHours.value ?? null,
     operable: true,
@@ -199,6 +232,7 @@ const createSellerListingFromRow = (
     imageUrl,
     images,
     source: `seller:${sellerId}`,
+    sourceExternalId,
     sourceUrl: "",
     status: "active",
     isPublished: true,
@@ -207,9 +241,9 @@ const createSellerListingFromRow = (
     updatedAt: now,
     make: toStringValue(row.make) || undefined,
     model: toStringValue(row.model) || undefined,
-    location: toStringValue(row.location),
+    location: normalizedLocation,
     contactName: toStringValue(row.contactName),
-    contactEmail: parsedContact.data,
+    contactEmail: parsedContact?.success ? parsedContact.data : undefined,
     contactPhone: toStringValue(row.contactPhone) || undefined,
   };
 
@@ -245,7 +279,15 @@ export default async function sellerRoutes(app: FastifyInstance) {
     async (request, reply) => {
       const payload = manualListingSchema.safeParse(request.body);
       if (!payload.success) {
-        return fail(request, reply, "BAD_REQUEST", "Invalid listing payload.", 400);
+        reply.status(400);
+        return {
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Invalid seller listing payload.",
+            details: payload.error.issues.map((issue) => ({ path: issue.path.join("."), message: issue.message })),
+          },
+          requestId: request.requestId,
+        };
       }
 
       const userId = request.user?.id;
@@ -253,41 +295,27 @@ export default async function sellerRoutes(app: FastifyInstance) {
         return fail(request, reply, "UNAUTHORIZED", "Authentication required.", 401);
       }
 
-      const parsedPrice = parseOptionalNumeric(payload.data.price, "price", 1);
-      if (parsedPrice.error) {
-        return fail(request, reply, "BAD_REQUEST", parsedPrice.error.message, 400);
-      }
-
-      const parsedHours = parseOptionalNumeric(payload.data.hours, "hours", 1);
-      if (parsedHours.error) {
-        return fail(request, reply, "BAD_REQUEST", parsedHours.error.message, 400);
-      }
-
-      const parsedYear = parseOptionalYear(payload.data.year, 1);
-      if (parsedYear.error) {
-        return fail(request, reply, "BAD_REQUEST", parsedYear.error.message, 400);
-      }
-
-      const images = sanitizeImageUrls(payload.data.images ?? []);
-      const imageUrl = toStringValue(payload.data.imageUrl) || images[0] || "";
+      const { images, imageUrl } = normalizeListingImages(payload.data.images ?? []);
       const now = new Date().toISOString();
-      const id = new ObjectId().toHexString();
+      const externalId = randomUUID();
+      const id = `seller:${userId}:${externalId}`;
 
       const listing: SellerImportListing = {
         id,
         title: payload.data.title.trim(),
         description: payload.data.description.trim(),
         state: payload.data.location.trim(),
-        price: parsedPrice.value ?? null,
-        hours: parsedHours.value ?? null,
+        price: payload.data.price ?? null,
+        hours: payload.data.hours ?? null,
         operable: true,
         is_operable: true,
-        year: parsedYear.value,
+        year: payload.data.year,
         condition: 0,
         category: toStringValue(payload.data.category) || "equipment",
         imageUrl,
         images,
         source: `seller:${userId}`,
+        sourceExternalId: externalId,
         sourceUrl: "",
         status: "active",
         isPublished: true,
@@ -297,9 +325,6 @@ export default async function sellerRoutes(app: FastifyInstance) {
         make: toStringValue(payload.data.make) || undefined,
         model: toStringValue(payload.data.model) || undefined,
         location: payload.data.location.trim(),
-        contactName: payload.data.contactName.trim(),
-        contactEmail: payload.data.contactEmail.trim(),
-        contactPhone: toStringValue(payload.data.contactPhone) || undefined,
       };
 
       await getListingsCollection().insertMany([listing]);
@@ -314,7 +339,7 @@ export default async function sellerRoutes(app: FastifyInstance) {
         requestId: request.id,
       });
 
-      return ok(request, { id });
+      return ok(request, listing);
     }
   );
 
@@ -377,6 +402,23 @@ export default async function sellerRoutes(app: FastifyInstance) {
     const payload = listingsImportSchema.safeParse(request.body);
     if (!payload.success) {
       return fail(request, reply, "BAD_REQUEST", "rows must be a non-empty array.", 400);
+    }
+
+    const seenColumns = new Set<string>();
+    payload.data.rows.forEach((row) => {
+      Object.keys(row).forEach((key) => seenColumns.add(key));
+    });
+    const missingColumns = requiredImportFields.filter((field) => !seenColumns.has(field));
+    if (missingColumns.length > 0) {
+      reply.status(400);
+      return {
+        error: {
+          code: "VALIDATION_ERROR",
+          message: `Missing required CSV columns: ${missingColumns.join(", ")}.`,
+          details: { missingColumns },
+        },
+        requestId: request.requestId,
+      };
     }
 
     if (!ObjectId.isValid(userId)) {
