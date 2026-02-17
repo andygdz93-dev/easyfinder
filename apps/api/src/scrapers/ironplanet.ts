@@ -97,7 +97,66 @@ const findNumberInText = (text: string): number | undefined => {
   return Number.isFinite(normalized) ? normalized : undefined;
 };
 
+const findLabeledValue = ($: CheerioAPI, labels: string[]): string => {
+  const normalizedLabels = labels.map((label) => label.trim().toLowerCase());
+  const isMatch = (value: string): boolean => normalizedLabels.includes(value.trim().toLowerCase());
+
+  for (const dt of $("dt").toArray()) {
+    const label = $(dt).text().trim();
+    if (!isMatch(label)) continue;
+
+    const value = $(dt).next("dd").first().text().trim();
+    if (value) return value;
+  }
+
+  for (const th of $("th").toArray()) {
+    const label = $(th).text().trim();
+    if (!isMatch(label)) continue;
+
+    const value = $(th).next("td").first().text().trim();
+    if (value) return value;
+  }
+
+  for (const node of $("body *").toArray()) {
+    const label = $(node).text().trim();
+    if (!isMatch(label)) continue;
+
+    const nextSiblingText = $(node).next().first().text().trim();
+    if (nextSiblingText) return nextSiblingText;
+
+    const parentNextText = $(node).parent().next().first().text().trim();
+    if (parentNextText) return parentNextText;
+
+    const container = $(node).closest("li, tr, .row, .field, .detail, .spec, .attribute, .info");
+    if (container.length) {
+      const siblingValue =
+        container.find("dd, td, .value, [data-value]").first().text().trim() ||
+        container.next().find("dd, td, .value, [data-value]").first().text().trim() ||
+        container.next().first().text().trim();
+
+      if (siblingValue) return siblingValue;
+    }
+  }
+
+  return "";
+};
+
 const findPrice = ($: CheerioAPI): number | undefined => {
+  const labeledValue = findLabeledValue($, ["Current Price", "Price", "Bid", "Winning Bid", "High Bid"]);
+  const labeledMatch = labeledValue.match(/(?:US\s*)?\$\s?([\d,.]+(?:\.\d{2})?)/i);
+  if (labeledMatch?.[1]) {
+    return findNumberInText(labeledMatch[1]);
+  }
+
+  const selectorValue =
+    $("[itemprop='price']").first().attr("content")?.trim() ||
+    $("[itemprop='price']").first().text().trim() ||
+    $("[class*='price' i]").first().text().trim();
+  const selectorMatch = selectorValue.match(/(?:US\s*)?\$\s?([\d,.]+(?:\.\d{2})?)/i);
+  if (selectorMatch?.[1]) {
+    return findNumberInText(selectorMatch[1]);
+  }
+
   const text = $("body").text();
   const match = text.match(/\$\s?([\d,.]+(?:\.\d{2})?)/);
   if (!match?.[1]) return undefined;
@@ -105,6 +164,12 @@ const findPrice = ($: CheerioAPI): number | undefined => {
 };
 
 const findHours = ($: CheerioAPI): number | undefined => {
+  const labeledValue = findLabeledValue($, ["Hours", "Hour Meter", "Meter Hours", "Usage"]);
+  const labeledMatch = labeledValue.match(/([\d,]+(?:\.\d+)?)/);
+  if (labeledMatch?.[1]) {
+    return findNumberInText(labeledMatch[1]);
+  }
+
   const text = $("body").text();
   const match = text.match(/([\d,]+(?:\.\d+)?)\s*(?:hours?|hrs?)\b/i);
   if (!match?.[1]) return undefined;
@@ -112,6 +177,10 @@ const findHours = ($: CheerioAPI): number | undefined => {
 };
 
 const findState = ($: CheerioAPI): string => {
+  const labeledValue = findLabeledValue($, ["State", "Item Location", "Location"]);
+  const labeledMatch = labeledValue.match(/\b([A-Z]{2})\b/);
+  if (labeledMatch?.[1]) return labeledMatch[1];
+
   const labels = ["State", "Location", "Item Location"];
   for (const label of labels) {
     const node = $("*:contains('" + label + "')")
