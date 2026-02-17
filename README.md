@@ -111,3 +111,7 @@ Important notes:
   ```powershell
   pnpm --filter @easyfinderai/api promote-admin -- --email fernandogarciarodriguez78@gmail.com --allow-production
   ```
+## Staging
+
+For staging setup and deployment steps, see `docs/DEPLOYMENT_STAGING.md`.
+
