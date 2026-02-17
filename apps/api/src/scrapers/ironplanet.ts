@@ -395,7 +395,20 @@ const findPrice = ($: CheerioAPI, meta: Record<string, unknown>[] = []): number 
   const selectorPrice = parseCurrency(selectorValue);
   if (selectorPrice !== undefined) return selectorPrice;
 
-  return parseCurrency($("body").text());
+  const fallbackSources = [
+    $("main").text(),
+    $("dl").text(),
+    $("table").text(),
+    $("[class*='price' i], [class*='bid' i], [data-price], [data-bid]").text(),
+    $("meta[name='description']").attr("content") ?? "",
+  ];
+
+  for (const source of fallbackSources) {
+    const fallbackPrice = parseCurrency(source);
+    if (fallbackPrice !== undefined) return fallbackPrice;
+  }
+
+  return undefined;
 };
 
 const findHours = ($: CheerioAPI): number | undefined => {
