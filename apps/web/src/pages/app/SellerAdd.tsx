@@ -136,13 +136,13 @@ export const SellerAdd = () => {
         description: form.description,
         location: form.location,
         condition: form.condition || undefined,
-        price: parsedPrice,
-        hours: parsedHours,
+        price: parsedPrice as number | null,
+        hours: parsedHours as number | null,
         year: parsedYear,
         make: form.make || undefined,
         model: form.model || undefined,
         category: form.category || undefined,
-        images: sanitizedImages,
+        images: sanitizedImages as string[],
       };
 
       const result = await createSellerListing(payload);
@@ -163,19 +163,21 @@ export const SellerAdd = () => {
           Array.isArray((submitError.details as { missingColumns?: string[] }).missingColumns)
         ) {
           details.push(`missingColumns: ${(submitError.details as { missingColumns: string[] }).missingColumns.join(", ")}`);
+        } else if (submitError.details && typeof submitError.details === "object") {
+          for (const [key, value] of Object.entries(submitError.details as Record<string, unknown>)) {
+            details.push(`${key}: ${typeof value === "string" ? value : JSON.stringify(value)}`);
+          }
         }
 
-        const meta = [
-          submitError.status ? `status=${submitError.status}` : null,
-          submitError.code ? `code=${submitError.code}` : null,
-          submitError.requestId ? `requestId=${submitError.requestId}` : null,
-        ]
-          .filter(Boolean)
-          .join(" | ");
+        const method = submitError.method ?? "UNKNOWN";
+        const url = submitError.url ?? "unknown-url";
+        const status = submitError.status ?? "unknown";
+        const serverMessage = submitError.message.trim();
+        const requestIdMeta = submitError.requestId ? `requestId=${submitError.requestId}` : undefined;
 
         setError({
-          message: submitError.message,
-          meta: meta || undefined,
+          message: `Request failed (${status}) ${method} ${url}${serverMessage ? ` — ${serverMessage}` : ""}${requestIdMeta ? ` — ${requestIdMeta}` : ""}`,
+          meta: submitError.code ? `code=${submitError.code}` : undefined,
           details,
         });
       } else {
