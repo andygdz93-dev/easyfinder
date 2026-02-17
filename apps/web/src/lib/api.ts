@@ -334,13 +334,16 @@ export const activateProPromo = () =>
 
 
 export const importSellerListings = (rows: unknown[]) =>
-  apiRequest<{ created: number; failed: number; errors: Array<{ row: number; message: string }> }>(
+  apiRequest<{ created: number; failed: number; errors: Array<{ row: number; field?: string; code: string; message: string }> }>(
     "/seller/listings/import",
     {
       method: "POST",
       body: JSON.stringify({ rows }),
     }
   );
+
+export const createSellerListing = (payload: unknown) =>
+  apiRequest<{ id: string }>("/seller/listings", { method: "POST", body: JSON.stringify(payload) });
 
 export const uploadSellerCsv = importSellerListings;
 export const createInquiry = (input: { listingId: string; message: string }) =>
