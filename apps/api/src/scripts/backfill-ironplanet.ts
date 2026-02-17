@@ -250,8 +250,11 @@ const main = async () => {
     for (let i = 0; i < upserts.length; i += BATCH_SIZE) {
       const batch = upserts.slice(i, i + BATCH_SIZE).map((doc) => {
         // listings.ts upsertManyBySourceExternalId uses $setOnInsert for insert-only fields,
-        // so strip them here to avoid bulkWrite path conflicts with $set.
-        const { createdAt: _createdAt, status: _status, isPublished: _isPublished, ...sanitized } = doc;
+        // so delete them here to avoid bulkWrite path conflicts with $set.
+        const sanitized = { ...doc };
+        delete (sanitized as any).createdAt;
+        delete (sanitized as any).status;
+        delete (sanitized as any).isPublished;
         return sanitized;
       });
       await listingsApi.upsertManyBySourceExternalId("ironplanet", batch);
