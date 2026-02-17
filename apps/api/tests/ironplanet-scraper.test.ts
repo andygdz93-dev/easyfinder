@@ -164,6 +164,7 @@ describe("scrapeIronPlanetSearch", () => {
           <script type="application/ld+json">
             {"@context":"https://schema.org","@type":"Product","offers":{"price":"13861836"},"image":["https://www.ironplanet.com/images/logo.png","https://example.com/photo1.jpg"]}
           </script>
+          <script>var x="$13861836";</script>
           <img src="https://www.ironplanet.com/n_images/mpe-avatar-white.png" />
         </body>
       </html>
