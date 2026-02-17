@@ -157,7 +157,8 @@ describe("scrapeIronPlanetSearch", () => {
         <body>
           <h1>2022 CAT 349</h1>
           <dl>
-            <dt>Current Price</dt><dd>US $12,300</dd>
+            <dt>Buy Now Price</dt><dd>US $140,000</dd>
+            <dt>High Offer</dt><dd>US $40,000</dd>
             <dt>Hours</dt><dd>1,049 hrs</dd>
             <dt>Location</dt><dd>Mesa, Arizona, United States</dd>
           </dl>
@@ -189,7 +190,8 @@ describe("scrapeIronPlanetSearch", () => {
     expect(summary.scraped).toBe(1);
 
     const listing = summary.sampleListings[0]!;
-    expect(listing.price).toBe(12300);
+    expect(listing.price).toBe(140000);
+    expect(listing.price).not.toBe(40000);
     expect(listing.price).not.toBe(13861836);
     expect(listing.hours).toBe(1049);
     expect(listing.state).toBe("AZ");

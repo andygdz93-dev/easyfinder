@@ -384,9 +384,17 @@ const findPrice = ($: CheerioAPI, meta: Record<string, unknown>[] = []): number 
     }
   }
 
-  const labeledValue = findLabeledValue($, ["Current Price", "Price", "Bid", "Winning Bid", "High Bid"]);
-  const labeledPrice = parseCurrency(labeledValue);
-  if (labeledPrice !== undefined) return labeledPrice;
+  const labeledPriceGroups = [
+    ["Buy Now Price", "Buy Now", "Buy-Now Price", "Buy Now price"],
+    ["High Offer", "High Bid", "Highest Bid", "High offer"],
+    ["Current Price", "Price", "Bid", "Winning Bid", "High Bid"],
+  ];
+
+  for (const labels of labeledPriceGroups) {
+    const labeledValue = findLabeledValue($, labels);
+    const labeledPrice = parseCurrency(labeledValue);
+    if (labeledPrice !== undefined) return labeledPrice;
+  }
 
   const selectorValue =
     $("[itemprop='price']").first().attr("content")?.trim() ||
