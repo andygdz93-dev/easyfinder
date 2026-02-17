@@ -45,7 +45,7 @@ export const SellerAdd = () => {
 
   const [form, setForm] = useState<ListingFormState>(INITIAL_FORM);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; meta?: string; details: string[] } | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const plan = meQuery.data?.billing?.plan ?? "free";
@@ -96,27 +96,49 @@ export const SellerAdd = () => {
     setSuccessMessage(null);
 
     if (!form.title.trim() || !form.description.trim() || !form.location.trim()) {
-      setError("Please complete all required fields.");
+      setError({ message: "Please complete all required fields.", details: [] });
       return;
     }
 
     const sanitizedImages = form.images.map((image) => image.trim()).filter(Boolean).slice(0, 5);
     const invalidImage = sanitizedImages.find((url) => !/^https?:\/\//i.test(url));
     if (invalidImage) {
-      setError("Image URLs must start with http:// or https://.");
+      setError({ message: "Image URLs must start with http:// or https://.", details: [] });
       return;
     }
 
     setSubmitting(true);
     try {
+      const parsedPrice = form.price ? Number(form.price.replace(/[$,]/g, "").trim()) : null;
+      const parsedHours = form.hours ? Number(form.hours.replace(/[$,]/g, "").trim()) : null;
+      const parsedYear = form.year ? Number(form.year.trim()) : undefined;
+
+      if (parsedPrice !== null && !Number.isFinite(parsedPrice)) {
+        setError({ message: "Price must be a valid number.", details: [] });
+        setSubmitting(false);
+        return;
+      }
+
+      if (parsedHours !== null && !Number.isFinite(parsedHours)) {
+        setError({ message: "Hours must be a valid number.", details: [] });
+        setSubmitting(false);
+        return;
+      }
+
+      if (parsedYear !== undefined && !Number.isInteger(parsedYear)) {
+        setError({ message: "Year must be a whole number.", details: [] });
+        setSubmitting(false);
+        return;
+      }
+
       const payload = {
         title: form.title,
         description: form.description,
         location: form.location,
         condition: form.condition || undefined,
-        price: form.price ? Number(form.price.replace(/[$,]/g, "")) : null,
-        hours: form.hours ? Number(form.hours.replace(/[$,]/g, "")) : null,
-        year: form.year ? Number(form.year) : undefined,
+        price: parsedPrice,
+        hours: parsedHours,
+        year: parsedYear,
         make: form.make || undefined,
         model: form.model || undefined,
         category: form.category || undefined,
@@ -127,22 +149,41 @@ export const SellerAdd = () => {
       setSuccessMessage(`Listing created successfully (ID: ${result.id}).`);
       setForm(INITIAL_FORM);
     } catch (submitError) {
-      const message =
-        submitError instanceof ApiError
-          ? [
-              submitError.message,
-              Array.isArray((submitError.details as { path?: string; message?: string }[] | undefined))
-                ? (submitError.details as { path?: string; message?: string }[])
-                    .map((detail) => `${detail.path || "field"}: ${detail.message || "invalid"}`)
-                    .join("; ")
-                : "",
-            ]
-              .filter(Boolean)
-              .join(" — ")
-          : submitError instanceof Error
-            ? submitError.message
-            : "Failed to create listing.";
-      setError(message);
+      if (submitError instanceof ApiError) {
+        const details: string[] = [];
+        if (Array.isArray(submitError.details)) {
+          details.push(
+            ...(submitError.details as { path?: string; message?: string }[]).map(
+              (detail) => `${detail.path || "field"}: ${detail.message || "invalid"}`
+            )
+          );
+        } else if (
+          submitError.details &&
+          typeof submitError.details === "object" &&
+          Array.isArray((submitError.details as { missingColumns?: string[] }).missingColumns)
+        ) {
+          details.push(`missingColumns: ${(submitError.details as { missingColumns: string[] }).missingColumns.join(", ")}`);
+        }
+
+        const meta = [
+          submitError.status ? `status=${submitError.status}` : null,
+          submitError.code ? `code=${submitError.code}` : null,
+          submitError.requestId ? `requestId=${submitError.requestId}` : null,
+        ]
+          .filter(Boolean)
+          .join(" | ");
+
+        setError({
+          message: submitError.message,
+          meta: meta || undefined,
+          details,
+        });
+      } else {
+        setError({
+          message: submitError instanceof Error ? submitError.message : "Failed to create listing.",
+          details: [],
+        });
+      }
     } finally {
       setSubmitting(false);
     }
@@ -228,7 +269,19 @@ export const SellerAdd = () => {
             </Button>
           </div>
 
-          {error ? <p className="text-sm text-rose-400">{error}</p> : null}
+          {error ? (
+            <div className="rounded-md border border-rose-700/40 bg-rose-950/30 p-3 text-sm text-rose-200">
+              <p className="font-medium">{error.message}</p>
+              {error.meta ? <p className="mt-1 text-xs text-rose-300">{error.meta}</p> : null}
+              {error.details.length ? (
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-rose-200">
+                  {error.details.map((detail, idx) => (
+                    <li key={`${detail}-${idx}`}>{detail}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          ) : null}
           {successMessage ? (
             <div className="rounded-md border border-emerald-700/40 bg-emerald-950/30 p-3 text-sm text-emerald-200">
               <p>{successMessage}</p>
