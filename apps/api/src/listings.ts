@@ -134,17 +134,20 @@ export const getListingsCollection = (): ListingsCollection => {
             throw new Error("upsertManyBySourceExternalId requires listing.sourceExternalId to be a non-empty string");
           }
 
-          const { status, ...setListing } = listing;
-          void status;
+          const setDoc = { ...listing } as any;
+          delete setDoc.createdAt;
+          delete setDoc.status;
+          delete setDoc.isPublished;
 
           return {
             updateOne: {
               filter: { source, sourceExternalId },
               update: {
                 $set: {
-                  ...setListing,
+                  ...setDoc,
                   source,
                   sourceExternalId,
+                  status: normalizeStatus(listing.status),
                   updatedAt: now,
                 },
                 $setOnInsert: {
