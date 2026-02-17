@@ -126,6 +126,25 @@ const firstText = ($: CheerioAPI, selectors: string[]): string => {
   return "";
 };
 
+const cleanHtmlToText = (html: string): string => {
+  if (!html) return "";
+
+  const $ = cheerio.load(html);
+  const lines: string[] = [];
+
+  $("li").each((_i, el) => {
+    const text = $(el).text().replace(/\s+/g, " ").trim();
+    if (text) lines.push(`• ${text}`);
+  });
+
+  if (lines.length === 0) {
+    const text = $.text().trim();
+    return text.replace(/\s+/g, " ");
+  }
+
+  return lines.join("\n");
+};
+
 const findNumberInText = (text: string): number | undefined => {
   const normalized = Number(text.replaceAll(",", ""));
   return Number.isFinite(normalized) ? normalized : undefined;
@@ -581,11 +600,14 @@ const buildListingDocument = (
   const normalizedImages = normalizeImages(findImages(detail$));
   const imageUrl = normalizedImages.find((image) => image.trim().length > 0 && !isJunkImage(image)) ?? "";
   const { make, model } = inferMakeAndModel(title);
+  const rawDescription =
+    detail$("meta[name='description']").attr("content")?.trim() ?? firstText(detail$, ["main p", ".description"]);
+  const description = cleanHtmlToText(rawDescription);
 
   return {
     id: `ironplanet:${sourceExternalId}`,
     title,
-    description: detail$("meta[name='description']").attr("content")?.trim() ?? firstText(detail$, ["main p", ".description"]),
+    description,
     state: findState(detail$, url),
     price: findPrice(detail$, jsonLdEntries) ?? 0,
     hours: findHours(detail$) ?? 0,
