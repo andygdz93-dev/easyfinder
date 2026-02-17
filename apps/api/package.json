@@ -13,7 +13,8 @@
     "lint": "eslint -c ../../eslint.config.js src tests --ext .ts",
     "typecheck": "tsc -p tsconfig.test.json --noEmit",
     "test": "vitest run",
-    "promote-admin": "tsx scripts/promote-admin.ts"
+    "promote-admin": "tsx scripts/promote-admin.ts",
+    "backfill:ironplanet": "node --enable-source-maps dist/scripts/backfill-ironplanet-listings.js"
   },
   "dependencies": {
     "@easyfinderai/shared": "workspace:*",
