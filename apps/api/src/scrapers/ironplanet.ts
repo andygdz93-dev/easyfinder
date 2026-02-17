@@ -8,6 +8,7 @@ import { getListingsCollection, type ListingDocument } from "../listings.js";
 const BASE_URL = "https://www.ironplanet.com";
 const FALLBACK_IMAGE_URL = "https://placehold.co/600x400?text=IronPlanet";
 const FETCH_TIMEOUT_MS = 20000;
+const DETAIL_TIMEOUT_MS = 20000;
 const CONCURRENCY = 3;
 const MAX_LISTINGS = 25;
 
@@ -19,7 +20,7 @@ export type IronPlanetScrapeSummary = {
   sampleListings: ListingDocument[];
 };
 
-type IronPlanetScrapedListing = Omit<ListingDocument, "price" | "hours" | "source"> & {
+export type IronPlanetScrapedListing = Omit<ListingDocument, "price" | "hours" | "source"> & {
   price: number | null;
   hours: number | null;
   source: "ironplanet";
@@ -63,10 +64,11 @@ const extractSourceExternalId = (url: string): string => {
 const isListingUrl = (url: string): boolean => /\/for-sale\//i.test(url);
 
 const fetchHtml = async (
-  url: string
+  url: string,
+  timeoutMs = FETCH_TIMEOUT_MS
 ): Promise<{ html: string; meta: { url: string; status: number; contentType: string } }> => {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const response = await fetch(url, {
@@ -112,7 +114,7 @@ const fetchHtml = async (
     return { html, meta };
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
-      throw new Error(`Timed out fetching HTML after ${FETCH_TIMEOUT_MS}ms: url=${url}`);
+      throw new Error(`Timed out fetching HTML after ${timeoutMs}ms: url=${url}`);
     }
     throw error;
   } finally {
@@ -680,4 +682,12 @@ export async function scrapeIronPlanetSearch(searchUrl: string): Promise<IronPla
     matched,
     sampleListings: scrapedListings.slice(0, 10),
   };
+}
+
+export async function scrapeIronPlanetDetail(detailUrl: string): Promise<IronPlanetScrapedListing | null> {
+  const { html: detailHtml, meta } = await fetchHtml(detailUrl, DETAIL_TIMEOUT_MS);
+  const sourceExternalId = extractSourceExternalId(meta.url);
+  const now = new Date().toISOString();
+
+  return buildListingDocument(detailHtml, meta.url, sourceExternalId, now);
 }
