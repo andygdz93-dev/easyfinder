@@ -17,6 +17,7 @@ import healthRoutes from "./routes/health.js";
 import authRoutes from "./routes/auth.js";
 import adminRoutes from "./routes/admin.js";
 import sellerRoutes from "./routes/seller.js";
+import uploadsRoutes from "./routes/uploads.js";
 import ndaRoutes from "./routes/nda.js";
 import billingRoutes from "./routes/billing.js";
 import offersRoutes from "./routes/offers.js";
@@ -267,6 +268,7 @@ export const buildServer = () => {
     });
   }
   app.register(sellerRoutes, { prefix: "/api/seller" });
+  app.register(uploadsRoutes, { prefix: "/api/uploads" });
   app.register(meRoutes, { prefix: "/api/me" });
   app.register(ironPlanetScraperRoutes);
   app.register(ndaRoutes, { prefix: "/api/nda" });

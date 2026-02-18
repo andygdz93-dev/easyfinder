@@ -1,4 +1,4 @@
-import { Collection, Db, Document, MongoClient } from "mongodb";
+import { Collection, Db, Document, GridFSBucket, MongoClient } from "mongodb";
 import { env } from "./env.js";
 
 let client: MongoClient | null = null;
@@ -66,3 +66,13 @@ export const getDb = () => {
 
 export const getCollection = <T extends Document = Document>(name: string): Collection<T> =>
   getDb().collection<T>(name);
+
+let uploadsBucket: GridFSBucket | null = null;
+
+export const getUploadsBucket = () => {
+  if (!uploadsBucket) {
+    uploadsBucket = new GridFSBucket(getDb(), { bucketName: "uploads" });
+  }
+
+  return uploadsBucket;
+};

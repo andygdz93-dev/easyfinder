@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "../../components/ui/card";
 import { apiFetch } from "../../lib/api";
@@ -33,7 +34,7 @@ export const SellerListings = () => {
       apiFetch<SellerListing[]>("/seller/listings", {
         headers: { Authorization: `Bearer ${token}` },
       }),
-    enabled: Boolean(token && user && user.role === "seller"),
+    enabled: Boolean(token && user && (user.role === "seller" || user.role === "admin")),
   });
 
   const listings = useMemo(() => listingsQuery.data ?? [], [listingsQuery.data]);
@@ -61,12 +62,13 @@ export const SellerListings = () => {
                 <th className="px-2 py-2">Year</th>
                 <th className="px-2 py-2">Price</th>
                 <th className="px-2 py-2">Status</th>
+                <th className="px-2 py-2">Actions</th>
               </tr>
             </thead>
             <tbody>
               {listings.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-2 py-4 text-slate-400">
+                  <td colSpan={6} className="px-2 py-4 text-slate-400">
                     No seller listings yet.
                   </td>
                 </tr>
@@ -78,6 +80,9 @@ export const SellerListings = () => {
                     <td className="px-2 py-3">{listing.year ?? "—"}</td>
                     <td className="px-2 py-3">{formatCurrency(listing.price)}</td>
                     <td className="px-2 py-3 capitalize">{listing.status ?? "draft"}</td>
+                    <td className="px-2 py-3">
+                      {listing.id ? <Link className="text-emerald-300 hover:underline" to={`/app/seller/listings/${listing.id}/edit`}>Edit</Link> : "—"}
+                    </td>
                   </tr>
                 ))
               )}

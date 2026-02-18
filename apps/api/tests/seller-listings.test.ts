@@ -10,6 +10,7 @@ const buildServer = async (): Promise<FastifyInstance> => {
   process.env.EMAIL_ENABLED = "false";
   process.env.BILLING_ENABLED = "false";
   process.env.ALLOW_DEMO_WRITES_IN_TESTS = "true";
+  process.env.BILLING_STUB_PLAN = "pro";
 
   const serverModule = await import("../src/server.js");
   const app = serverModule.buildServer();
@@ -110,6 +111,109 @@ describe("/api/seller/listings manual create", () => {
       expect(res.body.error.details.some((detail: { path: string }) => detail.path === "title")).toBe(true);
       expect(res.body.error.details.some((detail: { path: string }) => detail.path === "description")).toBe(true);
       expect(res.body.error.details.some((detail: { path: string }) => detail.path === "location")).toBe(true);
+    } finally {
+      await app.close();
+    }
+  });
+});
+
+
+describe("/api/seller/listings patch", () => {
+  it("seller can PATCH their own listing to add images later", async () => {
+    const app = await buildServer();
+    try {
+      const token = await login(app, "seller@easyfinder.ai", "SellerPass123!");
+      await activatePromo(app, token);
+      await acceptNda(app, token);
+
+      const createRes = await supertest(app.server)
+        .post("/api/seller/listings")
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          title: "Patch target",
+          description: "No images yet",
+          location: "Phoenix, AZ",
+        });
+
+      const listingId = createRes.body.data.id as string;
+      const patchRes = await supertest(app.server)
+        .patch(`/api/seller/listings/${listingId}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ images: ["/api/uploads/images/507f1f77bcf86cd799439011"] });
+
+      expect(patchRes.status).toBe(200);
+      expect(patchRes.body.data.images[0]).toBe("/api/uploads/images/507f1f77bcf86cd799439011");
+      expect(patchRes.body.data.imageUrl).toBe("/api/uploads/images/507f1f77bcf86cd799439011");
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("seller cannot PATCH another seller listing", async () => {
+    const app = await buildServer();
+    try {
+      const sellerOneToken = await login(app, "seller@easyfinder.ai", "SellerPass123!");
+      await activatePromo(app, sellerOneToken);
+      await acceptNda(app, sellerOneToken);
+
+      const secondEmail = `seller2+${Date.now()}@easyfinder.ai`;
+      const registerRes = await supertest(app.server).post("/api/auth/register").send({
+        email: secondEmail,
+        password: "SellerPass123!",
+        name: "Seller Two",
+        role: "seller",
+      });
+      const sellerTwoToken = registerRes.body?.data?.token as string;
+      await acceptNda(app, sellerTwoToken);
+
+      const createRes = await supertest(app.server)
+        .post("/api/seller/listings")
+        .set("Authorization", `Bearer ${sellerOneToken}`)
+        .send({
+          title: "Seller one listing",
+          description: "Owned by seller one",
+          location: "Austin, TX",
+        });
+
+      const listingId = createRes.body.data.id as string;
+      const patchRes = await supertest(app.server)
+        .patch(`/api/seller/listings/${listingId}`)
+        .set("Authorization", `Bearer ${sellerTwoToken}`)
+        .send({ title: "Hacked title" });
+
+      expect(patchRes.status).toBe(403);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("admin can PATCH any seller listing", async () => {
+    const app = await buildServer();
+    try {
+      const sellerToken = await login(app, "seller@easyfinder.ai", "SellerPass123!");
+      await activatePromo(app, sellerToken);
+      await acceptNda(app, sellerToken);
+
+      const adminToken = await login(app, "admin@easyfinder.ai", "AdminPass123!");
+      await acceptNda(app, adminToken);
+
+      const createRes = await supertest(app.server)
+        .post("/api/seller/listings")
+        .set("Authorization", `Bearer ${sellerToken}`)
+        .send({
+          title: "Admin editable",
+          description: "Owned by seller",
+          location: "Boise, ID",
+        });
+
+      const listingId = createRes.body.data.id as string;
+      const patchRes = await supertest(app.server)
+        .patch(`/api/seller/listings/${listingId}`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({ title: "Admin updated title" });
+
+      expect(patchRes.status).toBe(200);
+      expect(patchRes.body.data.title).toBe("Admin updated title");
     } finally {
       await app.close();
     }

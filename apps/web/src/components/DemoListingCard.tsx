@@ -34,7 +34,7 @@ export default function DemoListingCard({ listing }: Props) {
           cycleMs={2500}
           maxThumbs={4}
           heroClassName="h-48"
-          heroImageClassName="object-cover"
+          heroImageClassName="bg-slate-100 object-contain"
           thumbsClassName="mt-3"
           thumbClassName="h-10 sm:h-12"
           fallbackSrc="/demo-images/other/1.jpg"
