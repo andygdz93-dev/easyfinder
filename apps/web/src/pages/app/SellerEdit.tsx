@@ -127,7 +127,7 @@ export default function SellerEdit() {
 
         <div className="flex gap-3">
           <Button type="submit" disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
-          <Button type="button" variant="ghost" asChild><Link to="/app/seller/listings">Cancel</Link></Button>
+          <Button type="button" variant="outline"><Link to="/app/seller/listings">Cancel</Link></Button>
         </div>
       </form>
     </Card>
