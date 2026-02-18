@@ -108,7 +108,6 @@ export const Listings = () => {
   const data = listingsQuery.data;
   const listings = Array.isArray(data) ? data : [];
   const sellerCount = listings.filter((listing) => listing.source?.startsWith("seller:")).length;
-  const externalCount = listings.length - sellerCount;
 
   useEffect(() => {
     if (!Array.isArray(data) || hasInitializedSellerOnly.current) {
@@ -123,6 +122,10 @@ export const Listings = () => {
   const visibleListings = isFreeBuyerLive
     ? listings.slice(0, FREE_BUYER_LISTING_LIMIT)
     : listings;
+  const visibleSellerCount = visibleListings.filter((listing) =>
+    listing.source?.startsWith("seller:")
+  ).length;
+  const visibleExternalCount = visibleListings.length - visibleSellerCount;
   const filteredListings = sellerOnly
     ? visibleListings.filter((listing) => listing.source?.startsWith("seller:"))
     : visibleListings;
@@ -212,14 +215,20 @@ export const Listings = () => {
           <input
             type="checkbox"
             checked={sellerOnly}
-            onChange={(event) => setSellerOnly(event.target.checked)}
+            onChange={(event) => {
+              if (isFreeBuyerLive) {
+                triggerUpgradeToast();
+                return;
+              }
+              setSellerOnly(event.target.checked);
+            }}
           />
           Seller listings only
         </label>
       </div>
 
       <p className="text-xs text-slate-400">
-        {sellerCount} seller listing{sellerCount === 1 ? "" : "s"} · {externalCount} external
+        {visibleSellerCount} seller listing{visibleSellerCount === 1 ? "" : "s"} · {visibleExternalCount} external
       </p>
 
       {isFreeBuyerLive ? (
@@ -248,7 +257,7 @@ export const Listings = () => {
         <Card className="border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-300">
           Marketplace integrations available in Production accounts.
         </Card>
-      ) : sellerOnly && sellerCount === 0 ? (
+      ) : sellerOnly && visibleSellerCount === 0 ? (
         <Card className="border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-300">
           <p>No seller listings yet. Turn off the filter to view external listings.</p>
           <Button
