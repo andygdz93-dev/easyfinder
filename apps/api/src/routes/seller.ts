@@ -26,9 +26,10 @@ const requiredImportFields = ["title", "description", "location"] as const;
 const importImageFields = ["imageUrl", "imageUrl2", "imageUrl3", "imageUrl4", "imageUrl5"] as const;
 const SELLER_IMAGE_PLACEHOLDER = "/demo-images/other/1.jpg";
 
-const apiBaseUrl = env.PUBLIC_API_BASE_URL.replace(/\/+$/, "");
+const apiBaseUrl = (env.PUBLIC_API_BASE_URL || "").replace(/\/+$/, "");
 
 const toAbsoluteImageUrl = (url: string): string => {
+  if (!apiBaseUrl) return url;
   if (/^https?:\/\//i.test(url)) return url;
   if (url.startsWith("/")) return `${apiBaseUrl}${url}`;
   return `${apiBaseUrl}/${url}`;
@@ -229,7 +230,9 @@ const getZipImageContentType = (fileName: string) => {
 };
 
 const normalizeZipImageKey = (rawValue: string): string | null => {
-  const match = rawValue.trim().match(/^(\d+)([A-E])(?:\.(jpg|jpeg|png|webp))?$/i);
+  const match = rawValue
+    .trim()
+    .match(/^(\d+)\s*[-_ ]?\s*([A-E])(?:\.(jpg|jpeg|png|webp))?$/i);
   if (!match) return null;
   return `${Number.parseInt(match[1], 10)}${match[2].toUpperCase()}`;
 };
