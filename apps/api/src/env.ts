@@ -71,6 +71,15 @@ const EnvSchema = z
     // Prod:  https://<your-vercel-domain>
     APP_BASE_URL: z.string().url().default("http://localhost:5173"),
 
+    // Public API base URL (used for storing absolute image links)
+    // Local: http://localhost:8080
+    // Prod:  https://easyfinder.fly.dev
+    PUBLIC_API_BASE_URL: z
+      .string()
+      .url()
+      .default("http://localhost:8080")
+      .transform((value) => value.replace(/\/+$/, "")),
+
     // Resend (for password reset emails, etc.)
     RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY is required").optional(),
     // Must be a verified sender in Resend, e.g. "EasyFinder <no-reply@yourdomain.com>"
@@ -132,6 +141,7 @@ const testDefaults =
         MONGO_URL: "mongodb://localhost:27017",
         DB_NAME: "easyfinder_test",
         APP_BASE_URL: "http://localhost:5173",
+        PUBLIC_API_BASE_URL: "http://localhost:8080",
         BILLING_ENABLED: "false",
         EMAIL_ENABLED: "false",
       }

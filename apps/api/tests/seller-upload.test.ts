@@ -408,8 +408,8 @@ describe("/api/seller/upload", () => {
         "https://cdn.example.com/equipment-hero.jpg",
       ]);
 
-      expect(second.imageUrl).toBe("/demo-images/other/1.jpg");
-      expect(second.images).toEqual(Array(5).fill("/demo-images/other/1.jpg"));
+      expect(second.imageUrl).toBe("http://localhost:8080/demo-images/other/1.jpg");
+      expect(second.images).toEqual(Array(5).fill("http://localhost:8080/demo-images/other/1.jpg"));
     } finally {
       await app.close();
     }
@@ -496,12 +496,12 @@ describe("/api/seller/upload", () => {
 
       expect(listingsRes.status).toBe(200);
       const mapped = listingsRes.body.data.find((item: { title: string }) => item.title === "Zip Mapped Listing");
-      expect(mapped.imageUrl).toMatch(/^\/api\/images\/[a-f0-9]{24}$/);
-      expect(mapped.images[1]).toMatch(/^\/api\/images\/[a-f0-9]{24}$/);
+      expect(mapped.imageUrl).toMatch(/^http:\/\/localhost:8080\/api\/images\/[a-f0-9]{24}$/);
+      expect(mapped.images[1]).toMatch(/^http:\/\/localhost:8080\/api\/images\/[a-f0-9]{24}$/);
 
       const noMatch = listingsRes.body.data.find((item: { title: string }) => item.title === "No Zip Match Listing");
-      expect(noMatch.imageUrl).toBe("/demo-images/other/1.jpg");
-      expect(noMatch.images).toEqual(Array(5).fill("/demo-images/other/1.jpg"));
+      expect(noMatch.imageUrl).toBe("http://localhost:8080/demo-images/other/1.jpg");
+      expect(noMatch.images).toEqual(Array(5).fill("http://localhost:8080/demo-images/other/1.jpg"));
     } finally {
       await app.close();
     }

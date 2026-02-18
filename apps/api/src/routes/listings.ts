@@ -6,6 +6,44 @@ import { requireNDA } from "../middleware/requireNDA.js";
 import { config } from "../config.js";
 import { disableWritesInDemo } from "../middleware/disableWritesInDemo.js";
 import { audit } from "../lib/audit.js";
+import { env } from "../env.js";
+
+
+const apiBaseUrl = env.PUBLIC_API_BASE_URL.replace(/\/+$/, "");
+
+const toAbsoluteImageUrl = (url: string): string => {
+  if (/^https?:\/\//i.test(url)) return url;
+  if (url.startsWith("/")) return `${apiBaseUrl}${url}`;
+  return `${apiBaseUrl}/${url}`;
+};
+
+const normalizeListingImagesForResponse = <T extends { imageUrl?: string; images?: string[] }>(listing: T): T => {
+  const deduped = Array.from(
+    new Set([listing.imageUrl, ...(listing.images ?? [])].filter((value): value is string => Boolean(value)))
+  )
+    .slice(0, 5)
+    .map((url) => toAbsoluteImageUrl(url));
+
+  if (deduped.length === 0) {
+    const placeholder = toAbsoluteImageUrl("/demo-images/other/1.jpg");
+    return {
+      ...listing,
+      imageUrl: placeholder,
+      images: Array(5).fill(placeholder),
+    };
+  }
+
+  const hero = deduped[0];
+  while (deduped.length < 5) {
+    deduped.push(hero);
+  }
+
+  return {
+    ...listing,
+    imageUrl: hero,
+    images: deduped,
+  };
+};
 
 export default async function listingsRoutes(app: FastifyInstance) {
   /**
@@ -30,7 +68,7 @@ export default async function listingsRoutes(app: FastifyInstance) {
     const scored = activeListings.map((listing) => {
       const score = scoreListing({ ...listing, createdAt: listing.createdAt ?? new Date(0).toISOString() }, defaultScoringConfig);
       return {
-        ...listing,
+        ...normalizeListingImagesForResponse(listing),
         totalScore: score.total,
         scoreV2: score.scoreV2,
         confidenceScore: score.confidenceScore,
@@ -81,7 +119,7 @@ export default async function listingsRoutes(app: FastifyInstance) {
     const score = scoreListing({ ...listing, createdAt: listing.createdAt ?? new Date(0).toISOString() }, defaultScoringConfig);
 
     return ok(request, {
-      ...listing,
+      ...normalizeListingImagesForResponse(listing),
       totalScore: score.total,
       scoreV2: score.scoreV2,
       confidenceScore: score.confidenceScore,
