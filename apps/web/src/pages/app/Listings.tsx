@@ -209,7 +209,7 @@ export const Listings = () => {
         </div>
       )}
       {listingsQuery.isLoading ? (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 4 }).map((_, index) => (
             <Card key={index} className="h-40 animate-pulse" />
           ))}
@@ -223,7 +223,7 @@ export const Listings = () => {
           No live listings available yet. Once ingestion starts, they will appear here.
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {visibleListings.map((listing) => {
             const listingId = listing.id ?? "";
             const score = listing.score;
@@ -249,7 +249,7 @@ export const Listings = () => {
                 <img
                   src={(listing.images ?? [])[0] || listing.imageUrl || "/demo-images/other/1.jpg"}
                   alt={listing.title}
-                  className="h-48 w-full rounded-lg object-cover"
+                  className="h-48 w-full rounded-lg bg-slate-900/20 object-contain"
                 />
                 <p className="text-sm text-slate-300">{toPlainText(listing.description)}</p>
                 <div className="flex flex-wrap gap-3 text-xs text-slate-400">
