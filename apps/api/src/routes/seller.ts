@@ -92,6 +92,7 @@ type SellerImportListing = (typeof listings)[number] & {
   isPublished: boolean;
   publishedAt: string;
   updatedAt: string;
+  sourceExternalId?: string;
   make?: string;
   model?: string;
   contactName?: string;
