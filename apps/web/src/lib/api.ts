@@ -433,6 +433,46 @@ export const uploadListingImage = async (file: File) => {
   return payload.data;
 };
 
+export async function uploadSellerImages(files: File[]): Promise<string[]> {
+  if (files.length === 0) {
+    return [];
+  }
+
+  const token = getStoredAuthToken();
+  const formData = new FormData();
+  for (const file of files) {
+    formData.append("images", file);
+  }
+
+  const res = await fetch(buildApiUrl("/seller/images"), {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    body: formData,
+  });
+
+  const payload = (await res.json()) as ApiEnvelope<string[] | { urls?: string[]; images?: string[] }>;
+  const urls = Array.isArray(payload?.data)
+    ? payload.data
+    : Array.isArray(payload?.data?.urls)
+      ? payload.data.urls
+      : Array.isArray(payload?.data?.images)
+        ? payload.data.images
+        : null;
+
+  if (!res.ok || !urls) {
+    throw new ApiError(
+      payload?.error?.message ?? "Upload failed.",
+      payload?.requestId,
+      res.status,
+      payload?.error?.code,
+      undefined,
+      payload?.error?.details
+    );
+  }
+
+  return urls;
+}
+
 
 export const uploadSellerCsv = importSellerListings;
 export const createInquiry = (input: { listingId: string; message: string }) =>
