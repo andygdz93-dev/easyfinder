@@ -26,6 +26,14 @@ const requiredImportFields = ["title", "description", "location"] as const;
 const importImageFields = ["imageUrl", "imageUrl2", "imageUrl3", "imageUrl4", "imageUrl5"] as const;
 const SELLER_IMAGE_PLACEHOLDER = "/demo-images/other/1.jpg";
 
+const apiBaseUrl = env.PUBLIC_API_BASE_URL.replace(/\/+$/, "");
+
+const toAbsoluteImageUrl = (url: string): string => {
+  if (/^https?:\/\//i.test(url)) return url;
+  if (url.startsWith("/")) return `${apiBaseUrl}${url}`;
+  return `${apiBaseUrl}/${url}`;
+};
+
 const importRowSchema = z
   .object({
     title: z.string().trim().min(1),
@@ -207,8 +215,8 @@ const normalizeListingForResponse = <T extends { imageUrl?: string; images?: str
   const normalized = normalizeListingImages([listing.imageUrl, ...(listing.images ?? [])]);
   return {
     ...listing,
-    imageUrl: normalized.imageUrl,
-    images: normalized.images,
+    imageUrl: toAbsoluteImageUrl(normalized.imageUrl),
+    images: normalized.images.map((url) => toAbsoluteImageUrl(url)),
   };
 };
 
