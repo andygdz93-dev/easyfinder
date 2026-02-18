@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card } from "../../components/ui/card";
 import { apiFetch } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
@@ -27,6 +27,32 @@ const formatCurrency = (value?: number) => {
 
 export const SellerListings = () => {
   const { token, user } = useAuth();
+
+  const queryClient = useQueryClient();
+
+  const deleteListingMutation = useMutation({
+    mutationFn: async (id: string) =>
+      apiFetch<{ id: string }>(`/seller/listings/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["seller-listings"] });
+    },
+  });
+
+  const handleDeleteListing = async (id?: string) => {
+    if (!id || !token) {
+      return;
+    }
+
+    const confirmed = window.confirm("Delete this listing? This can’t be undone.");
+    if (!confirmed) {
+      return;
+    }
+
+    await deleteListingMutation.mutateAsync(id);
+  };
 
   const listingsQuery = useQuery({
     queryKey: ["seller-listings"],
@@ -81,7 +107,23 @@ export const SellerListings = () => {
                     <td className="px-2 py-3">{formatCurrency(listing.price)}</td>
                     <td className="px-2 py-3 capitalize">{listing.status ?? "draft"}</td>
                     <td className="px-2 py-3">
-                      {listing.id ? <Link className="text-emerald-300 hover:underline" to={`/app/seller/listings/${listing.id}/edit`}>Edit</Link> : "—"}
+                      {listing.id ? (
+                        <div className="flex items-center gap-3">
+                          <Link className="text-emerald-300 hover:underline" to={`/app/seller/listings/${listing.id}/edit`}>
+                            Edit
+                          </Link>
+                          <button
+                            type="button"
+                            className="text-rose-300 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+                            onClick={() => handleDeleteListing(listing.id)}
+                            disabled={deleteListingMutation.isPending}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ) : (
+                        "—"
+                      )}
                     </td>
                   </tr>
                 ))
