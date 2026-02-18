@@ -61,17 +61,6 @@ declare module "fastify" {
 
 export const buildServer = () => {
   const app = Fastify({ logger: true });
-  const frontendOrigins = new Set(
-    [
-      "http://localhost:5173",
-      "http://127.0.0.1:5173",
-      "https://easyfinder.vercel.app",
-      "https://web-easyfinder.vercel.app",
-      ...config.corsOrigins,
-    ].map((origin) => origin.toLowerCase())
-  );
-  frontendOrigins.delete("*");
-  const vercelPreviewRegex = /^https:\/\/.+\.vercel\.app$/i;
 
   if (env.DEMO_MODE) {
     app.log.warn("DEMO_MODE ENABLED - serving demo inventory");
@@ -82,24 +71,8 @@ export const buildServer = () => {
 
   // CORS
   app.register(cors, {
-    origin: (origin, cb) => {
-      // Allow non-browser tools (curl/postman) or same-origin cases where origin is undefined
-      if (!origin) return cb(null, true);
-
-      const normalizedOrigin = origin.toLowerCase();
-      const isVercelOrigin = vercelPreviewRegex.test(normalizedOrigin);
-
-      if (frontendOrigins.has(normalizedOrigin) || isVercelOrigin) {
-        return cb(null, true);
-      }
-
-      return cb(null, false);
-    },
-    credentials: false,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Authorization", "Content-Type"],
-    optionsSuccessStatus: 204,
-    preflightContinue: false,
+    origin: true,
+    credentials: true,
   });
 
   // Security headers
