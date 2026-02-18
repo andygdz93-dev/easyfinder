@@ -600,6 +600,47 @@ export default async function sellerRoutes(app: FastifyInstance) {
     updateListingHandler
   );
 
+  app.delete(
+    "/listings/:id",
+    {
+      preHandler: [app.authenticate, requireNDA, disableWritesInDemo],
+    },
+    async (request, reply) => {
+      if (!sellerOnly.has(request.user.role)) {
+        return fail(request, reply, "FORBIDDEN", "Seller access only.", 403);
+      }
+
+      const { id } = request.params as { id: string };
+      const existing = await getListingsCollection().findById(id);
+      if (!existing) {
+        return fail(request, reply, "NOT_FOUND", "Listing not found.", 404);
+      }
+
+      const isAdmin = request.user.role === "admin";
+      if (!isAdmin && existing.source !== `seller:${request.user.id}`) {
+        return fail(request, reply, "FORBIDDEN", "You do not have access to this listing.", 403);
+      }
+
+      const result = await getListingsCollection().deleteById(id);
+      if (!result.deletedCount) {
+        return fail(request, reply, "NOT_FOUND", "Listing not found.", 404);
+      }
+
+      await insertAuditEvent({
+        actorUserId: request.user.id,
+        actorEmail: request.user.email,
+        action: "SELLER_LISTING_DELETED",
+        targetType: "listing",
+        targetId: id,
+        before: { id, source: existing.source },
+        after: null,
+        requestId: request.requestId,
+      });
+
+      return ok(request, { id });
+    }
+  );
+
   app.get("/inquiries", { preHandler: app.authenticate }, async (request, reply) => {
     if (!sellerOnly.has(request.user.role)) {
       return fail(request, reply, "FORBIDDEN", "Seller access only.", 403);

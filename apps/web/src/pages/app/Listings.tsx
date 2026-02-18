@@ -209,7 +209,7 @@ export const Listings = () => {
         </div>
       )}
       {listingsQuery.isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
             <Card key={index} className="h-40 animate-pulse" />
           ))}
@@ -223,24 +223,24 @@ export const Listings = () => {
           No live listings available yet. Once ingestion starts, they will appear here.
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {visibleListings.map((listing) => {
             const listingId = listing.id ?? "";
             const score = listing.score;
             const sourceLabel = listing.source?.startsWith("seller:") ? "Private seller" : listing.source;
             return (
               <Card key={listingId || listing.title || "listing"} className="space-y-4">
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start justify-between gap-3 overflow-hidden">
                   <div className="min-w-0">
                     <h3 className="truncate text-lg font-semibold">{listing.title}</h3>
                     <p className="truncate text-xs text-slate-400">{sourceLabel}</p>
                   </div>
-                  <div className="shrink-0 flex flex-col items-end gap-2">
+                  <div className="shrink-0 flex max-w-[40%] flex-col items-end gap-2">
                     <Badge className="bg-accent text-slate-900">
                       Score {score?.total ?? listing.totalScore ?? 0}
                     </Badge>
                     <span
-                      className="text-[11px] font-semibold text-slate-300"
+                      className="truncate text-[11px] font-semibold text-slate-300"
                       title="Confidence reflects data completeness."
                     >
                       {((score?.confidence ?? 0) * 100).toFixed(0)}% confidence
