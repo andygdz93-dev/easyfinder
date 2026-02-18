@@ -1,9 +1,9 @@
-import { FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
-import { ApiError, getSellerListing, SellerListingPayload, updateSellerListing, uploadListingImage } from "../../lib/api";
+import { ApiError, getSellerListing, SellerListingPayload, updateSellerListing, uploadSellerImages } from "../../lib/api";
 
 type FormState = {
   title: string;
@@ -18,6 +18,8 @@ type FormState = {
   condition: string;
 };
 
+const MAX_IMAGES = 5;
+
 export default function SellerEdit() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
@@ -25,6 +27,7 @@ export default function SellerEdit() {
   const [saving, setSaving] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [details, setDetails] = useState<string[]>([]);
   const [form, setForm] = useState<FormState>({ title: "", description: "", location: "", price: "", hours: "", year: "", make: "", model: "", category: "", condition: "" });
@@ -45,7 +48,7 @@ export default function SellerEdit() {
           category: String(listing.category ?? ""),
           condition: "",
         });
-        setExistingImages(Array.isArray(listing.images) ? (listing.images as string[]).filter(Boolean) : []);
+        setExistingImages(Array.isArray(listing.images) ? (listing.images as string[]).filter(Boolean).slice(0, MAX_IMAGES) : []);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to load listing.");
       } finally {
@@ -55,17 +58,48 @@ export default function SellerEdit() {
     void load();
   }, [id]);
 
+  const handleFileSelect = (event: ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(event.target.files ?? []);
+    if (selected.length === 0) {
+      return;
+    }
+
+    setFiles((prev) => {
+      const availableSlots = Math.max(MAX_IMAGES - existingImages.length, 0);
+      const merged = [...prev, ...selected];
+      return merged.slice(0, availableSlots);
+    });
+    event.target.value = "";
+  };
+
+  const removeExistingImage = (index: number) => {
+    setExistingImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const removeNewFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const filePreviews = useMemo(() => files.map((file) => ({ file, url: URL.createObjectURL(file) })), [files]);
+
+  useEffect(() => {
+    return () => {
+      for (const preview of filePreviews) {
+        URL.revokeObjectURL(preview.url);
+      }
+    };
+  }, [filePreviews]);
+
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSaving(true);
     setError(null);
     setDetails([]);
+    setSuccessMessage(null);
     try {
-      const uploadedUrls: string[] = [];
-      for (const file of files.slice(0, 5)) {
-        const uploaded = await uploadListingImage(file);
-        uploadedUrls.push(uploaded.url);
-      }
+      const availableSlots = Math.max(MAX_IMAGES - existingImages.length, 0);
+      const uploadedUrls = await uploadSellerImages(files.slice(0, availableSlots));
+      const mergedImages = [...existingImages, ...uploadedUrls].slice(0, MAX_IMAGES);
 
       const payload: Partial<SellerListingPayload> = {
         title: form.title,
@@ -78,13 +112,11 @@ export default function SellerEdit() {
         model: form.model || undefined,
         category: form.category || undefined,
         condition: form.condition || undefined,
+        images: mergedImages,
       };
 
-      if (uploadedUrls.length > 0) {
-        payload.images = [...existingImages, ...uploadedUrls].slice(0, 5);
-      }
-
       await updateSellerListing(id, payload);
+      setSuccessMessage("Upload successful. Listing updated.");
       navigate("/app/seller/listings");
     } catch (e) {
       if (e instanceof ApiError) {
@@ -119,11 +151,42 @@ export default function SellerEdit() {
         <textarea className="w-full rounded-xl border border-slate-700 bg-slate-900 p-3 text-sm" rows={5} value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} placeholder="Description" />
 
         <div>
-          <label className="text-sm text-slate-300">Upload more images</label>
-          <input type="file" accept="image/*" multiple onChange={(event) => setFiles(Array.from(event.target.files ?? []).slice(0, 5))} className="block w-full text-sm" />
+          <label className="text-sm text-slate-300">Images (up to {MAX_IMAGES})</label>
+          <input type="file" accept="image/*" multiple onChange={handleFileSelect} className="mt-2 block w-full text-sm" />
+          <p className="mt-2 text-xs text-slate-400">Selected {existingImages.length + files.length}/{MAX_IMAGES} images.</p>
+
+          {existingImages.length > 0 ? (
+            <div className="mt-3">
+              <p className="mb-2 text-xs text-slate-400">Existing images</p>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+                {existingImages.map((url, index) => (
+                  <div key={`${url}-${index}`} className="rounded-lg border border-slate-700 bg-slate-900 p-2">
+                    <img src={url} alt={`Existing image ${index + 1}`} className="h-24 w-full rounded object-cover" />
+                    <Button type="button" variant="outline" className="mt-2 w-full" onClick={() => removeExistingImage(index)}>Remove</Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {files.length > 0 ? (
+            <div className="mt-3">
+              <p className="mb-2 text-xs text-slate-400">New images</p>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+                {filePreviews.map(({ file, url }, index) => (
+                  <div key={`${file.name}-${index}`} className="rounded-lg border border-slate-700 bg-slate-900 p-2">
+                    <img src={url} alt={file.name} className="h-24 w-full rounded object-cover" />
+                    <p className="mt-2 truncate text-xs text-slate-300" title={file.name}>{file.name}</p>
+                    <Button type="button" variant="outline" className="mt-2 w-full" onClick={() => removeNewFile(index)}>Remove</Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
 
         {error ? <div className="rounded-lg border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-100">{error}{details.length ? <ul className="mt-2 list-disc pl-5">{details.map((d) => <li key={d}>{d}</li>)}</ul> : null}</div> : null}
+        {successMessage ? <div className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-100">{successMessage}</div> : null}
 
         <div className="flex gap-3">
           <Button type="submit" disabled={saving}>{saving ? "Saving..." : "Save"}</Button>

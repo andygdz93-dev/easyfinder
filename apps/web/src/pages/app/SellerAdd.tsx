@@ -1,9 +1,9 @@
-import { FormEvent, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Card } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
-import { ApiError, createSellerListing, getMe, SellerListingPayload, uploadListingImage } from "../../lib/api";
+import { ApiError, createSellerListing, getMe, SellerListingPayload, uploadSellerImages } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { useQuery } from "@tanstack/react-query";
 
@@ -25,6 +25,8 @@ const INITIAL_FORM: ListingFormState = {
   model: "",
   category: "",
 };
+
+const MAX_IMAGES = 5;
 
 export const SellerAdd = () => {
   const { token, user } = useAuth();
@@ -51,6 +53,33 @@ export const SellerAdd = () => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
+  const handleFileSelect = (event: ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(event.target.files ?? []);
+    if (selected.length === 0) {
+      return;
+    }
+
+    setFiles((prev) => {
+      const merged = [...prev, ...selected];
+      return merged.slice(0, MAX_IMAGES);
+    });
+    event.target.value = "";
+  };
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const filePreviews = useMemo(() => files.map((file) => ({ file, url: URL.createObjectURL(file) })), [files]);
+
+  useEffect(() => {
+    return () => {
+      for (const preview of filePreviews) {
+        URL.revokeObjectURL(preview.url);
+      }
+    };
+  }, [filePreviews]);
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
@@ -61,7 +90,7 @@ export const SellerAdd = () => {
       return;
     }
 
-    if (files.length > 5) {
+    if (files.length > MAX_IMAGES) {
       setError({ message: "You can upload up to 5 images.", details: [] });
       return;
     }
@@ -76,11 +105,7 @@ export const SellerAdd = () => {
       if (parsedHours !== null && !Number.isFinite(parsedHours)) throw new Error("Hours must be a valid number.");
       if (parsedYear !== undefined && !Number.isInteger(parsedYear)) throw new Error("Year must be a whole number.");
 
-      const uploadedUrls: string[] = [];
-      for (const file of files.slice(0, 5)) {
-        const uploaded = await uploadListingImage(file);
-        uploadedUrls.push(uploaded.url);
-      }
+      const uploadedUrls = await uploadSellerImages(files.slice(0, MAX_IMAGES));
 
       const payload: SellerListingPayload = {
         title: form.title,
@@ -97,7 +122,7 @@ export const SellerAdd = () => {
       };
 
       const result = await createSellerListing(payload);
-      setSuccessMessage(`Listing created successfully (ID: ${result.id}).`);
+      setSuccessMessage(`Upload successful. Listing created (ID: ${result.id}).`);
       setForm(INITIAL_FORM);
       setFiles([]);
     } catch (submitError) {
@@ -136,14 +161,20 @@ export const SellerAdd = () => {
         <textarea className="w-full rounded-xl border border-slate-700 bg-slate-900 p-3 text-sm" rows={5} placeholder="Description *" value={form.description} onChange={(e) => updateField("description", e.target.value)} />
 
         <div>
-          <label className="mb-2 block text-sm text-slate-300">Images (up to 5)</label>
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={(event) => setFiles(Array.from(event.target.files ?? []).slice(0, 5))}
-            className="block w-full text-sm"
-          />
+          <label className="mb-2 block text-sm text-slate-300">Images (up to {MAX_IMAGES})</label>
+          <input type="file" accept="image/*" multiple onChange={handleFileSelect} className="block w-full text-sm" />
+          <p className="mt-2 text-xs text-slate-400">Selected {files.length}/{MAX_IMAGES} images.</p>
+          {files.length > 0 ? (
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+              {filePreviews.map(({ file, url }, index) => (
+                <div key={`${file.name}-${index}`} className="rounded-lg border border-slate-700 bg-slate-900 p-2">
+                  <img src={url} alt={file.name} className="h-24 w-full rounded object-cover" />
+                  <p className="mt-2 truncate text-xs text-slate-300" title={file.name}>{file.name}</p>
+                  <Button type="button" variant="outline" className="mt-2 w-full" onClick={() => removeFile(index)}>Remove</Button>
+                </div>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         {error ? (
