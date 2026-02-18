@@ -47,10 +47,18 @@ Copy-Item apps/web/.env.example apps/web/.env
 
 Set `VITE_API_BASE_URL` to the API origin **without** `/api`.
 
+For the API, set `PUBLIC_API_BASE_URL` to the public backend origin (also **without** `/api`) so seller-uploaded image URLs are stored as absolute URLs.
+
 Examples:
 
 - Local: `http://127.0.0.1:8080`
 - Production: `https://easyfinder.fly.dev`
+
+Fly.io runtime config:
+
+```bash
+flyctl secrets set PUBLIC_API_BASE_URL=https://easyfinder.fly.dev -a easyfinder
+```
 
 ## Install and run
 
