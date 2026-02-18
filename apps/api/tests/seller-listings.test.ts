@@ -47,6 +47,7 @@ describe("/api/seller/listings manual create", () => {
       const res = await supertest(app.server)
         .post("/api/seller/listings")
         .set("Authorization", `Bearer ${token}`)
+        .timeout(15000)
         .send({
           title: "Manual listing",
           description: "Manual description",

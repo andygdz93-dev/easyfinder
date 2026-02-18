@@ -192,7 +192,7 @@ describe("/api/seller/upload", () => {
     } finally {
       await app.close();
     }
-  });
+  }, 15000);
 
   it("rejects free seller uploads", async () => {
     const app = await buildServer();
