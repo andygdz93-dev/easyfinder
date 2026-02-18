@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import {
   Navigate,
   Outlet,
@@ -19,6 +18,7 @@ import { ScoringConfigs } from "./pages/app/ScoringConfigs";
 import { Offers } from "./pages/app/Offers";
 import { SellerListings } from "./pages/app/SellerListings";
 import { SellerAdd } from "./pages/app/SellerAdd";
+import SellerEdit from "./pages/app/SellerEdit";
 import { SellerUpload } from "./pages/app/SellerUpload";
 import { SellerDashboard } from "./pages/app/SellerDashboard";
 import SellerInquiries from "./pages/app/SellerInquiries";
@@ -35,12 +35,9 @@ import { DemoLayout } from "./layouts/DemoLayout";
 import { LiveLayout } from "./layouts/LiveLayout";
 import { NdaProvider } from "./lib/nda";
 import { useAuth } from "./lib/auth";
-import { getAdminOverview } from "./lib/api";
 import { SelectRole } from "./pages/app/SelectRole";
 import { Billing } from "./pages/app/Billing";
 import RequireSellerUploadAccess from "./components/RequireSellerUploadAccess";
-import { isAdmin } from "./lib/roles";
-import AdminHome from "./pages/admin/AdminHome";
 import AdminListings from "./pages/admin/AdminListings";
 import AdminListingDetail from "./pages/admin/AdminListingDetail";
 import AdminInquiries from "./pages/admin/AdminInquiries";
@@ -143,36 +140,31 @@ const UpgradeRouteGuard = () => {
 const AdminEntry = () => {
   const { user, isUserLoading } = useAuth();
   const location = useLocation();
-  const overview = useQuery({
-    queryKey: ["admin-overview-gate"],
-    queryFn: getAdminOverview,
-    enabled: Boolean(user && user.role === "admin"),
-    retry: false,
-  });
 
-  if (isUserLoading || overview.isLoading) {
+  if (isUserLoading) {
     return <div className="p-6 text-sm text-slate-400">Loading…</div>;
   }
 
-  if (!user || user.role !== "admin" || overview.isError) {
+  if (!user || user.role !== "admin") {
     return <div className="p-6">Not authorized.</div>;
   }
 
   if (location.pathname === "/admin") {
-    return <Navigate to="/admin/home" replace />;
+    return <Navigate to="/admin/listings" replace />;
   }
 
   return (
     <Routes>
-      <Route path="/admin/home" element={<AdminHome />} />
+      <Route path="/admin/home" element={<Navigate to="/admin/listings" replace />} />
       <Route path="/admin/listings" element={<AdminListings />} />
       <Route path="/admin/listings/:id" element={<AdminListingDetail />} />
       <Route path="/admin/inquiries" element={<AdminInquiries />} />
       <Route path="/admin/audit" element={<AdminAudit />} />
-      <Route path="*" element={<Navigate to="/admin/home" replace />} />
+      <Route path="*" element={<Navigate to="/admin/listings" replace />} />
     </Routes>
   );
 };
+
 
 export default function App() {
   return (
@@ -250,7 +242,7 @@ export default function App() {
             <Route path="admin/sources" element={<AdminSources />} />
             <Route
               path="admin/overview"
-              element={<Navigate to="/admin/home" replace />}
+              element={<Navigate to="/admin/listings" replace />}
             />
             <Route
               element={
@@ -268,6 +260,7 @@ export default function App() {
               <Route path="seller/inquiries" element={<SellerInquiries />} />
               <Route path="seller/pipeline" element={<SellerPipeline />} />
               <Route path="seller/add" element={<SellerAdd />} />
+              <Route path="seller/listings/:id/edit" element={<SellerEdit />} />
               <Route
                 path="seller/upload"
                 element={

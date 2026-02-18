@@ -394,6 +394,46 @@ export type SellerListingCreateResponse = {
 export const createSellerListing = (payload: unknown) =>
   apiRequest<SellerListingCreateResponse>("/seller/listings", { method: "POST", body: JSON.stringify(payload) });
 
+
+export type SellerListingPayload = {
+  title: string;
+  description: string;
+  location: string;
+  condition?: string;
+  price?: number | null;
+  hours?: number | null;
+  year?: number;
+  make?: string;
+  model?: string;
+  category?: string;
+  images?: string[];
+};
+
+export const getSellerListing = (id: string) => apiRequest<SellerListingCreateResponse>(`/seller/listings/${id}`);
+
+export const updateSellerListing = (id: string, payload: Partial<SellerListingPayload>) =>
+  apiRequest<SellerListingCreateResponse>(`/seller/listings/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+
+export const uploadListingImage = async (file: File) => {
+  const token = getStoredAuthToken();
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(buildApiUrl("/uploads/images"), {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    body: formData,
+  });
+
+  const payload = (await res.json()) as ApiEnvelope<{ id: string; url: string }>;
+  if (!res.ok || !payload.data) {
+    throw new ApiError(payload.error?.message ?? "Upload failed.", payload.requestId, res.status, payload.error?.code, undefined, payload.error?.details);
+  }
+
+  return payload.data;
+};
+
+
 export const uploadSellerCsv = importSellerListings;
 export const createInquiry = (input: { listingId: string; message: string }) =>
   apiFetch<InquiryDto>("/inquiries", {
