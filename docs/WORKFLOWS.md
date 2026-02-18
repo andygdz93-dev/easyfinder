@@ -1,66 +1,65 @@
-# EasyFinder Workflows
+# Workflows
 
-Canonical engineering workflow document for delivery, validation, and operational write-policy behavior.
+## Manual Listing Creation
 
-## Documentation map
+1. Seller fills form
+2. Uploads images (max 5)
+3. Images stored via API
+4. Listing saved
+5. Score generated
 
-- Docs index: `docs/README.md`
-- Generated snapshot: `docs/_generated/REPO_SNAPSHOT.md` (generated artifact; do not hand-edit)
+---
 
-## CI and local verification gates
+## Edit Listing
 
-Run the required workspace checks before merge:
+1. Seller updates fields
+2. Seller can add/remove images
+3. PATCH or PUT request
+4. Listing updated
+5. Score recalculated
 
-- `pnpm -w typecheck`
-- `pnpm -w build`
-- `pnpm -w lint`
-- `pnpm -w test`
+---
 
-If API contract changes, also run:
+## Delete Listing
 
-- `pnpm -w openapi:types`
+1. Seller clicks delete
+2. Confirmation modal
+3. DELETE request
+4. Listing removed
+5. Images removed
 
-## PR and branch policy
+---
 
-- Workflow is PR-only to `app` (branch -> push -> PR -> merge).
-- Do not bypass PR review with direct pushes to `app`.
+## CSV Upload
 
-## API contract workflow
+1. Seller uploads CSV
+2. Validate CSV
+3. Show row errors
+4. Confirm upload
+5. Save listings
 
-`openapi.yml` is the source of truth for API contracts.
+---
 
-When contracts change:
+## ZIP Upload
 
-1. Update `openapi.yml`.
-2. Regenerate frontend types with `pnpm -w openapi:types`.
-3. Commit `apps/web/src/generated/openapi.ts` in the same PR.
+1. Seller uploads ZIP
+2. Validate ZIP:
+   - Contains one CSV
+   - Images named correctly
+3. Map images to rows
+4. Save listings
+5. Attach images
+6. Generate score
 
-## Scraper flow and guardrails
+---
 
-### Public/admin scrape routes
+## Image Flow
 
-- Public route: `GET /api/scrape/ironplanet?url=...`
-  - URL validation failure: `400 INVALID_URL`
-  - Scrape exception: `500 SCRAPE_FAILED`
-  - Protected by write-disable middleware in demo mode
-- Admin route: `POST /api/admin/scrape/ironplanet`
-  - Requires admin authentication
-  - Uses the same URL validation behavior
+Upload:
+Frontend → API → Mongo → store ID
 
-### `DEMO_MODE` write policy
+Display:
+Frontend uses full URL:
+https://easyfinder.fly.dev/api/images/:id
 
-When `DEMO_MODE=true`, guarded write paths return `403 DEMO_WRITE_DISABLED` (including scrape entrypoints that persist listings).
-
-### Runtime constraints
-
-- Search page timeout: 15s
-- Detail page timeout: 15s
-- Concurrency: 3 parallel detail fetches
-- Maximum processed listings per request: 25
-
-### Image extraction and normalization
-
-- Scraper reads `<img src|data-src>` and normalizes to absolute URLs.
-- Obvious non-listing assets are filtered (`icon`, `logo`, `pixel`, `placeholder`, `sprite`, `blank` patterns).
-- Up to 5 images are persisted.
-- If no valid images remain, a fallback placeholder image URL is used.
+No relative paths allowed.

@@ -4868,3 +4868,14 @@ Use `docs/engineering/AI_DEV_CONTEXT.md` for AI/dev rules and invariants, and us
 ```
 
 
+
+## February 2026 Updates
+
+- Added ZIP bulk upload support
+- Added PATCH listing route
+- Added seller delete functionality
+- Fixed admin redirect logic
+- Replaced seller ID display with "Private seller"
+- Updated image serving architecture
+- Fixed listing card overflow (score & confidence)
+- Converted listing grid from 2 → 4 columns

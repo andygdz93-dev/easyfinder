@@ -910,6 +910,16 @@
         "modifiedUtc":  "2026-02-13T10:35:11Z"
     },
     {
+        "path":  "docs/ADMIN.md",
+        "bytes":  916,
+        "modifiedUtc":  "2026-02-18T17:01:07Z"
+    },
+    {
+        "path":  "docs/ARCHITECTURE.md",
+        "bytes":  1398,
+        "modifiedUtc":  "2026-02-18T17:01:07Z"
+    },
+    {
         "path":  "docs/ARCHITECTURE_MAP.md",
         "bytes":  18696,
         "modifiedUtc":  "2026-02-16T04:34:15Z"
@@ -928,6 +938,16 @@
         "path":  "docs/FILE_INDEX.json",
         "bytes":  30926,
         "modifiedUtc":  "2026-02-16T22:52:09Z"
+    },
+    {
+        "path":  "docs/SCORING.md",
+        "bytes":  641,
+        "modifiedUtc":  "2026-02-18T17:01:07Z"
+    },
+    {
+        "path":  "docs/WORKFLOWS.md",
+        "bytes":  890,
+        "modifiedUtc":  "2026-02-18T17:01:07Z"
     },
     {
         "path":  "docs/product/PRODUCT_VISION.md",
