@@ -77,8 +77,10 @@ const sellerListingUpdateSchema = z
     model: z.string().trim().optional(),
     category: z.string().trim().optional(),
     condition: z.string().trim().optional(),
+    imageUrl: z.string().trim().optional(),
     images: z.array(z.string().trim()).max(5).optional(),
   })
+  .strict()
   .refine((value) => Object.keys(value).length > 0, {
     message: "At least one field is required.",
   });
@@ -362,7 +364,7 @@ export default async function sellerRoutes(app: FastifyInstance) {
   );
 
   app.get("/listings/:id", { preHandler: [app.authenticate, requireNDA] }, async (request, reply) => {
-    if (!uploadRoleAllowed.has(request.user.role)) {
+    if (!sellerOnly.has(request.user.role)) {
       return fail(request, reply, "FORBIDDEN", "Seller access only.", 403);
     }
 
@@ -380,13 +382,13 @@ export default async function sellerRoutes(app: FastifyInstance) {
     return ok(request, listing);
   });
 
-  app.patch(
+  app.put(
     "/listings/:id",
     {
-      preHandler: [app.authenticate, requireNDA, requirePlan(["pro", "enterprise"]), disableWritesInDemo],
+      preHandler: [app.authenticate, requireNDA, disableWritesInDemo],
     },
     async (request, reply) => {
-      if (!uploadRoleAllowed.has(request.user.role)) {
+      if (!sellerOnly.has(request.user.role)) {
         return fail(request, reply, "FORBIDDEN", "Seller access only.", 403);
       }
 
@@ -431,6 +433,12 @@ export default async function sellerRoutes(app: FastifyInstance) {
       if (data.model !== undefined) updateDoc.model = toStringValue(data.model) || undefined;
       if (data.category !== undefined) updateDoc.category = toStringValue(data.category) || "equipment";
       if (data.condition !== undefined) updateDoc.condition = 0;
+
+      if (data.imageUrl !== undefined) {
+        const { images, imageUrl } = normalizeListingImages([data.imageUrl]);
+        updateDoc.images = images;
+        updateDoc.imageUrl = imageUrl;
+      }
 
       if (data.images !== undefined) {
         const { images, imageUrl } = normalizeListingImages(data.images);
