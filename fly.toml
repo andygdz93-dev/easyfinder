@@ -35,3 +35,6 @@ primary_region = 'lax'
     method = 'GET'
     path = '/health'
     protocol = 'http'
+
+[env]
+  PUBLIC_API_BASE_URL = "https://easyfinder.fly.dev"
