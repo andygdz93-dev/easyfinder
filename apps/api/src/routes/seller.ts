@@ -1,4 +1,4 @@
-import { FastifyInstance } from "fastify";
+import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { randomUUID } from "node:crypto";
 import { ObjectId } from "mongodb";
 import { z } from "zod";
@@ -382,74 +382,84 @@ export default async function sellerRoutes(app: FastifyInstance) {
     return ok(request, listing);
   });
 
+  const updateListingHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+    if (!sellerOnly.has(request.user.role)) {
+      return fail(request, reply, "FORBIDDEN", "Seller access only.", 403);
+    }
+
+    const payload = sellerListingUpdateSchema.safeParse(request.body);
+    if (!payload.success) {
+      reply.status(400);
+      return {
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Invalid seller listing payload.",
+          details: payload.error.issues.map((issue) => ({ path: issue.path.join("."), message: issue.message })),
+        },
+        requestId: request.requestId,
+      };
+    }
+
+    const { id } = request.params as { id: string };
+    const existing = await getListingsCollection().findById(id);
+    if (!existing) {
+      return fail(request, reply, "NOT_FOUND", "Listing not found.", 404);
+    }
+
+    const isAdmin = request.user.role === "admin";
+    if (!isAdmin && existing.source !== `seller:${request.user.id}`) {
+      return fail(request, reply, "FORBIDDEN", "You do not have access to this listing.", 403);
+    }
+
+    const updateDoc: Partial<SellerImportListing> = {};
+    const data = payload.data;
+
+    if (data.title !== undefined) updateDoc.title = data.title.trim();
+    if (data.description !== undefined) updateDoc.description = data.description.trim();
+    if (data.location !== undefined) {
+      updateDoc.location = data.location.trim();
+      updateDoc.state = data.location.trim();
+    }
+    if (data.state !== undefined) updateDoc.state = data.state.trim();
+    if (data.price !== undefined) updateDoc.price = data.price;
+    if (data.hours !== undefined) updateDoc.hours = data.hours;
+    if (data.year !== undefined) updateDoc.year = data.year;
+    if (data.make !== undefined) updateDoc.make = toStringValue(data.make) || undefined;
+    if (data.model !== undefined) updateDoc.model = toStringValue(data.model) || undefined;
+    if (data.category !== undefined) updateDoc.category = toStringValue(data.category) || "equipment";
+    if (data.condition !== undefined) updateDoc.condition = 0;
+
+    if (data.imageUrl !== undefined) {
+      const { images, imageUrl } = normalizeListingImages([data.imageUrl]);
+      updateDoc.images = images;
+      updateDoc.imageUrl = imageUrl;
+    }
+
+    if (data.images !== undefined) {
+      const { images, imageUrl } = normalizeListingImages(data.images);
+      updateDoc.images = images;
+      updateDoc.imageUrl = imageUrl;
+    }
+
+    await getListingsCollection().updateById(id, updateDoc);
+    const updated = await getListingsCollection().findById(id);
+    return ok(request, updated);
+  };
+
   app.put(
     "/listings/:id",
     {
       preHandler: [app.authenticate, requireNDA, disableWritesInDemo],
     },
-    async (request, reply) => {
-      if (!sellerOnly.has(request.user.role)) {
-        return fail(request, reply, "FORBIDDEN", "Seller access only.", 403);
-      }
+    updateListingHandler
+  );
 
-      const payload = sellerListingUpdateSchema.safeParse(request.body);
-      if (!payload.success) {
-        reply.status(400);
-        return {
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "Invalid seller listing payload.",
-            details: payload.error.issues.map((issue) => ({ path: issue.path.join("."), message: issue.message })),
-          },
-          requestId: request.requestId,
-        };
-      }
-
-      const { id } = request.params as { id: string };
-      const existing = await getListingsCollection().findById(id);
-      if (!existing) {
-        return fail(request, reply, "NOT_FOUND", "Listing not found.", 404);
-      }
-
-      const isAdmin = request.user.role === "admin";
-      if (!isAdmin && existing.source !== `seller:${request.user.id}`) {
-        return fail(request, reply, "FORBIDDEN", "You do not have access to this listing.", 403);
-      }
-
-      const updateDoc: Partial<SellerImportListing> = {};
-      const data = payload.data;
-
-      if (data.title !== undefined) updateDoc.title = data.title.trim();
-      if (data.description !== undefined) updateDoc.description = data.description.trim();
-      if (data.location !== undefined) {
-        updateDoc.location = data.location.trim();
-        updateDoc.state = data.location.trim();
-      }
-      if (data.state !== undefined) updateDoc.state = data.state.trim();
-      if (data.price !== undefined) updateDoc.price = data.price;
-      if (data.hours !== undefined) updateDoc.hours = data.hours;
-      if (data.year !== undefined) updateDoc.year = data.year;
-      if (data.make !== undefined) updateDoc.make = toStringValue(data.make) || undefined;
-      if (data.model !== undefined) updateDoc.model = toStringValue(data.model) || undefined;
-      if (data.category !== undefined) updateDoc.category = toStringValue(data.category) || "equipment";
-      if (data.condition !== undefined) updateDoc.condition = 0;
-
-      if (data.imageUrl !== undefined) {
-        const { images, imageUrl } = normalizeListingImages([data.imageUrl]);
-        updateDoc.images = images;
-        updateDoc.imageUrl = imageUrl;
-      }
-
-      if (data.images !== undefined) {
-        const { images, imageUrl } = normalizeListingImages(data.images);
-        updateDoc.images = images;
-        updateDoc.imageUrl = imageUrl;
-      }
-
-      await getListingsCollection().updateById(id, updateDoc);
-      const updated = await getListingsCollection().findById(id);
-      return ok(request, updated);
-    }
+  app.patch(
+    "/listings/:id",
+    {
+      preHandler: [app.authenticate, requireNDA, disableWritesInDemo],
+    },
+    updateListingHandler
   );
 
   app.get("/inquiries", { preHandler: app.authenticate }, async (request, reply) => {
