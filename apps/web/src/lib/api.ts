@@ -412,7 +412,7 @@ export type SellerListingPayload = {
 export const getSellerListing = (id: string) => apiRequest<SellerListingCreateResponse>(`/seller/listings/${id}`);
 
 export const updateSellerListing = (id: string, payload: Partial<SellerListingPayload>) =>
-  apiRequest<SellerListingCreateResponse>(`/seller/listings/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+  apiRequest<SellerListingCreateResponse>(`/seller/listings/${id}`, { method: "PUT", body: JSON.stringify(payload) });
 
 export const uploadListingImage = async (file: File) => {
   const token = getStoredAuthToken();
