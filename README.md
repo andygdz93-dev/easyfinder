@@ -1,136 +1,99 @@
-# EasyFinder
+# EasyFinder AI
 
-Intelligent heavy-equipment discovery and scoring in a pnpm monorepo.
+EasyFinder AI is a marketplace and intelligence platform for heavy equipment listings.
 
-## Repository layout
+It supports:
+- Buyer browsing and scoring
+- Seller-managed inventory
+- Admin review and source management
+- CSV and ZIP-based bulk uploads
+- AI-based listing scoring and confidence modeling
 
-- `apps/api` — Fastify API (auth, listings, NDA, seller/admin workflows, billing, scraping entrypoints).
-- `apps/web` — Vite + React frontend.
-- `packages/shared` — shared types and scoring logic used by API and web.
+---
 
-## Canonical docs
+## Core Features
 
-Canonical docs in `/docs` (only these files):
+### 1. Buyer Experience
+- Browse listings
+- Filter by state, hours, price
+- View AI score and confidence
+- View detailed breakdown (Deal, Usage, Risk, Speed)
+- Add to watchlist
 
-- `docs/ARCHITECTURE.md`
-- `docs/WORKFLOWS.md`
-- `docs/ADMIN.md`
-- `docs/SCORING.md`
-- Optional compatibility pointer: `docs/ARCHITECTURE_MAP.md`
-- API contract (source of truth): `openapi.yml`
+### 2. Seller Experience
+- Add listings manually
+- Edit listings
+- Delete listings (with confirmation)
+- Upload bulk listings via CSV
+- Upload ZIP bundle (CSV + images)
+- Manage up to 200 listings (Pro plan)
 
-## Docs locations
+### 3. Admin
+- Manage scraped sources
+- Review listings
+- Access all seller listings
+- Override restrictions
 
-- Snapshots: `ops/snapshots/`
-- Archived docs: `archive/docs/`
-- Product docs: `product/docs/`
+---
 
-## Docs policy
+## Image Handling (Current Implementation)
 
-- The 4 canonical docs in `/docs` are the maintained source of truth.
-- `ops/snapshots/` contains generated snapshot artifacts and is not canonical; do not hand-edit these files.
-- `archive/docs/` is historical reference and is not actively maintained.
-- `product/docs/` contains product documentation and is not canonical.
-- `project docs/` is deprecated and will be removed in a later cleanup.
+Images are stored via the API and saved in MongoDB as references.
 
-## Prerequisites
+Listings store:
+- `imageUrl` (primary image)
+- `images[]` (up to 5 images)
 
-- Node.js 20.x
-- pnpm 9.6.0+
+Images are served via:
 
-## Environment setup (PowerShell)
+https://easyfinder.fly.dev/api/images/:id
 
-```powershell
-Copy-Item apps/api/.env.example apps/api/.env
-Copy-Item apps/web/.env.example apps/web/.env
-```
+Important:
+- Demo images use `/demo-images/...`
+- Uploaded images use `/api/images/:id`
+- Frontend must NOT prefix relative URLs
+- All image URLs must be absolute
 
-Set `VITE_API_BASE_URL` to the API origin **without** `/api`.
+---
 
-For the API, set `PUBLIC_API_BASE_URL` to the public backend origin (also **without** `/api`) so seller-uploaded image URLs are stored as absolute URLs.
+## Bulk Upload Rules
 
-Examples:
+### CSV Upload
+- One row = one listing
+- Required columns:
+  - title
+  - description
+  - location
+  - condition
+  - contactName
+  - contactEmail
+- Optional:
+  - imageUrl..imageUrl5
 
-- Local: `http://127.0.0.1:8080`
-- Production: `https://easyfinder.fly.dev`
+### ZIP Bundle Upload
+ZIP must contain:
+- Exactly one `.csv`
+- Image files named according to row number
 
-Fly.io runtime config:
+Example:
+Row 2 → 2A.jpg, 2B.jpg, 2C.jpg, 2D.jpg, 2E.jpg  
+Row 3 → 3A.jpg, 3B.jpg, 3C.jpg, 3D.jpg, 3E.jpg  
 
-```bash
-flyctl secrets set PUBLIC_API_BASE_URL=https://easyfinder.fly.dev -a easyfinder
-```
+Max listings per upload: 200
 
-## Install and run
+---
 
-```powershell
-pnpm install
-pnpm dev
-```
+## Deployment
 
-## Local verification
+- Web: Vercel
+- API: Fly.io
+- Database: MongoDB
 
-Run the same workspace checks expected in CI:
+---
 
-```powershell
-pnpm -w typecheck
-pnpm -w build
-pnpm -w lint
-pnpm -w test
-```
+## Known Constraints
 
-## API route existence quick-check
-
-Before debugging frontend submit issues, verify the deployed API has seller routes:
-
-```bash
-curl -i https://<API_BASE>/api/health
-curl -i -X POST https://<API_BASE>/api/seller/listings \
-  -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer <TOKEN>' \
-  --data '{"title":"Route check","description":"Route check","location":"Austin, TX"}'
-```
-
-If `/api/health` works but `/api/seller/listings` returns 404, the deployed backend is missing seller route registration/version.
-
-## OpenAPI workflow
-
-`openapi.yml` is the canonical contract.
-
-When API contract changes:
-
-1. Update `openapi.yml`.
-2. Regenerate frontend types:
-   ```powershell
-   pnpm -w openapi:types
-   ```
-3. Commit `apps/web/src/generated/openapi.ts` in the same PR.
-
-## Git workflow (PR-only)
-
-Changes must go through a Pull Request. Do **not** push direct commits to the `app` branch.
-
-Recommended flow:
-
-1. Create a branch from latest `app`.
-2. Commit your work on that branch.
-3. Push the branch to origin.
-4. Open a PR into `app`.
-5. Merge after review + required checks.
-
-## Admin bootstrap / promotion
-
-Use the API helper to promote an existing user to `admin`:
-
-```powershell
-pnpm --filter @easyfinderai/api promote-admin -- --email fernandogarciarodriguez78@gmail.com
-pnpm --filter @easyfinderai/api promote-admin -- --email andygdz653@gmail.com
-```
-
-Important notes:
-
-- `promote-admin` only works for users that already exist in the database.
-- In production, add `--allow-production` intentionally:
-  ```powershell
-  pnpm --filter @easyfinderai/api promote-admin -- --email fernandogarciarodriguez78@gmail.com --allow-production
-  ```
-
+- Max 5 images per listing
+- ZIP validation requires API endpoint:
+  - POST `/api/seller/upload/validate-zip`
+- Image CORS headers must allow frontend domain

@@ -1,61 +1,54 @@
-# EasyFinder Admin
+# Admin Documentation
 
-Canonical admin policy and operations reference.
+## Admin Capabilities
 
-## Admin control center behavior
+Admins can:
 
-### Feature flags and policy gates
+- View all listings
+- Access seller listings
+- Access sources
+- Access scraping controls
+- Bypass seller ownership restrictions
+- Access scoring insights
 
-- `ADMIN_ENABLED` (default `true`)
-  - When `false`, admin endpoints return `404 ADMIN_DISABLED`.
-- `ADMIN_EMAIL_ALLOWLIST` (optional comma-separated emails)
-  - Enforces allowlisting in addition to role checks.
-- Admin API routes are protected by `app.authenticate` + `requireAdmin`.
-- NDA middleware (`requireNDA`) explicitly bypasses NDA requirements for admins.
+---
 
-## Admin API endpoints
+## Admin Routing
 
-Under `/api/admin`:
+- `/admin` → redirects to `/admin/listings`
+- `/admin/home` → redirected to `/admin/listings`
 
-- `GET /overview`
-- `GET /listings`
-- `GET /listings/:id`
-- `PATCH /listings/:id`
-- `DELETE /listings/:id`
-- `GET /inquiries`
-- `PATCH /inquiries/:id`
-- `GET /scoring-config`
-- `POST /scoring-config`
-- `GET /audit`
-- `POST /scrape/ironplanet`
+Admin landing page is listings dashboard.
 
-For request/response shapes, use `openapi.yml`.
+---
 
-## Admin UI routes
+## Listing Source Display Rules
 
-- `/admin/home`
-- `/admin/listings`
-- `/admin/listings/:id`
-- `/admin/inquiries`
-- `/admin/audit`
+Public marketplace cards must display:
 
-Legacy bridge routes under `/app/admin/*` remain and redirect into `/admin/*`.
+- "Private seller" for seller-created listings
+- Actual source name for scraped listings
 
-## Admin bootstrap / promotion
+Seller IDs must NOT be shown in listing cards.
 
-Use the API helper to promote an existing user:
+Seller ID is visible only in:
+- Listing details view
+- Admin panel
 
-```bash
-pnpm --filter @easyfinderai/api promote-admin -- --email fernandogarciarodriguez78@gmail.com
-pnpm --filter @easyfinderai/api promote-admin -- --email andygdz653@gmail.com
-```
+---
 
-Production usage requires explicit opt-in:
+## Write Permissions
 
-```bash
-pnpm --filter @easyfinderai/api promote-admin -- --email fernandogarciarodriguez78@gmail.com --allow-production
-```
+- Admin can edit any listing
+- Admin can delete any listing
+- Demo mode disables writes
 
-Notes:
+---
 
-- `promote-admin` only works for users that already exist in the database.
+## Delete Listing
+
+Deletion:
+- Requires confirmation
+- Cannot be undone
+- Removes images associated with listing
+- Logs audit event

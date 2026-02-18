@@ -1,48 +1,56 @@
-# EasyFinder Scoring
+# Scoring Model
 
-Canonical scoring semantics and implementation posture. For API schema truth, use `openapi.yml`.
+Each listing receives:
 
-## Scoring pillars
+- Score (0–100)
+- Confidence (%)
 
-EasyFinder treats these pillars as first-class:
+---
 
-- `deal`
-- `usage`
-- `risk`
-- `speed`
+## Score Components
 
-`speed` is part of the same explainable surface as other pillars (not a hidden tiebreaker).
+Deal
+Usage
+Risk
+Speed
 
-## Output semantics
+---
 
-Score payload supports:
+## Confidence
 
-- `total`
-- `breakdown.{deal,usage,risk,speed}`
-- `scoreV2.{deal,usage,risk,speed}`
-- `reasons[]` (human-readable explainability)
-- `flags[]`
-- `confidence` and `confidenceScore`
-- `bestOptionEligible`
-- `disqualified`
+Confidence is derived from:
 
-## Weighting posture
+- Data completeness
+- Verified seller status
+- Model certainty
+- Listing consistency
 
-- Composite score currently starts from equal-weight blending across pillars (25% each).
-- The equal baseline is intentional while the pillar model stabilizes.
+---
 
-## Config/schema alignment direction
+## Display Rules
 
-Current scoring config still includes legacy keys (`price/hours/year/location/condition/completeness`).
+On card view:
+- Show score badge
+- Show confidence
+- Must remain inside container (no overflow)
 
-Direction:
+On detail view:
+- Full breakdown
+- Explanation panel
 
-- Align config schema with pillar-based scoring.
-- Keep migrations explicit and backwards-safe.
-- Update OpenAPI and generated types in the same PR when schema changes.
+---
 
-## Explainability requirements
+## Risk Signals
 
-- Every ranking output must remain explainable to end users.
-- Paid placement/promotion must not be merged into relevance score.
-- Score changes must remain auditable and reversible.
+- High hours
+- High price vs category
+- Unverified seller
+- Incomplete fields
+
+---
+
+## Seller Listings
+
+Private sellers default to:
+- Higher risk weighting
+- Lower baseline confidence
