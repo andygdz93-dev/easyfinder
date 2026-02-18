@@ -1,7 +1,7 @@
 import { basename, extname } from "node:path";
 import { inflateRawSync } from "node:zlib";
 
-const IMAGE_NAME_PATTERN = /^(\d+)([A-E])\.(jpg|jpeg|png|webp)$/i;
+const IMAGE_NAME_PATTERN = /^(\d+)\s*(?:[-_]\s*)?([A-E])\s*\.(jpg|jpeg|png|webp)$/i;
 const ZIP_SIGNATURES = {
   endOfCentralDir: 0x06054b50,
   centralFileHeader: 0x02014b50,
