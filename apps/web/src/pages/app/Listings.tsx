@@ -209,7 +209,7 @@ export const Listings = () => {
         </div>
       )}
       {listingsQuery.isLoading ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
             <Card key={index} className="h-40 animate-pulse" />
           ))}
@@ -223,7 +223,7 @@ export const Listings = () => {
           No live listings available yet. Once ingestion starts, they will appear here.
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {visibleListings.map((listing) => {
             const listingId = listing.id ?? "";
             const score = listing.score;
