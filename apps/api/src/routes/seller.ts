@@ -64,6 +64,26 @@ const manualListingSchema = z.object({
   images: z.array(z.string().trim()).max(5).optional(),
 });
 
+const sellerListingUpdateSchema = z
+  .object({
+    title: z.string().trim().min(1).optional(),
+    description: z.string().trim().min(1).optional(),
+    location: z.string().trim().min(1).optional(),
+    state: z.string().trim().min(1).optional(),
+    price: z.union([z.number().finite(), z.null()]).optional(),
+    hours: z.union([z.number().finite(), z.null()]).optional(),
+    year: z.number().int().finite().optional(),
+    make: z.string().trim().optional(),
+    model: z.string().trim().optional(),
+    category: z.string().trim().optional(),
+    condition: z.string().trim().optional(),
+    images: z.array(z.string().trim()).max(5).optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, {
+    message: "At least one field is required.",
+  });
+
+
 type IngestionError = { row: number; field?: string; code: string; message: string };
 
 type SellerImportListing = (typeof listings)[number] & {
@@ -337,6 +357,89 @@ export default async function sellerRoutes(app: FastifyInstance) {
       });
 
       return ok(request, listing);
+    }
+  );
+
+  app.get("/listings/:id", { preHandler: [app.authenticate, requireNDA] }, async (request, reply) => {
+    if (!uploadRoleAllowed.has(request.user.role)) {
+      return fail(request, reply, "FORBIDDEN", "Seller access only.", 403);
+    }
+
+    const { id } = request.params as { id: string };
+    const listing = await getListingsCollection().findById(id);
+    if (!listing) {
+      return fail(request, reply, "NOT_FOUND", "Listing not found.", 404);
+    }
+
+    const isAdmin = request.user.role === "admin";
+    if (!isAdmin && listing.source !== `seller:${request.user.id}`) {
+      return fail(request, reply, "FORBIDDEN", "You do not have access to this listing.", 403);
+    }
+
+    return ok(request, listing);
+  });
+
+  app.patch(
+    "/listings/:id",
+    {
+      preHandler: [app.authenticate, requireNDA, requirePlan(["pro", "enterprise"]), disableWritesInDemo],
+    },
+    async (request, reply) => {
+      if (!uploadRoleAllowed.has(request.user.role)) {
+        return fail(request, reply, "FORBIDDEN", "Seller access only.", 403);
+      }
+
+      const payload = sellerListingUpdateSchema.safeParse(request.body);
+      if (!payload.success) {
+        reply.status(400);
+        return {
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Invalid seller listing payload.",
+            details: payload.error.issues.map((issue) => ({ path: issue.path.join("."), message: issue.message })),
+          },
+          requestId: request.requestId,
+        };
+      }
+
+      const { id } = request.params as { id: string };
+      const existing = await getListingsCollection().findById(id);
+      if (!existing) {
+        return fail(request, reply, "NOT_FOUND", "Listing not found.", 404);
+      }
+
+      const isAdmin = request.user.role === "admin";
+      if (!isAdmin && existing.source !== `seller:${request.user.id}`) {
+        return fail(request, reply, "FORBIDDEN", "You do not have access to this listing.", 403);
+      }
+
+      const updateDoc: Partial<SellerImportListing> = {};
+      const data = payload.data;
+
+      if (data.title !== undefined) updateDoc.title = data.title.trim();
+      if (data.description !== undefined) updateDoc.description = data.description.trim();
+      if (data.location !== undefined) {
+        updateDoc.location = data.location.trim();
+        updateDoc.state = data.location.trim();
+      }
+      if (data.state !== undefined) updateDoc.state = data.state.trim();
+      if (data.price !== undefined) updateDoc.price = data.price;
+      if (data.hours !== undefined) updateDoc.hours = data.hours;
+      if (data.year !== undefined) updateDoc.year = data.year;
+      if (data.make !== undefined) updateDoc.make = toStringValue(data.make) || undefined;
+      if (data.model !== undefined) updateDoc.model = toStringValue(data.model) || undefined;
+      if (data.category !== undefined) updateDoc.category = toStringValue(data.category) || "equipment";
+      if (data.condition !== undefined) updateDoc.condition = 0;
+
+      if (data.images !== undefined) {
+        const { images, imageUrl } = normalizeListingImages(data.images);
+        updateDoc.images = images;
+        updateDoc.imageUrl = imageUrl;
+      }
+
+      await getListingsCollection().updateById(id, updateDoc);
+      const updated = await getListingsCollection().findById(id);
+      return ok(request, updated);
     }
   );
 
