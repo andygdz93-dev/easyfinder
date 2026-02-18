@@ -28,9 +28,11 @@ export const Listings = () => {
   const [maxHours, setMaxHours] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [operableOnly, setOperableOnly] = useState(true);
+  const [sellerOnly, setSellerOnly] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [showUpgradeToast, setShowUpgradeToast] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasInitializedSellerOnly = useRef(false);
 
   const meQuery = useQuery({
     queryKey: ["me"],
@@ -105,9 +107,25 @@ export const Listings = () => {
 
   const data = listingsQuery.data;
   const listings = Array.isArray(data) ? data : [];
+  const sellerCount = listings.filter((listing) => listing.source?.startsWith("seller:")).length;
+  const externalCount = listings.length - sellerCount;
+
+  useEffect(() => {
+    if (!Array.isArray(data) || hasInitializedSellerOnly.current) {
+      return;
+    }
+    if (sellerCount > 0) {
+      setSellerOnly(true);
+    }
+    hasInitializedSellerOnly.current = true;
+  }, [data, sellerCount]);
+
   const visibleListings = isFreeBuyerLive
     ? listings.slice(0, FREE_BUYER_LISTING_LIMIT)
     : listings;
+  const filteredListings = sellerOnly
+    ? visibleListings.filter((listing) => listing.source?.startsWith("seller:"))
+    : visibleListings;
   const hasInvalidData = data !== undefined && !Array.isArray(data);
 
   return (
@@ -190,7 +208,19 @@ export const Listings = () => {
           />
           Operable only
         </label>
+        <label className="flex items-center gap-2 text-xs text-slate-300">
+          <input
+            type="checkbox"
+            checked={sellerOnly}
+            onChange={(event) => setSellerOnly(event.target.checked)}
+          />
+          Seller listings only
+        </label>
       </div>
+
+      <p className="text-xs text-slate-400">
+        {sellerCount} seller listing{sellerCount === 1 ? "" : "s"} · {externalCount} external
+      </p>
 
       {isFreeBuyerLive ? (
         <Card className="border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100">
@@ -218,21 +248,36 @@ export const Listings = () => {
         <Card className="border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-300">
           Marketplace integrations available in Production accounts.
         </Card>
-      ) : visibleListings.length === 0 ? (
+      ) : sellerOnly && sellerCount === 0 ? (
+        <Card className="border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-300">
+          <p>No seller listings yet. Turn off the filter to view external listings.</p>
+          <Button
+            className="mt-3"
+            variant="secondary"
+            onClick={() => setSellerOnly(false)}
+          >
+            Show all listings
+          </Button>
+        </Card>
+      ) : filteredListings.length === 0 ? (
         <Card className="border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-300">
           No live listings available yet. Once ingestion starts, they will appear here.
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {visibleListings.map((listing) => {
+          {filteredListings.map((listing) => {
             const listingId = listing.id ?? "";
             const score = listing.score;
+            const isSellerListing = listing.source?.startsWith("seller:");
             const sourceLabel = listing.source?.startsWith("seller:") ? "Private seller" : listing.source;
             return (
               <Card key={listingId || listing.title || "listing"} className="space-y-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h3 className="truncate text-lg font-semibold">{listing.title}</h3>
+                    <Badge className="mt-1">
+                      {isSellerListing ? "Seller Listing" : "External Listing"}
+                    </Badge>
                     <p className="truncate text-xs text-slate-400">{sourceLabel}</p>
                   </div>
                   <div className="flex min-w-[9rem] shrink-0 flex-col items-end gap-2 sm:max-w-[45%]">

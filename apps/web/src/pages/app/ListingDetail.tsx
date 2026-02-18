@@ -103,6 +103,7 @@ export const ListingDetail = () => {
   const scores = score?.breakdown ?? {};
   const rationale = score?.reasons ?? [];
   const listingId = data.id ?? "";
+  const isSellerListing = data.source?.startsWith("seller:");
   const canRequestInfo = !runtime.demoMode && (user?.role === "buyer" || user?.role === "admin");
 
   const handleSubmitInquiry = async (event: FormEvent<HTMLFormElement>) => {
@@ -129,7 +130,12 @@ export const ListingDetail = () => {
     <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
       <Card className="space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-2xl font-semibold">{data.title}</h2>
+          <div>
+            <h2 className="text-2xl font-semibold">{data.title}</h2>
+            <Badge className="mt-1">
+              {isSellerListing ? "Seller Listing" : "External Listing"}
+            </Badge>
+          </div>
           <div className="flex items-center gap-2">
             {canRequestInfo && (
               inquirySuccess ? (
