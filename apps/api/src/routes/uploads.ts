@@ -68,6 +68,9 @@ export default async function uploadsRoutes(app: FastifyInstance) {
   );
 
   app.get("/images/:id", async (request, reply) => {
+    reply.header("Cross-Origin-Resource-Policy", "cross-origin");
+    reply.header("Access-Control-Allow-Origin", "*");
+
     const { id } = request.params as { id: string };
     if (!ObjectId.isValid(id)) {
       return fail(request, reply, "BAD_REQUEST", "Invalid upload id.", 400);
