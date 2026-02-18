@@ -314,7 +314,7 @@ export const SellerUpload = () => {
         rowsDetected: result.rowsDetected,
         validRows: result.validRows,
         invalidRows: result.invalidRows,
-        errors: result.topValidationErrors,
+        errors: result.topErrors,
       });
     } catch (error) {
       const message = error instanceof ApiError ? error.message : error instanceof Error ? error.message : String(error);

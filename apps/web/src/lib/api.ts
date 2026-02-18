@@ -480,12 +480,12 @@ export type SellerZipValidationResponse = {
   validRows: number;
   invalidRows: number;
   totalValidationErrors: number;
-  topValidationErrors: string[];
+  topErrors: string[];
 };
 
 export const validateSellerZipBundle = (bundleZip: File) => {
   const body = new FormData();
-  body.append("bundleZip", bundleZip);
+  body.append("zip", bundleZip);
   return apiRequest<SellerZipValidationResponse>("/seller/upload/validate-zip", {
     method: "POST",
     body,
@@ -494,12 +494,12 @@ export const validateSellerZipBundle = (bundleZip: File) => {
 
 export const uploadSellerZipBundle = (bundleZip: File) => {
   const body = new FormData();
-  body.append("bundleZip", bundleZip);
+  body.append("zip", bundleZip);
   return apiRequest<{
     created: number;
     failed: number;
     errors: Array<{ row: number; field?: string; code: string; message: string }>;
-  }>("/seller/upload/bundle", {
+  }>("/seller/upload/upload-zip", {
     method: "POST",
     body,
   });
