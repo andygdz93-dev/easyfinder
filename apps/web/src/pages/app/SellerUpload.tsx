@@ -5,7 +5,13 @@ import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { useAuth } from "../../lib/auth";
-import { getMe, importSellerListings, ApiError } from "../../lib/api";
+import {
+  getMe,
+  importSellerListings,
+  ApiError,
+  validateSellerZipBundle,
+  uploadSellerZipBundle,
+} from "../../lib/api";
 import { canUseSellerCsvUpload } from "../../lib/billing";
 
 const REQUIRED_HEADERS = ["title", "description", "location", "condition", "contactName", "contactEmail"] as const;
@@ -102,20 +108,50 @@ const parseCsv = (csvText: string) => {
 
 const quoteCsvValue = (value: string) => `"${String(value).replace(/"/g, '""')}"`;
 
+const ValidationPanel = ({ validation }: { validation: UploadValidationResult }) => {
+  const validationErrors = validation.errors ?? [];
+  return (
+    <div className="mt-4 rounded-md border border-slate-700 p-4 text-sm text-slate-200">
+      <p>rows detected: {validation.rowsDetected}</p>
+      <p>valid rows: {validation.validRows}</p>
+      <p>invalid rows: {validation.invalidRows}</p>
+      <p>total validation errors: {validationErrors.length}</p>
+      <div className="mt-2">
+        <p className="font-medium">Top validation errors</p>
+        {validationErrors.length === 0 ? (
+          <p className="mt-1 text-emerald-300">No validation errors.</p>
+        ) : (
+          <ul className="mt-1 list-disc space-y-1 pl-5 text-rose-300">
+            {validationErrors.slice(0, 12).map((error, index) => (
+              <li key={`${error}-${index}`}>{error}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export const SellerUpload = () => {
   const { token, user, isUserLoading } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [file, setFile] = useState<File | null>(null);
+
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [zipFile, setZipFile] = useState<File | null>(null);
   const [parsedRows, setParsedRows] = useState<Record<string, string>[]>([]);
-  const [validation, setValidation] = useState<UploadValidationResult | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
-  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [csvValidation, setCsvValidation] = useState<UploadValidationResult | null>(null);
+  const [zipValidation, setZipValidation] = useState<UploadValidationResult | null>(null);
+  const [uploadingCsv, setUploadingCsv] = useState(false);
+  const [uploadingZip, setUploadingZip] = useState(false);
+  const [csvUploadResult, setCsvUploadResult] = useState<UploadResult | null>(null);
+  const [zipUploadResult, setZipUploadResult] = useState<UploadResult | null>(null);
+  const [csvUploadError, setCsvUploadError] = useState<string | null>(null);
+  const [zipUploadError, setZipUploadError] = useState<string | null>(null);
 
   const rows = Array.isArray(parsedRows) ? parsedRows : [];
-  const validationErrors = validation?.errors ?? [];
-  const uploadErrors = uploadResult?.errors ?? [];
+  const csvUploadErrors = csvUploadResult?.errors ?? [];
+  const zipUploadErrors = zipUploadResult?.errors ?? [];
 
   const meQuery = useQuery({
     queryKey: ["me"],
@@ -183,16 +219,22 @@ export const SellerUpload = () => {
   };
 
   const validateCsv = async () => {
-    setUploadResult(null);
-    setUploadError(null);
+    setCsvUploadResult(null);
+    setCsvUploadError(null);
 
-    if (!file) {
+    if (!csvFile) {
       setParsedRows([]);
-      setValidation({ rowsDetected: 0, validRows: 0, invalidRows: 0, errors: ["Please choose a CSV file before validation."] });
+      setCsvValidation({ rowsDetected: 0, validRows: 0, invalidRows: 0, errors: ["Please choose a CSV file before validation."] });
       return;
     }
 
-    const raw = await file.text();
+    if (!csvFile.name.toLowerCase().endsWith(".csv")) {
+      setParsedRows([]);
+      setCsvValidation({ rowsDetected: 0, validRows: 0, invalidRows: 0, errors: ["Only .csv files are allowed in CSV upload. Use ZIP bundle upload for .zip files."] });
+      return;
+    }
+
+    const raw = await csvFile.text();
     const parsed = parseCsv(raw);
     const errors: string[] = [];
 
@@ -249,21 +291,50 @@ export const SellerUpload = () => {
     });
 
     setParsedRows(missingHeaders.length === 0 && unknownHeaders.length === 0 ? parsed.rows : []);
-    setValidation({ rowsDetected: parsed.rows.length, validRows, invalidRows, errors });
+    setCsvValidation({ rowsDetected: parsed.rows.length, validRows, invalidRows, errors });
   };
 
-  const canUpload = Boolean(validation && validation.validRows > 0 && validation.invalidRows === 0 && rows.length > 0);
+  const validateZip = async () => {
+    setZipUploadResult(null);
+    setZipUploadError(null);
 
-  const onUpload = async () => {
-    if (!canUpload) return;
+    if (!zipFile) {
+      setZipValidation({ rowsDetected: 0, validRows: 0, invalidRows: 0, errors: ["Please choose a ZIP file before validation."] });
+      return;
+    }
 
-    setUploading(true);
-    setUploadResult(null);
-    setUploadError(null);
+    if (!zipFile.name.toLowerCase().endsWith(".zip")) {
+      setZipValidation({ rowsDetected: 0, validRows: 0, invalidRows: 0, errors: ["Only .zip files are allowed in ZIP bundle upload."] });
+      return;
+    }
+
+    try {
+      const result = await validateSellerZipBundle(zipFile);
+      setZipValidation({
+        rowsDetected: result.rowsDetected,
+        validRows: result.validRows,
+        invalidRows: result.invalidRows,
+        errors: result.topValidationErrors,
+      });
+    } catch (error) {
+      const message = error instanceof ApiError ? error.message : error instanceof Error ? error.message : String(error);
+      setZipValidation({ rowsDetected: 0, validRows: 0, invalidRows: 0, errors: [message] });
+    }
+  };
+
+  const canUploadCsv = Boolean(csvValidation && csvValidation.validRows > 0 && csvValidation.invalidRows === 0 && rows.length > 0);
+  const canUploadZip = Boolean(zipValidation && zipValidation.validRows > 0 && zipValidation.invalidRows === 0 && zipFile);
+
+  const onUploadCsv = async () => {
+    if (!canUploadCsv) return;
+
+    setUploadingCsv(true);
+    setCsvUploadResult(null);
+    setCsvUploadError(null);
 
     try {
       const result = await importSellerListings(rows);
-      setUploadResult(result);
+      setCsvUploadResult(result);
       await queryClient.invalidateQueries({ queryKey: ["seller-listings"] });
       if (result.created > 0 && result.failed === 0) {
         navigate("/app/seller/listings");
@@ -271,9 +342,32 @@ export const SellerUpload = () => {
     } catch (error) {
       const message =
         error instanceof ApiError ? error.message : error instanceof Error ? error.message : String(error);
-      setUploadError(message);
+      setCsvUploadError(message);
     } finally {
-      setUploading(false);
+      setUploadingCsv(false);
+    }
+  };
+
+  const onUploadZip = async () => {
+    if (!canUploadZip || !zipFile) return;
+
+    setUploadingZip(true);
+    setZipUploadResult(null);
+    setZipUploadError(null);
+
+    try {
+      const result = await uploadSellerZipBundle(zipFile);
+      setZipUploadResult(result);
+      await queryClient.invalidateQueries({ queryKey: ["seller-listings"] });
+      if (result.created > 0 && result.failed === 0) {
+        navigate("/app/seller/listings");
+      }
+    } catch (error) {
+      const message =
+        error instanceof ApiError ? error.message : error instanceof Error ? error.message : String(error);
+      setZipUploadError(message);
+    } finally {
+      setUploadingZip(false);
     }
   };
 
@@ -281,7 +375,7 @@ export const SellerUpload = () => {
     <div className="space-y-6">
       <Card>
         <h2 className="text-xl font-semibold">Upload inventory</h2>
-        <p className="mt-2 text-sm text-slate-400">Bulk upload listings using a CSV template.</p>
+        <p className="mt-2 text-sm text-slate-400">Bulk upload listings using a CSV template or a ZIP bundle (CSV + images).</p>
       </Card>
 
       <Card>
@@ -291,6 +385,7 @@ export const SellerUpload = () => {
           <li>Each row is one listing.</li>
           <li>Required columns: {REQUIRED_HEADERS_DISPLAY}</li>
           <li>Optional image columns: imageUrl..imageUrl5</li>
+          <li>ZIP bundle must contain exactly one .csv and image files named 2A..2E, 3A..3E, etc.</li>
         </ul>
         <Button className="mt-4" onClick={downloadTemplate}>
           Download CSV template
@@ -298,65 +393,93 @@ export const SellerUpload = () => {
       </Card>
 
       <Card>
-        <h3 className="text-lg font-semibold">Validate CSV</h3>
+        <h3 className="text-lg font-semibold">CSV upload</h3>
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
           <Input
             type="file"
-            accept=".csv"
+            accept=".csv,text/csv"
             onChange={(event) => {
               const nextFile = event.target.files?.[0] ?? null;
-              setFile(nextFile);
-              setValidation(null);
+              setCsvFile(nextFile);
+              setCsvValidation(null);
               setParsedRows([]);
-              setUploadResult(null);
-              setUploadError(null);
+              setCsvUploadResult(null);
+              setCsvUploadError(null);
             }}
           />
           <Button onClick={validateCsv}>Validate CSV</Button>
         </div>
 
-        {validation ? (
-          <div className="mt-4 rounded-md border border-slate-700 p-4 text-sm text-slate-200">
-            <p>rows detected: {validation.rowsDetected}</p>
-            <p>valid rows: {validation.validRows}</p>
-            <p>invalid rows: {validation.invalidRows}</p>
-            <p>total validation errors: {validationErrors.length}</p>
-            <div className="mt-2">
-              <p className="font-medium">Top validation errors</p>
-              {validationErrors.length === 0 ? (
-                <p className="mt-1 text-emerald-300">No validation errors.</p>
-              ) : (
-                <ul className="mt-1 list-disc space-y-1 pl-5 text-rose-300">
-                  {validationErrors.slice(0, 12).map((error, index) => (
-                    <li key={`${error}-${index}`}>{error}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        ) : null}
+        {csvValidation ? <ValidationPanel validation={csvValidation} /> : null}
 
-        {validation ? (
-          <Button className="mt-4" onClick={onUpload} disabled={!canUpload || uploading}>
-            {uploading ? "Uploading..." : "Upload"}
+        {csvValidation ? (
+          <Button className="mt-4" onClick={onUploadCsv} disabled={!canUploadCsv || uploadingCsv}>
+            {uploadingCsv ? "Uploading..." : "Upload CSV"}
           </Button>
         ) : null}
 
-        {uploadResult ? (
+        {csvUploadResult ? (
           <div className="mt-4 rounded-md border border-emerald-700/40 bg-emerald-950/30 p-4 text-sm text-emerald-200">
-            <p>created: {uploadResult.created}</p>
-            <p>failed: {uploadResult.failed}</p>
-            <p>error rows returned: {uploadErrors.length}</p>
-            {uploadErrors.length > 0 ? (
+            <p>created: {csvUploadResult.created}</p>
+            <p>failed: {csvUploadResult.failed}</p>
+            <p>error rows returned: {csvUploadErrors.length}</p>
+            {csvUploadErrors.length > 0 ? (
               <ul className="mt-2 list-disc pl-5 text-rose-300">
-                {uploadErrors.slice(0, 12).map((error, index) => (
+                {csvUploadErrors.slice(0, 12).map((error, index) => (
                   <li key={`${error.row}-${error.field ?? "none"}-${index}`}>
                     Row {error.row}{error.field ? ` • ${error.field}` : ""}: {error.message}
                   </li>
                 ))}
               </ul>
             ) : null}
-            {uploadResult.created > 0 ? (
+          </div>
+        ) : null}
+
+        {csvUploadError ? (
+          <div className="mt-4 rounded-md border border-rose-700/50 bg-rose-950/30 p-4 text-sm text-rose-200">{csvUploadError}</div>
+        ) : null}
+      </Card>
+
+      <Card>
+        <h3 className="text-lg font-semibold">ZIP bundle upload</h3>
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Input
+            type="file"
+            accept=".zip,application/zip"
+            onChange={(event) => {
+              const nextFile = event.target.files?.[0] ?? null;
+              setZipFile(nextFile);
+              setZipValidation(null);
+              setZipUploadResult(null);
+              setZipUploadError(null);
+            }}
+          />
+          <Button onClick={validateZip}>Validate ZIP</Button>
+        </div>
+
+        {zipValidation ? <ValidationPanel validation={zipValidation} /> : null}
+
+        {zipValidation ? (
+          <Button className="mt-4" onClick={onUploadZip} disabled={!canUploadZip || uploadingZip}>
+            {uploadingZip ? "Uploading..." : "Upload ZIP"}
+          </Button>
+        ) : null}
+
+        {zipUploadResult ? (
+          <div className="mt-4 rounded-md border border-emerald-700/40 bg-emerald-950/30 p-4 text-sm text-emerald-200">
+            <p>created: {zipUploadResult.created}</p>
+            <p>failed: {zipUploadResult.failed}</p>
+            <p>error rows returned: {zipUploadErrors.length}</p>
+            {zipUploadErrors.length > 0 ? (
+              <ul className="mt-2 list-disc pl-5 text-rose-300">
+                {zipUploadErrors.slice(0, 12).map((error, index) => (
+                  <li key={`${error.row}-${error.field ?? "none"}-${index}`}>
+                    Row {error.row}{error.field ? ` • ${error.field}` : ""}: {error.message}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {zipUploadResult.created > 0 ? (
               <Button className="mt-3" onClick={() => navigate("/app/seller/listings")}>
                 View listings
               </Button>
@@ -364,8 +487,8 @@ export const SellerUpload = () => {
           </div>
         ) : null}
 
-        {uploadError ? (
-          <div className="mt-4 rounded-md border border-rose-700/50 bg-rose-950/30 p-4 text-sm text-rose-200">{uploadError}</div>
+        {zipUploadError ? (
+          <div className="mt-4 rounded-md border border-rose-700/50 bg-rose-950/30 p-4 text-sm text-rose-200">{zipUploadError}</div>
         ) : null}
       </Card>
     </div>

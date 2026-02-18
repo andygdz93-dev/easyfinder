@@ -98,6 +98,14 @@ const sellerListingUpdateSchema = z
 
 type IngestionError = { row: number; field?: string; code: string; message: string };
 
+type UploadValidationSummary = {
+  rowsDetected: number;
+  validRows: number;
+  invalidRows: number;
+  totalValidationErrors: number;
+  topValidationErrors: string[];
+};
+
 type ZipImageEntry = { fileName: string; data: Buffer; fileId?: ObjectId };
 
 type SellerImportListing = (typeof listings)[number] & {
@@ -296,6 +304,63 @@ const createZipImageMap = (zipBuffer: Buffer): { filesByKey: Map<string, ZipImag
   }
 
   return { filesByKey };
+};
+
+const buildValidationSummary = (
+  rows: Record<string, unknown>[],
+  sellerId: string,
+  zipImagesByKey?: Map<string, ZipImageEntry>
+): { summary: UploadValidationSummary; errors: IngestionError[] } => {
+  const errors: IngestionError[] = [];
+  let validRows = 0;
+  let invalidRows = 0;
+
+  for (const [index, row] of rows.entries()) {
+    const rowNumber = index + 2;
+    const result = createSellerListingFromRow(sellerId, row, rowNumber, zipImagesByKey);
+    if (result.error) {
+      invalidRows += 1;
+      errors.push(result.error);
+    } else {
+      validRows += 1;
+    }
+  }
+
+  return {
+    summary: {
+      rowsDetected: rows.length,
+      validRows,
+      invalidRows,
+      totalValidationErrors: errors.length,
+      topValidationErrors: errors.slice(0, 12).map((error) => {
+        const fieldPrefix = error.field ? `${error.field}: ` : "";
+        return `Row ${error.row} • ${fieldPrefix}${error.message}`;
+      }),
+    },
+    errors,
+  };
+};
+
+const parseCsvRowsFromZipBundle = (bundleZipBuffer: Buffer): { rows: Record<string, unknown>[]; zipImagesByKey: Map<string, ZipImageEntry> } => {
+  const entries = unzipBuffer(bundleZipBuffer);
+  const csvEntries = entries.filter((entry) => extname(entry.fileName).toLowerCase() === ".csv");
+  if (csvEntries.length !== 1) {
+    throw new Error("ZIP bundle must contain exactly one CSV file.");
+  }
+
+  const rows = parseCsv(csvEntries[0].data.toString("utf8"), {
+    columns: true,
+    skip_empty_lines: true,
+    trim: true,
+    bom: true,
+  }) as Record<string, unknown>[];
+
+  const { filesByKey, duplicateKey } = createZipImageMap(bundleZipBuffer);
+  if (duplicateKey) {
+    throw new Error(`Duplicate image mapping found in ZIP for row-slot key '${duplicateKey}'.`);
+  }
+
+  return { rows, zipImagesByKey: filesByKey };
 };
 
 const createSellerListingFromRow = (
@@ -698,9 +763,9 @@ export default async function sellerRoutes(app: FastifyInstance) {
     }
 
     let body = request.body;
-    let zipImagesByKey: Map<string, ZipImageEntry> | undefined;
+    let zipImagesByKey: Map<string, ZipImageEntry> | undefined = request.zipImagesByKey;
 
-    if (request.isMultipart()) {
+    if (request.isMultipart() && !(body && Array.isArray(body.rows))) {
       let csvBuffer: Buffer | null = null;
       let imagesZipBuffer: Buffer | null = null;
 
@@ -932,6 +997,115 @@ export default async function sellerRoutes(app: FastifyInstance) {
       preHandler: [app.authenticate, requireNDA, requirePlan(["pro", "enterprise"]), disableWritesInDemo],
     },
     createImportHandler
+  );
+
+  app.post(
+    "/upload/validate-zip",
+    {
+      preHandler: [app.authenticate, requireNDA, requirePlan(["pro", "enterprise"]), disableWritesInDemo],
+    },
+    async (request, reply) => {
+      if (!request.user?.id) {
+        return fail(request, reply, "UNAUTHORIZED", "Missing user id.", 401);
+      }
+
+      if (!uploadRoleAllowed.has(request.user.role)) {
+        return fail(request, reply, "FORBIDDEN", "Seller access only.", 403);
+      }
+
+      if (!request.isMultipart()) {
+        return fail(request, reply, "BAD_REQUEST", "Expected multipart form data.", 400);
+      }
+
+      let bundleZipBuffer: Buffer | null = null;
+      const parts = request.parts();
+      for await (const part of parts) {
+        if (part.type === "file" && part.fieldname === "bundleZip") {
+          bundleZipBuffer = await part.toBuffer();
+          break;
+        }
+      }
+
+      if (!bundleZipBuffer) {
+        return fail(request, reply, "BAD_REQUEST", "Missing required file field named 'bundleZip'.", 400);
+      }
+
+      let rows: Record<string, unknown>[];
+      let zipImagesByKey: Map<string, ZipImageEntry>;
+      try {
+        const parsed = parseCsvRowsFromZipBundle(bundleZipBuffer);
+        rows = parsed.rows;
+        zipImagesByKey = parsed.zipImagesByKey;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unable to parse ZIP bundle.";
+        return fail(request, reply, "BAD_REQUEST", message, 400);
+      }
+
+      const payload = listingsImportSchema.safeParse({ rows });
+      if (!payload.success) {
+        return fail(request, reply, "BAD_REQUEST", "rows must be a non-empty array.", 400);
+      }
+
+      const seenColumns = new Set<string>();
+      payload.data.rows.forEach((row) => {
+        Object.keys(row).forEach((key) => seenColumns.add(key));
+      });
+      const missingColumns = requiredImportFields.filter((field) => !seenColumns.has(field));
+      if (missingColumns.length > 0) {
+        reply.status(400);
+        return {
+          error: {
+            code: "VALIDATION_ERROR",
+            message: `Missing required CSV columns: ${missingColumns.join(", ")}.`,
+            details: { missingColumns },
+          },
+          requestId: request.requestId,
+        };
+      }
+
+      const { summary } = buildValidationSummary(payload.data.rows, request.user.id, zipImagesByKey);
+      return ok(request, summary);
+    }
+  );
+
+  app.post(
+    "/upload/bundle",
+    {
+      preHandler: [app.authenticate, requireNDA, requirePlan(["pro", "enterprise"]), disableWritesInDemo],
+    },
+    async (request, reply) => {
+      if (!request.isMultipart()) {
+        return fail(request, reply, "BAD_REQUEST", "Expected multipart form data.", 400);
+      }
+
+      let bundleZipBuffer: Buffer | null = null;
+      const parts = request.parts();
+      for await (const part of parts) {
+        if (part.type === "file" && part.fieldname === "bundleZip") {
+          bundleZipBuffer = await part.toBuffer();
+          break;
+        }
+      }
+
+      if (!bundleZipBuffer) {
+        return fail(request, reply, "BAD_REQUEST", "Missing required file field named 'bundleZip'.", 400);
+      }
+
+      let rows: Record<string, unknown>[];
+      let zipImagesByKey: Map<string, ZipImageEntry>;
+      try {
+        const parsed = parseCsvRowsFromZipBundle(bundleZipBuffer);
+        rows = parsed.rows;
+        zipImagesByKey = parsed.zipImagesByKey;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unable to parse ZIP bundle.";
+        return fail(request, reply, "BAD_REQUEST", message, 400);
+      }
+
+      request.body = { rows };
+      (request as typeof request & { zipImagesByKey?: Map<string, ZipImageEntry> }).zipImagesByKey = zipImagesByKey;
+      return createImportHandler(request, reply);
+    }
   );
 
   app.post("/upload", { preHandler: [app.authenticate, requireNDA, requirePlan(["pro", "enterprise"]), disableWritesInDemo] }, createImportHandler);
