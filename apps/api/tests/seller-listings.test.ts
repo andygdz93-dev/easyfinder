@@ -82,8 +82,8 @@ describe("/api/seller/listings manual create", () => {
         });
 
       expect(res.status).toBe(200);
-      expect(res.body.data.images).toEqual(Array(5).fill("/demo-images/other/1.jpg"));
-      expect(res.body.data.imageUrl).toBe("/demo-images/other/1.jpg");
+      expect(res.body.data.images).toEqual(Array(5).fill("http://localhost:8080/demo-images/other/1.jpg"));
+      expect(res.body.data.imageUrl).toBe("http://localhost:8080/demo-images/other/1.jpg");
     } finally {
       await app.close();
     }
@@ -142,8 +142,8 @@ describe("/api/seller/listings patch", () => {
         .send({ images: ["/api/uploads/images/507f1f77bcf86cd799439011"] });
 
       expect(patchRes.status).toBe(200);
-      expect(patchRes.body.data.images[0]).toBe("/api/uploads/images/507f1f77bcf86cd799439011");
-      expect(patchRes.body.data.imageUrl).toBe("/api/uploads/images/507f1f77bcf86cd799439011");
+      expect(patchRes.body.data.images[0]).toBe("http://localhost:8080/api/uploads/images/507f1f77bcf86cd799439011");
+      expect(patchRes.body.data.imageUrl).toBe("http://localhost:8080/api/uploads/images/507f1f77bcf86cd799439011");
     } finally {
       await app.close();
     }

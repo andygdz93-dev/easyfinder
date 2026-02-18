@@ -182,6 +182,20 @@ const isJunkImageUrl = (url: string): boolean => {
   return /(logo|icon|pixel|spacer|sprite|favicon)/i.test(normalized);
 };
 
+const apiBaseUrl = env.PUBLIC_API_BASE_URL.replace(/\/+$/, "");
+
+const toAbsoluteImageUrl = (url: string): string => {
+  if (/^https?:\/\//i.test(url)) {
+    return url;
+  }
+
+  if (url.startsWith("/")) {
+    return `${apiBaseUrl}${url}`;
+  }
+
+  return `${apiBaseUrl}/${url}`;
+};
+
 const normalizeListingImages = (input: unknown[]): { images: string[]; imageUrl: string } => {
   const deduped = Array.from(
     new Set(
@@ -189,16 +203,26 @@ const normalizeListingImages = (input: unknown[]): { images: string[]; imageUrl:
         .map((item) => toStringValue(item))
         .filter((url) => url.length > 0)
         .filter((url) => !isJunkImageUrl(url))
+        .map((url) => toAbsoluteImageUrl(url))
     )
   ).slice(0, 5);
 
-  const hero = deduped[0] ?? SELLER_IMAGE_PLACEHOLDER;
+  const hero = deduped[0] ?? toAbsoluteImageUrl(SELLER_IMAGE_PLACEHOLDER);
   const images = [...deduped];
   while (images.length < 5) {
     images.push(hero);
   }
 
   return { images, imageUrl: hero };
+};
+
+const normalizeListingForResponse = <T extends { imageUrl?: string; images?: string[] }>(listing: T): T => {
+  const normalized = normalizeListingImages([listing.imageUrl, ...(listing.images ?? [])]);
+  return {
+    ...listing,
+    imageUrl: normalized.imageUrl,
+    images: normalized.images,
+  };
 };
 
 const normalizeZipImageKey = (rawFilename: string): string | null => {
@@ -492,7 +516,7 @@ export default async function sellerRoutes(app: FastifyInstance) {
 
     const sellerListings = await getListingsCollection().findSellerListings(request.user.id);
 
-    return ok(request, sellerListings);
+    return ok(request, sellerListings.map((listing) => normalizeListingForResponse(listing)));
   });
 
   app.post(
@@ -562,7 +586,7 @@ export default async function sellerRoutes(app: FastifyInstance) {
         requestId: request.id,
       });
 
-      return ok(request, listing);
+      return ok(request, normalizeListingForResponse(listing));
     }
   );
 
@@ -582,7 +606,7 @@ export default async function sellerRoutes(app: FastifyInstance) {
       return fail(request, reply, "FORBIDDEN", "You do not have access to this listing.", 403);
     }
 
-    return ok(request, listing);
+    return ok(request, normalizeListingForResponse(listing));
   });
 
   const updateListingHandler = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -646,7 +670,7 @@ export default async function sellerRoutes(app: FastifyInstance) {
 
     await getListingsCollection().updateById(id, updateDoc);
     const updated = await getListingsCollection().findById(id);
-    return ok(request, updated);
+    return ok(request, updated ? normalizeListingForResponse(updated) : updated);
   };
 
   app.put(
@@ -980,7 +1004,7 @@ export default async function sellerRoutes(app: FastifyInstance) {
           },
         });
 
-        imageUrls.push(`/api/images/${imageId.toHexString()}`);
+        imageUrls.push(toAbsoluteImageUrl(`/api/images/${imageId.toHexString()}`));
       }
 
       if (imageUrls.length === 0) {
