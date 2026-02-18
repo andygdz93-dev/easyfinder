@@ -172,7 +172,7 @@ const apiRequest = async <T>(
   const { timeoutMs, signal, ...fetchOptions } = options;
 
   const headers = new Headers(fetchOptions.headers ?? {});
-  if (!headers.has("Content-Type")) {
+  if (!(fetchOptions.body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
   if (token && !headers.has("Authorization")) {
@@ -473,6 +473,37 @@ export async function uploadSellerImages(files: File[]): Promise<string[]> {
   return urls;
 }
 
+
+
+export type SellerZipValidationResponse = {
+  rowsDetected: number;
+  validRows: number;
+  invalidRows: number;
+  totalValidationErrors: number;
+  topValidationErrors: string[];
+};
+
+export const validateSellerZipBundle = (bundleZip: File) => {
+  const body = new FormData();
+  body.append("bundleZip", bundleZip);
+  return apiRequest<SellerZipValidationResponse>("/seller/upload/validate-zip", {
+    method: "POST",
+    body,
+  });
+};
+
+export const uploadSellerZipBundle = (bundleZip: File) => {
+  const body = new FormData();
+  body.append("bundleZip", bundleZip);
+  return apiRequest<{
+    created: number;
+    failed: number;
+    errors: Array<{ row: number; field?: string; code: string; message: string }>;
+  }>("/seller/upload/bundle", {
+    method: "POST",
+    body,
+  });
+};
 
 export const uploadSellerCsv = importSellerListings;
 export const createInquiry = (input: { listingId: string; message: string }) =>
