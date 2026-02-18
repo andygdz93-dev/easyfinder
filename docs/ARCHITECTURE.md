@@ -1,55 +1,104 @@
-# EasyFinder Architecture
+# Architecture Overview
 
-Canonical architecture and runtime map for EasyFinder. For endpoint and schema truth, use `openapi.yml`.
+## Stack
 
-## Monorepo services
+Frontend:
+- React
+- Vite
+- TypeScript
 
-- `apps/api` — Fastify API with auth, NDA gating, listings/seller/admin workflows, billing, and scraper orchestration.
-- `apps/web` — Vite + React client with buyer/seller app routes and admin surfaces.
-- `packages/shared` — shared domain contracts and scoring logic.
+Backend:
+- Fastify
+- MongoDB
+- Zod validation
 
-## Workspace and root contract files
+Deployment:
+- Web: Vercel
+- API: Fly.io
 
-- `openapi.yml` — canonical API contract.
-- `package.json` — workspace scripts (`typecheck`, `build`, `lint`, `test`, `openapi:types`).
-- `pnpm-workspace.yaml` — workspace package selection.
-- `turbo.json` — task pipeline orchestration.
-- `.github/workflows/ci.yml` — CI gates and OpenAPI generation checks.
+---
 
-## API functional areas (`apps/api`)
+## Image Architecture (Updated)
 
-- Auth/session/profile (`/api/auth`, `/api/me`)
-- Listings/demo listings (`/api/listings`, `/api/demo/listings`)
-- NDA and policy middleware (`/api/nda`, middleware)
-- Watchlist/inquiries/seller workflows (`/api/watchlist`, `/api/inquiries`, `/api/seller`)
-- Admin control center (`/api/admin/*`)
-- Scraper entrypoint (`/api/scrape/ironplanet`)
-- Billing (`/api/billing/*`, feature-flagged)
+Images are:
 
-## Frontend route areas (`apps/web`)
+1. Uploaded via multipart/form-data
+2. Stored in MongoDB (GridFS or binary collection)
+3. Referenced by ID
+4. Served via:
 
-- Public/marketing + app shell
-- Auth + NDA flows
-- Buyer/seller workspace routes under `/app/*`
-- Admin workspace under `/admin/*` (legacy `/app/admin/*` redirects retained)
+   /api/images/:id
 
-## Monorepo invariants
+Images are not stored as public CDN files.
 
-- Treat `packages/shared` as a strict package boundary.
-- Import shared code through `@easyfinderai/shared` only.
-- Do not deep-import `packages/shared/src/*` across workspace apps.
+Important:
+- API must set correct Content-Type
+- API must set CORS headers
+- API must allow cross-origin image fetch
 
-## Build/runtime invariants
+---
 
-- Keep builds deterministic; build shared artifacts before dependent apps.
-- API runtime entry remains `node dist/index.js`.
-- API service binds to port `8080`.
-- Health endpoint must remain available.
+## Listing Model
 
-## Contract synchronization rule
+Listing contains:
 
-When API contract changes:
+- id
+- title
+- description
+- state
+- location
+- price
+- hours
+- year
+- category
+- condition
+- imageUrl
+- images[]
+- source
+- status
+- publishedAt
+- contactName
+- contactEmail
 
-1. Update `openapi.yml`.
-2. Run `pnpm -w openapi:types`.
-3. Commit `apps/web/src/generated/openapi.ts` in the same PR.
+---
+
+## Bulk Upload Architecture
+
+### CSV Upload
+- Parse
+- Validate required columns
+- Validate row-level errors
+- Store listings
+
+### ZIP Upload
+- Extract zip
+- Locate CSV
+- Map images to row numbers
+- Attach images to listing
+- Validate naming pattern:
+  RowNumber + Letter (A–E)
+
+---
+
+## Routes
+
+Seller:
+- POST /seller/listings
+- PUT /seller/listings/:id
+- PATCH /seller/listings/:id
+- DELETE /seller/listings/:id
+- POST /seller/upload/validate-csv
+- POST /seller/upload/validate-zip
+- POST /seller/upload/zip
+
+Images:
+- GET /api/images/:id
+
+---
+
+## Security
+
+- Auth required for seller routes
+- NDA middleware
+- Plan middleware
+- Demo mode disables writes
