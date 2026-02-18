@@ -14,6 +14,7 @@ import { defaultBilling, normalizeBilling } from "../billing.js";
 import { getUsersCollection } from "../users.js";
 import { getSellerEntitlements } from "../entitlements.js";
 import { env } from "../env.js";
+import { uploadImageToGridFs } from "../gridfs-images.js";
 
 const sellerOnly = new Set(["seller", "admin"]);
 const uploadRoleAllowed = new Set(["seller", "enterprise", "admin"]);
@@ -615,6 +616,55 @@ export default async function sellerRoutes(app: FastifyInstance) {
       liveListingIds,
     });
   };
+
+  app.post(
+    "/images",
+    {
+      preHandler: [app.authenticate, requireNDA, disableWritesInDemo],
+    },
+    async (request, reply) => {
+      if (!sellerOnly.has(request.user.role)) {
+        return fail(request, reply, "FORBIDDEN", "Seller role required.", 403);
+      }
+
+      const parts = request.files();
+      const imageUrls: string[] = [];
+
+      for await (const part of parts) {
+        if (part.fieldname !== "images") {
+          return fail(request, reply, "BAD_REQUEST", "Only field 'images' is allowed.", 400);
+        }
+
+        if (!part.mimetype?.toLowerCase().startsWith("image/")) {
+          return fail(request, reply, "BAD_REQUEST", "Only image uploads are allowed.", 400);
+        }
+
+        if (imageUrls.length >= 5) {
+          return fail(request, reply, "BAD_REQUEST", "Maximum of 5 images allowed.", 400);
+        }
+
+        const buffer = await part.toBuffer();
+        const imageId = await uploadImageToGridFs({
+          buffer,
+          filename: part.filename || "image",
+          contentType: part.mimetype,
+          metadata: {
+            contentType: part.mimetype,
+            ownerUserId: request.user.id,
+            uploadedAt: new Date().toISOString(),
+          },
+        });
+
+        imageUrls.push(`/api/images/${imageId.toHexString()}`);
+      }
+
+      if (imageUrls.length === 0) {
+        return fail(request, reply, "BAD_REQUEST", "Missing file field named 'images'.", 400);
+      }
+
+      return ok(request, { images: imageUrls });
+    }
+  );
 
   app.post(
     "/listings/import",

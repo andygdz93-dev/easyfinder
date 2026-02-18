@@ -22,6 +22,7 @@ import ndaRoutes from "./routes/nda.js";
 import billingRoutes from "./routes/billing.js";
 import offersRoutes from "./routes/offers.js";
 import inquiriesRoutes from "./routes/inquiries.js";
+import imageRoutes from "./routes/images.js";
 import { ZodError } from "zod";
 import { env } from "./env.js";
 import meRoutes from "./routes/me.js";
@@ -269,6 +270,7 @@ export const buildServer = () => {
   }
   app.register(sellerRoutes, { prefix: "/api/seller" });
   app.register(uploadsRoutes, { prefix: "/api/uploads" });
+  app.register(imageRoutes, { prefix: "/api" });
   app.register(meRoutes, { prefix: "/api/me" });
   app.register(ironPlanetScraperRoutes);
   app.register(ndaRoutes, { prefix: "/api/nda" });
