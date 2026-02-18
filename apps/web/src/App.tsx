@@ -129,8 +129,9 @@ const RequireRoleSelection = ({ children }: { children?: React.ReactNode }) => {
 
 const UpgradeRouteGuard = () => {
   const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
-  if (isAdmin(user)) {
+  if (isAdmin) {
     return <Navigate to="/admin" replace />;
   }
 
