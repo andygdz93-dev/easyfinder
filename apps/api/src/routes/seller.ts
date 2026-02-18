@@ -1,7 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { randomUUID } from "node:crypto";
-import { basename, extname } from "node:path";
-import { inflateRawSync } from "node:zlib";
+import { extname } from "node:path";
 import { ObjectId } from "mongodb";
 import { parse as parseCsv } from "csv-parse/sync";
 import { z } from "zod";
@@ -18,6 +17,7 @@ import { getUsersCollection } from "../users.js";
 import { getSellerEntitlements } from "../entitlements.js";
 import { env } from "../env.js";
 import { uploadImageToGridFs } from "../gridfs-images.js";
+import { parseZipBundle, parseZipImageArchive } from "../zipBundle.js";
 
 const sellerOnly = new Set(["seller", "admin"]);
 const uploadRoleAllowed = new Set(["seller", "enterprise", "admin"]);
@@ -25,12 +25,6 @@ const uploadRoleAllowed = new Set(["seller", "enterprise", "admin"]);
 const requiredImportFields = ["title", "description", "location"] as const;
 const importImageFields = ["imageUrl", "imageUrl2", "imageUrl3", "imageUrl4", "imageUrl5"] as const;
 const SELLER_IMAGE_PLACEHOLDER = "/demo-images/other/1.jpg";
-const ALLOWED_ZIP_IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp"]);
-const ZIP_SIGNATURES = {
-  endOfCentralDir: 0x06054b50,
-  centralFileHeader: 0x02014b50,
-  localFileHeader: 0x04034b50,
-} as const;
 
 const importRowSchema = z
   .object({
@@ -103,7 +97,7 @@ type UploadValidationSummary = {
   validRows: number;
   invalidRows: number;
   totalValidationErrors: number;
-  topValidationErrors: string[];
+  topErrors: string[];
 };
 
 type ZipImageEntry = { fileName: string; data: Buffer; fileId?: ObjectId };
@@ -182,18 +176,11 @@ const isJunkImageUrl = (url: string): boolean => {
   return /(logo|icon|pixel|spacer|sprite|favicon)/i.test(normalized);
 };
 
-const apiBaseUrl = env.PUBLIC_API_BASE_URL.replace(/\/+$/, "");
-
-const toAbsoluteImageUrl = (url: string): string => {
-  if (/^https?:\/\//i.test(url)) {
-    return url;
-  }
-
-  if (url.startsWith("/")) {
-    return `${apiBaseUrl}${url}`;
-  }
-
-  return `${apiBaseUrl}/${url}`;
+const toStoredImageUrl = (url: string): string => {
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
 };
 
 const normalizeListingImages = (input: unknown[]): { images: string[]; imageUrl: string } => {
@@ -203,11 +190,11 @@ const normalizeListingImages = (input: unknown[]): { images: string[]; imageUrl:
         .map((item) => toStringValue(item))
         .filter((url) => url.length > 0)
         .filter((url) => !isJunkImageUrl(url))
-        .map((url) => toAbsoluteImageUrl(url))
+        .map((url) => toStoredImageUrl(url))
     )
   ).slice(0, 5);
 
-  const hero = deduped[0] ?? toAbsoluteImageUrl(SELLER_IMAGE_PLACEHOLDER);
+  const hero = deduped[0] ?? toStoredImageUrl(SELLER_IMAGE_PLACEHOLDER);
   const images = [...deduped];
   while (images.length < 5) {
     images.push(hero);
@@ -225,24 +212,6 @@ const normalizeListingForResponse = <T extends { imageUrl?: string; images?: str
   };
 };
 
-const normalizeZipImageKey = (rawFilename: string): string | null => {
-  const fileNameOnly = basename(rawFilename).trim();
-  if (!fileNameOnly) return null;
-
-  const extension = extname(fileNameOnly).replace(/^\./, "").toLowerCase();
-  if (!ALLOWED_ZIP_IMAGE_EXTENSIONS.has(extension)) return null;
-
-  const stem = fileNameOnly.slice(0, -(extension.length + 1));
-  const compact = stem.replace(/[\s_-]+/g, "").toUpperCase();
-  const match = compact.match(/^(\d+)([A-E])$/);
-  if (!match) return null;
-
-  const row = Number.parseInt(match[1], 10);
-  if (!Number.isFinite(row) || row < 2) return null;
-
-  return `${row}${match[2]}`;
-};
-
 const getZipImageContentType = (fileName: string) => {
   const extension = extname(fileName).replace(/^\./, "").toLowerCase();
   if (extension === "jpg" || extension === "jpeg") return "image/jpeg";
@@ -251,83 +220,10 @@ const getZipImageContentType = (fileName: string) => {
   return "application/octet-stream";
 };
 
-const unzipBuffer = (zipBuffer: Buffer): Array<{ fileName: string; data: Buffer }> => {
-  let eocdOffset = -1;
-  for (let cursor = zipBuffer.length - 22; cursor >= 0; cursor -= 1) {
-    if (zipBuffer.readUInt32LE(cursor) === ZIP_SIGNATURES.endOfCentralDir) {
-      eocdOffset = cursor;
-      break;
-    }
-  }
-
-  if (eocdOffset < 0) {
-    throw new Error("Invalid ZIP: end of central directory not found.");
-  }
-
-  const centralDirectoryOffset = zipBuffer.readUInt32LE(eocdOffset + 16);
-  const totalEntries = zipBuffer.readUInt16LE(eocdOffset + 10);
-  const entries: Array<{ fileName: string; data: Buffer }> = [];
-
-  let centralOffset = centralDirectoryOffset;
-  for (let index = 0; index < totalEntries; index += 1) {
-    if (zipBuffer.readUInt32LE(centralOffset) !== ZIP_SIGNATURES.centralFileHeader) {
-      throw new Error("Invalid ZIP: malformed central directory entry.");
-    }
-
-    const compressionMethod = zipBuffer.readUInt16LE(centralOffset + 10);
-    const compressedSize = zipBuffer.readUInt32LE(centralOffset + 20);
-    const fileNameLength = zipBuffer.readUInt16LE(centralOffset + 28);
-    const extraLength = zipBuffer.readUInt16LE(centralOffset + 30);
-    const commentLength = zipBuffer.readUInt16LE(centralOffset + 32);
-    const localHeaderOffset = zipBuffer.readUInt32LE(centralOffset + 42);
-    const fileName = zipBuffer.toString("utf8", centralOffset + 46, centralOffset + 46 + fileNameLength);
-
-    centralOffset += 46 + fileNameLength + extraLength + commentLength;
-    if (!fileName || fileName.endsWith("/")) {
-      continue;
-    }
-
-    if (zipBuffer.readUInt32LE(localHeaderOffset) !== ZIP_SIGNATURES.localFileHeader) {
-      throw new Error("Invalid ZIP: local file header missing.");
-    }
-
-    const localFileNameLength = zipBuffer.readUInt16LE(localHeaderOffset + 26);
-    const localExtraLength = zipBuffer.readUInt16LE(localHeaderOffset + 28);
-    const fileDataStart = localHeaderOffset + 30 + localFileNameLength + localExtraLength;
-    const fileDataEnd = fileDataStart + compressedSize;
-    const compressedData = zipBuffer.subarray(fileDataStart, fileDataEnd);
-
-    let data: Buffer;
-    if (compressionMethod === 0) {
-      data = Buffer.from(compressedData);
-    } else if (compressionMethod === 8) {
-      data = inflateRawSync(compressedData);
-    } else {
-      throw new Error(`Unsupported ZIP compression method: ${compressionMethod}.`);
-    }
-
-    entries.push({ fileName, data });
-  }
-
-  return entries;
-};
-
-const createZipImageMap = (zipBuffer: Buffer): { filesByKey: Map<string, ZipImageEntry>; duplicateKey?: string } => {
-  const entries = unzipBuffer(zipBuffer);
-  const filesByKey = new Map<string, ZipImageEntry>();
-
-  for (const entry of entries) {
-    const key = normalizeZipImageKey(entry.fileName);
-    if (!key) continue;
-
-    if (filesByKey.has(key)) {
-      return { filesByKey, duplicateKey: key };
-    }
-
-    filesByKey.set(key, entry);
-  }
-
-  return { filesByKey };
+const normalizeZipImageKey = (rawValue: string): string | null => {
+  const match = rawValue.trim().match(/^(\d+)([A-E])(?:\.(jpg|jpeg|png|webp))?$/i);
+  if (!match) return null;
+  return `${Number.parseInt(match[1], 10)}${match[2].toUpperCase()}`;
 };
 
 const buildValidationSummary = (
@@ -356,7 +252,7 @@ const buildValidationSummary = (
       validRows,
       invalidRows,
       totalValidationErrors: errors.length,
-      topValidationErrors: errors.slice(0, 12).map((error) => {
+      topErrors: errors.slice(0, 12).map((error) => {
         const fieldPrefix = error.field ? `${error.field}: ` : "";
         return `Row ${error.row} • ${fieldPrefix}${error.message}`;
       }),
@@ -365,26 +261,26 @@ const buildValidationSummary = (
   };
 };
 
-const parseCsvRowsFromZipBundle = (bundleZipBuffer: Buffer): { rows: Record<string, unknown>[]; zipImagesByKey: Map<string, ZipImageEntry> } => {
-  const entries = unzipBuffer(bundleZipBuffer);
-  const csvEntries = entries.filter((entry) => extname(entry.fileName).toLowerCase() === ".csv");
-  if (csvEntries.length !== 1) {
-    throw new Error("ZIP bundle must contain exactly one CSV file.");
-  }
-
-  const rows = parseCsv(csvEntries[0].data.toString("utf8"), {
+const parseCsvRowsFromZipBundle = (
+  bundleZipBuffer: Buffer
+): {
+  rows: Record<string, unknown>[];
+  zipImagesByKey: Map<string, ZipImageEntry>;
+  invalidImageNames: string[];
+} => {
+  const parsedBundle = parseZipBundle(bundleZipBuffer);
+  const rows = parseCsv(parsedBundle.csvText, {
     columns: true,
     skip_empty_lines: true,
     trim: true,
     bom: true,
   }) as Record<string, unknown>[];
 
-  const { filesByKey, duplicateKey } = createZipImageMap(bundleZipBuffer);
-  if (duplicateKey) {
-    throw new Error(`Duplicate image mapping found in ZIP for row-slot key '${duplicateKey}'.`);
-  }
-
-  return { rows, zipImagesByKey: filesByKey };
+  return {
+    rows,
+    zipImagesByKey: parsedBundle.imagesByKey,
+    invalidImageNames: parsedBundle.invalidImageNames,
+  };
 };
 
 const createSellerListingFromRow = (
@@ -459,7 +355,7 @@ const createSellerListingFromRow = (
       return "";
     }
 
-    return `/api/images/${zipImage.fileId?.toHexString?.() ?? ""}`;
+    return zipImage.fileId ? `/api/images/${zipImage.fileId.toHexString()}` : "";
   });
   const { images, imageUrl } = normalizeListingImages(imageValues);
 
@@ -788,6 +684,7 @@ export default async function sellerRoutes(app: FastifyInstance) {
 
     let body = request.body;
     let zipImagesByKey: Map<string, ZipImageEntry> | undefined = request.zipImagesByKey;
+    const zipWarnings: string[] = Array.isArray(request.zipWarnings) ? request.zipWarnings : [];
 
     if (request.isMultipart() && !(body && Array.isArray(body.rows))) {
       let csvBuffer: Buffer | null = null;
@@ -821,17 +718,7 @@ export default async function sellerRoutes(app: FastifyInstance) {
 
       if (imagesZipBuffer) {
         try {
-          const zipMapResult = createZipImageMap(imagesZipBuffer);
-          if (zipMapResult.duplicateKey) {
-            return fail(
-              request,
-              reply,
-              "BAD_REQUEST",
-              `Duplicate image mapping found in ZIP for row-slot key '${zipMapResult.duplicateKey}'.`,
-              400
-            );
-          }
-          zipImagesByKey = zipMapResult.filesByKey;
+          zipImagesByKey = parseZipImageArchive(imagesZipBuffer).imagesByKey;
         } catch (error) {
           const message = error instanceof Error ? error.message : "Unable to parse images ZIP.";
           return fail(request, reply, "BAD_REQUEST", message, 400);
@@ -889,7 +776,7 @@ export default async function sellerRoutes(app: FastifyInstance) {
       );
     }
 
-    const errors: IngestionError[] = [];
+    const errors: IngestionError[] = zipWarnings.map((message) => ({ row: 0, code: "ZIP_WARNING", message }));
     const createdIds: string[] = [];
     const createdListings: SellerImportListing[] = [];
 
@@ -1004,7 +891,7 @@ export default async function sellerRoutes(app: FastifyInstance) {
           },
         });
 
-        imageUrls.push(toAbsoluteImageUrl(`/api/images/${imageId.toHexString()}`));
+        imageUrls.push(`/api/images/${imageId.toHexString()}`);
       }
 
       if (imageUrls.length === 0) {
@@ -1044,22 +931,24 @@ export default async function sellerRoutes(app: FastifyInstance) {
       let bundleZipBuffer: Buffer | null = null;
       const parts = request.parts();
       for await (const part of parts) {
-        if (part.type === "file" && part.fieldname === "bundleZip") {
+        if (part.type === "file" && part.fieldname === "zip") {
           bundleZipBuffer = await part.toBuffer();
           break;
         }
       }
 
       if (!bundleZipBuffer) {
-        return fail(request, reply, "BAD_REQUEST", "Missing required file field named 'bundleZip'.", 400);
+        return fail(request, reply, "BAD_REQUEST", "Missing required file field named 'zip'.", 400);
       }
 
       let rows: Record<string, unknown>[];
       let zipImagesByKey: Map<string, ZipImageEntry>;
+      let invalidImageNames: string[] = [];
       try {
         const parsed = parseCsvRowsFromZipBundle(bundleZipBuffer);
         rows = parsed.rows;
         zipImagesByKey = parsed.zipImagesByKey;
+        invalidImageNames = parsed.invalidImageNames;
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unable to parse ZIP bundle.";
         return fail(request, reply, "BAD_REQUEST", message, 400);
@@ -1088,12 +977,18 @@ export default async function sellerRoutes(app: FastifyInstance) {
       }
 
       const { summary } = buildValidationSummary(payload.data.rows, request.user.id, zipImagesByKey);
+      if (invalidImageNames.length > 0) {
+        summary.topErrors = [
+          `Images skipped due to invalid filename format: ${invalidImageNames.slice(0, 8).join(", ")}`,
+          ...summary.topErrors,
+        ].slice(0, 12);
+      }
       return ok(request, summary);
     }
   );
 
   app.post(
-    "/upload/bundle",
+    "/upload/upload-zip",
     {
       preHandler: [app.authenticate, requireNDA, requirePlan(["pro", "enterprise"]), disableWritesInDemo],
     },
@@ -1105,29 +1000,37 @@ export default async function sellerRoutes(app: FastifyInstance) {
       let bundleZipBuffer: Buffer | null = null;
       const parts = request.parts();
       for await (const part of parts) {
-        if (part.type === "file" && part.fieldname === "bundleZip") {
+        if (part.type === "file" && part.fieldname === "zip") {
           bundleZipBuffer = await part.toBuffer();
           break;
         }
       }
 
       if (!bundleZipBuffer) {
-        return fail(request, reply, "BAD_REQUEST", "Missing required file field named 'bundleZip'.", 400);
+        return fail(request, reply, "BAD_REQUEST", "Missing required file field named 'zip'.", 400);
       }
 
       let rows: Record<string, unknown>[];
       let zipImagesByKey: Map<string, ZipImageEntry>;
+      let invalidImageNames: string[] = [];
       try {
         const parsed = parseCsvRowsFromZipBundle(bundleZipBuffer);
         rows = parsed.rows;
         zipImagesByKey = parsed.zipImagesByKey;
+        invalidImageNames = parsed.invalidImageNames;
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unable to parse ZIP bundle.";
         return fail(request, reply, "BAD_REQUEST", message, 400);
       }
 
       request.body = { rows };
-      (request as typeof request & { zipImagesByKey?: Map<string, ZipImageEntry> }).zipImagesByKey = zipImagesByKey;
+      (request as typeof request & {
+        zipImagesByKey?: Map<string, ZipImageEntry>;
+        zipWarnings?: string[];
+      }).zipImagesByKey = zipImagesByKey;
+      (request as typeof request & { zipWarnings?: string[] }).zipWarnings = invalidImageNames.length
+        ? [`Images skipped due to invalid filename format: ${invalidImageNames.slice(0, 8).join(", ")}`]
+        : [];
       return createImportHandler(request, reply);
     }
   );

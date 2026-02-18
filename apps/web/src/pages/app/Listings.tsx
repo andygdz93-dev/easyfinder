@@ -230,12 +230,12 @@ export const Listings = () => {
             const sourceLabel = listing.source?.startsWith("seller:") ? "Private seller" : listing.source;
             return (
               <Card key={listingId || listing.title || "listing"} className="space-y-4">
-                <div className="flex items-start justify-between gap-3 overflow-hidden">
+                <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h3 className="truncate text-lg font-semibold">{listing.title}</h3>
                     <p className="truncate text-xs text-slate-400">{sourceLabel}</p>
                   </div>
-                  <div className="shrink-0 flex max-w-[40%] flex-col items-end gap-2">
+                  <div className="flex min-w-[9rem] shrink-0 flex-col items-end gap-2 sm:max-w-[45%]">
                     <Badge className="bg-accent text-slate-900">
                       Score {score?.total ?? listing.totalScore ?? 0}
                     </Badge>
