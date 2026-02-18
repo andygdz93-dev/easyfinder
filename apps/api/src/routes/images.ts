@@ -5,6 +5,8 @@ import { getImageFileFromGridFs, openImageDownloadStreamFromGridFs } from "../gr
 
 export default async function imageRoutes(app: FastifyInstance) {
   app.get("/images/:id", async (request, reply) => {
+    reply.header("Cross-Origin-Resource-Policy", "cross-origin");
+
     const { id } = request.params as { id: string };
     if (!ObjectId.isValid(id)) {
       return fail(request, reply, "NOT_FOUND", "Image not found.", 404);
@@ -35,4 +37,3 @@ export default async function imageRoutes(app: FastifyInstance) {
     return reply.send(stream);
   });
 }
-
