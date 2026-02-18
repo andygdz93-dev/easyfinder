@@ -157,7 +157,7 @@ export const SellerAdd = () => {
 
         <div className="flex gap-3">
           <Button type="submit" disabled={submitting}>{submitting ? "Saving..." : "Create listing"}</Button>
-          <Button type="button" variant="ghost" asChild>
+          <Button type="button" variant="outline">
             <Link to="/app/seller/listings">Back to listings</Link>
           </Button>
         </div>
