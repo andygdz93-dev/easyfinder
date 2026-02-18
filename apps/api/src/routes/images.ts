@@ -5,7 +5,9 @@ import { getImageFileFromGridFs, openImageDownloadStreamFromGridFs } from "../gr
 
 export default async function imageRoutes(app: FastifyInstance) {
   app.get("/images/:id", async (request, reply) => {
+    // Images are rendered by the Vercel-hosted frontend on a different origin.
     reply.header("Cross-Origin-Resource-Policy", "cross-origin");
+    reply.header("Access-Control-Allow-Origin", "*");
 
     const { id } = request.params as { id: string };
     if (!ObjectId.isValid(id)) {

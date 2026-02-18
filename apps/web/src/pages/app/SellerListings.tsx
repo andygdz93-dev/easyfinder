@@ -46,7 +46,7 @@ export const SellerListings = () => {
       return;
     }
 
-    const confirmed = window.confirm("Delete this listing? This can’t be undone.");
+    const confirmed = window.confirm("Are you sure you want to delete this listing? This cannot be undone.");
     if (!confirmed) {
       return;
     }
