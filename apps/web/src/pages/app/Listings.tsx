@@ -227,14 +227,15 @@ export const Listings = () => {
           {visibleListings.map((listing) => {
             const listingId = listing.id ?? "";
             const score = listing.score;
+            const sourceLabel = listing.source?.startsWith("seller:") ? "Private seller" : listing.source;
             return (
               <Card key={listingId || listing.title || "listing"} className="space-y-4">
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="text-lg font-semibold">{listing.title}</h3>
-                    <p className="text-xs text-slate-400">{listing.source}</p>
+                  <div className="min-w-0">
+                    <h3 className="truncate text-lg font-semibold">{listing.title}</h3>
+                    <p className="truncate text-xs text-slate-400">{sourceLabel}</p>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
+                  <div className="shrink-0 flex flex-col items-end gap-2">
                     <Badge className="bg-accent text-slate-900">
                       Score {score?.total ?? listing.totalScore ?? 0}
                     </Badge>
