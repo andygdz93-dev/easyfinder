@@ -13,7 +13,6 @@ import { Landing } from "./pages/Landing";
 import { Listings } from "./pages/app/Listings";
 import { ListingDetail } from "./pages/app/ListingDetail";
 import { Watchlist } from "./pages/app/Watchlist";
-import { AdminSources } from "./pages/app/AdminSources";
 import { ScoringConfigs } from "./pages/app/ScoringConfigs";
 import { Offers } from "./pages/app/Offers";
 import { SellerListings } from "./pages/app/SellerListings";
@@ -38,10 +37,14 @@ import { useAuth } from "./lib/auth";
 import { SelectRole } from "./pages/app/SelectRole";
 import { Billing } from "./pages/app/Billing";
 import RequireSellerUploadAccess from "./components/RequireSellerUploadAccess";
-import AdminListings from "./pages/admin/AdminListings";
-import AdminListingDetail from "./pages/admin/AdminListingDetail";
-import AdminInquiries from "./pages/admin/AdminInquiries";
-import AdminAudit from "./pages/admin/AdminAudit";
+import AdminLayout from "./layouts/AdminLayout";
+import AdminOverview from "./pages/app/admin/AdminOverview";
+import AdminUsers from "./pages/app/admin/AdminUsers";
+import AdminListings from "./pages/app/admin/AdminListings";
+import AdminInquiries from "./pages/app/admin/AdminInquiries";
+import AdminAudit from "./pages/app/admin/AdminAudit";
+import AdminSources from "./pages/app/admin/AdminSources";
+import AdminSettings from "./pages/app/admin/AdminSettings";
 
 const LegacyListingRedirect = () => {
   const { id } = useParams();
@@ -60,7 +63,7 @@ const DashboardRedirect = () => {
   }
 
   if (user?.role === "admin") {
-    return <Navigate to="/app/admin/overview" replace />;
+    return <Navigate to="/app/admin" replace />;
   }
 
   return <Navigate to="/app/listings" replace />;
@@ -138,35 +141,6 @@ const UpgradeRouteGuard = () => {
   return <Upgrade />;
 };
 
-const AdminEntry = () => {
-  const { user, isUserLoading } = useAuth();
-  const location = useLocation();
-
-  if (isUserLoading) {
-    return <div className="p-6 text-sm text-slate-400">Loading…</div>;
-  }
-
-  if (!user || user.role !== "admin") {
-    return <div className="p-6">Not authorized.</div>;
-  }
-
-  if (location.pathname === "/admin") {
-    return <Navigate to="/admin/listings" replace />;
-  }
-
-  return (
-    <Routes>
-      <Route path="/admin/home" element={<Navigate to="/admin/listings" replace />} />
-      <Route path="/admin/listings" element={<AdminListings />} />
-      <Route path="/admin/listings/:id" element={<AdminListingDetail />} />
-      <Route path="/admin/inquiries" element={<AdminInquiries />} />
-      <Route path="/admin/audit" element={<AdminAudit />} />
-      <Route path="*" element={<Navigate to="/admin/listings" replace />} />
-    </Routes>
-  );
-};
-
-
 export default function App() {
   return (
     <Routes>
@@ -176,7 +150,7 @@ export default function App() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/app/login" element={<Login />} />
-      <Route path="/admin/*" element={<AdminEntry />} />
+      <Route path="/admin/*" element={<Navigate to="/app/admin" replace />} />
       <Route path="/app/register" element={<Register />} />
       <Route
         path="/listings"
@@ -187,14 +161,8 @@ export default function App() {
         path="/watchlist"
         element={<Navigate to="/app/watchlist" replace />}
       />
-      <Route
-        path="/admin/sources"
-        element={<Navigate to="/app/admin/sources" replace />}
-      />
-      <Route
-        path="/app/admin"
-        element={<Navigate to="/app/admin/overview" replace />}
-      />
+      
+
       <Route path="/scoring" element={<Navigate to="/app/scoring" replace />} />
       <Route
         path="/seller"
@@ -240,11 +208,22 @@ export default function App() {
               <Route path="scoring" element={<ScoringConfigs />} />
               <Route path="offers" element={<Offers />} />
             </Route>
-            <Route path="admin/sources" element={<AdminSources />} />
             <Route
-              path="admin/overview"
-              element={<Navigate to="/admin/listings" replace />}
-            />
+              path="admin"
+              element={
+                <RequireRoles allowed={["admin"]}>
+                  <AdminLayout />
+                </RequireRoles>
+              }
+            >
+              <Route index element={<AdminOverview />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="listings" element={<AdminListings />} />
+              <Route path="inquiries" element={<AdminInquiries />} />
+              <Route path="audit" element={<AdminAudit />} />
+              <Route path="sources" element={<AdminSources />} />
+              <Route path="settings" element={<AdminSettings />} />
+            </Route>
             <Route
               element={
                 <RequireRoles allowed={["seller", "admin"]}>
