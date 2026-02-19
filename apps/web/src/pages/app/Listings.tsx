@@ -227,7 +227,7 @@ export const Listings = () => {
         </label>
       </div>
 
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-slate-300">
         {visibleSellerCount} seller listing{visibleSellerCount === 1 ? "" : "s"} · {visibleExternalCount} external
       </p>
 
@@ -281,20 +281,20 @@ export const Listings = () => {
             const sourceLabel = listing.source?.startsWith("seller:") ? "Private seller" : listing.source;
             return (
               <Card key={listingId || listing.title || "listing"} className="space-y-4">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1 pr-2">
                     <h3 className="truncate text-lg font-semibold">{listing.title}</h3>
                     <Badge className="mt-1">
                       {isSellerListing ? "Seller Listing" : "External Listing"}
                     </Badge>
-                    <p className="truncate text-xs text-slate-400">{sourceLabel}</p>
+                    <p className="truncate text-xs text-slate-300">{sourceLabel}</p>
                   </div>
-                  <div className="flex min-w-[7rem] flex-col items-end gap-2 sm:min-w-[9rem] sm:max-w-[45%]">
-                    <Badge className="bg-accent text-slate-900">
+                  <div className="flex w-[7.5rem] shrink-0 flex-col items-end gap-1 text-right sm:w-[8.5rem]">
+                    <Badge className="border border-emerald-200/80 bg-emerald-300 font-semibold text-emerald-950">
                       Score {score?.total ?? listing.totalScore ?? 0}
                     </Badge>
                     <span
-                      className="truncate text-[11px] font-semibold text-slate-300"
+                      className="block w-full truncate text-[11px] font-semibold text-slate-200"
                       title="Confidence reflects data completeness."
                     >
                       {((score?.confidence ?? 0) * 100).toFixed(0)}% confidence
@@ -307,7 +307,7 @@ export const Listings = () => {
                   className="h-48 w-full rounded-lg bg-slate-900/20 object-contain"
                 />
                 <p className="text-sm text-slate-300">{toPlainText(listing.description)}</p>
-                <div className="flex flex-wrap gap-3 text-xs text-slate-400">
+                <div className="flex flex-wrap gap-3 text-xs text-slate-300">
                   <span>
                     {formatListingPrice(listing.price)}
                   </span>
@@ -321,7 +321,7 @@ export const Listings = () => {
                       : "Not operable"}
                   </span>
                 </div>
-                <ul className="list-disc space-y-1 pl-4 text-xs text-slate-400">
+                <ul className="list-disc space-y-1 pl-4 text-xs text-slate-300">
                   {(score?.reasons ?? []).slice(0, 3).map((reason, index) => (
                     <li key={`${index}-${typeof reason === "string" ? reason : reason.message}`}>{typeof reason === "string" ? reason : reason.message}</li>
                   ))}
