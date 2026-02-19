@@ -290,7 +290,7 @@ export const Listings = () => {
                     <p className="truncate text-xs text-slate-300">{sourceLabel}</p>
                   </div>
                   <div className="flex w-[7.5rem] shrink-0 flex-col items-end gap-1 text-right sm:w-[8.5rem]">
-                    <Badge className="border border-emerald-200/80 bg-emerald-300 font-semibold text-emerald-950">
+                    <Badge className="border border-emerald-200/80 bg-emerald-400 font-semibold text-slate-950">
                       Score {score?.total ?? listing.totalScore ?? 0}
                     </Badge>
                     <span
