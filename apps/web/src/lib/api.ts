@@ -518,16 +518,45 @@ export const apiFetch = <T>(path: string, options: ApiRequestOptions = {}) =>
 
 
 export type AdminOverview = {
+  counts: { users: number; listings: number; inquiries: number };
   listings: { active: number; paused: number; removed: number; pending_review: number };
-  bySource: Record<string, number>;
-  inquiries: { total: number; open: number; closed: number };
+  inquiries: { open: number; closed: number };
+  recentActivity: Array<{ timestamp: string; userId: string; event: string; requestId: string; resource: string }>;
   lastIngestion: Record<string, string | null>;
   demoMode: boolean;
   billingEnabled: boolean;
 };
 
+export type AdminUser = {
+  id: string;
+  email: string;
+  name: string;
+  role: "buyer" | "seller" | "enterprise" | "admin" | null;
+  plan: string;
+  created: string | null;
+  lastLogin: string | null;
+  status: "active" | "disabled";
+};
+
+export type AdminUsersResponse = {
+  items: AdminUser[];
+  total: number;
+};
+
 export type AdminListingsResponse = {
-  items: Array<Listing & { status?: "active" | "paused" | "removed" | "pending_review" }>;
+  items: Array<{
+    id: string;
+    title: string;
+    seller: string | null;
+    source: string | null;
+    score: number | null;
+    state: string | null;
+    created: string | null;
+    status: "active" | "paused" | "removed" | "pending_review";
+    imagesCount: number;
+    isPublished: boolean;
+    price: number;
+  }>;
   total: number;
   page: number;
   pageSize: number;
@@ -537,37 +566,22 @@ export type AdminListingsResponse = {
 export type AdminListingDetail = {
   listing: Listing & { status?: "active" | "paused" | "removed" | "pending_review" };
   inquiries: Array<InquiryDto & { id: string; sellerId: string | null; buyerId: string; updatedAt: string }>;
-  audit: AdminAuditLog[];
+  audit: Array<{ id: string; actorUserId: string; actorEmail: string; action: string; targetType: string; targetId: string; reason?: string; requestId: string; createdAt: string }>;
 };
 
 export type AdminInquiriesResponse = {
-  items: Array<InquiryDto & { id: string }>;
+  items: Array<{ id: string; listingId: string; buyerId: string; sellerId: string | null; createdAt: string; status: string }>;
   total: number;
   page: number;
   pageSize: number;
-};
-
-export type AdminAuditLog = {
-  id: string;
-  actorUserId: string;
-  actorEmail: string;
-  action: string;
-  targetType: "listing" | "inquiry" | "scoringConfig" | "ingestion";
-  targetId: string;
-  reason?: string;
-  before?: Record<string, unknown> | null;
-  after?: Record<string, unknown> | null;
-  requestId: string;
-  createdAt: string;
 };
 
 export type AdminAuditResponse = {
-  items: AdminAuditLog[];
+  items: Array<{ timestamp: string; userId: string; event: string; requestId: string; resource: string }>;
   total: number;
   page: number;
   pageSize: number;
 };
-
 
 export const getAdminOverview = () => apiRequest<AdminOverview>("/admin/overview");
 
@@ -588,17 +602,23 @@ export const getAdminListings = (params: {
   return apiRequest<AdminListingsResponse>(`/admin/listings${query ? `?${query}` : ""}`);
 };
 
-export const getAdminListingDetail = (id: string) => apiRequest<AdminListingDetail>(`/admin/listings/${id}`);
-
 export const patchAdminListing = (
   id: string,
-  input: { status: "active" | "paused" | "removed"; reason?: string }
+  input: { status?: "active" | "paused" | "removed"; isPublished?: boolean; title?: string; price?: number; state?: string; reason?: string }
 ) => apiRequest<{ listing: Listing }>(`/admin/listings/${id}`, { method: "PATCH", body: JSON.stringify(input) });
+
+export const getAdminListingDetail = (id: string) => apiRequest<AdminListingDetail>(`/admin/listings/${id}`);
 
 export const deleteAdminListing = (
   id: string,
   input: { confirmation: string; reason: string }
 ) => apiRequest<{ deleted: boolean }>(`/admin/listings/${id}`, { method: "DELETE", body: JSON.stringify(input) });
+
+export const runAdminIronPlanetScrape = (input: { url: string }) =>
+  apiRequest<{ scraped: number; upserted: number; modified: number; matched: number }>("/admin/scrape/ironplanet", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
 
 export const getAdminInquiries = (params: { page?: number; pageSize?: number; status?: "open" | "closed" | "spam" }) => {
   const search = new URLSearchParams();
@@ -609,33 +629,26 @@ export const getAdminInquiries = (params: { page?: number; pageSize?: number; st
   return apiRequest<AdminInquiriesResponse>(`/admin/inquiries${query ? `?${query}` : ""}`);
 };
 
-export const patchAdminInquiry = (id: string, input: { status: "open" | "closed" | "spam"; reason?: string }) =>
+export const getAdminUsers = (params: { q?: string } = {}) => {
+  const search = new URLSearchParams();
+  if (params.q) search.set("q", params.q);
+  const query = search.toString();
+  return apiRequest<AdminUsersResponse>(`/admin/users${query ? `?${query}` : ""}`);
+};
+
+export const patchAdminUser = (
+  id: string,
+  input: { role?: "buyer" | "seller" | "enterprise" | "admin"; disabled?: boolean }
+) => apiRequest<{ user: MeResponse }>(`/admin/users/${id}`, { method: "PATCH", body: JSON.stringify(input) });
+
+export const patchAdminInquiry = (id: string, input: { status: "open" | "closed" | "spam" }) =>
   apiRequest<{ inquiry: InquiryDto }>(`/admin/inquiries/${id}`, { method: "PATCH", body: JSON.stringify(input) });
 
-export const runAdminIronPlanetScrape = (input: { url: string }) =>
-  apiRequest<{ scraped: number; upserted: number; modified: number; matched: number }>("/admin/scrape/ironplanet", {
-    method: "POST",
-    body: JSON.stringify(input),
-  });
-
-
-export const getAdminAuditLogs = (params: {
-  action?: string;
-  targetType?: "listing" | "inquiry" | "scoringConfig" | "ingestion";
-  targetId?: string;
-  actorEmail?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  page?: number;
-  pageSize?: number;
-}) => {
+export const getAdminAuditLogs = (params: { event?: string; userId?: string; resource?: string; action?: string; targetId?: string; page?: number; pageSize?: number }) => {
   const search = new URLSearchParams();
-  if (params.action) search.set("action", params.action);
-  if (params.targetType) search.set("targetType", params.targetType);
-  if (params.targetId) search.set("targetId", params.targetId);
-  if (params.actorEmail) search.set("actorEmail", params.actorEmail);
-  if (params.dateFrom) search.set("dateFrom", params.dateFrom);
-  if (params.dateTo) search.set("dateTo", params.dateTo);
+  if (params.event ?? params.action) search.set("event", params.event ?? params.action as string);
+  if (params.userId) search.set("userId", params.userId);
+  if (params.resource ?? params.targetId) search.set("resource", params.resource ?? params.targetId as string);
   if (params.page) search.set("page", String(params.page));
   if (params.pageSize) search.set("pageSize", String(params.pageSize));
   const query = search.toString();

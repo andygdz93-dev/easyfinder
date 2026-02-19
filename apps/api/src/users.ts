@@ -15,6 +15,8 @@ export type UserDocument = {
   ndaAcceptedAt: Date | null;
   ndaVersion?: string;
   roleSetAt?: Date;
+  lastLoginAt?: Date;
+  disabled?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
   billing?: BillingInfo;
@@ -28,6 +30,7 @@ type UserQuery = {
 
 type UsersCollection = {
   findOne: (query: UserQuery) => Promise<UserDocument | null>;
+  findMany: () => Promise<UserDocument[]>;
   insertOne: (doc: UserDocument) => Promise<void>;
   updateOne: (
     query: UserQuery,
@@ -74,6 +77,7 @@ export const getUsersCollection = (): UsersCollection => {
     const collection = getCollection<UserDocument>("users");
     return {
       findOne: (query) => collection.findOne(query),
+      findMany: async () => collection.find({}).toArray(),
       insertOne: async (doc) => {
         await collection.insertOne(doc);
       },
@@ -118,6 +122,7 @@ export const getUsersCollection = (): UsersCollection => {
       insertOne: async (doc) => {
         testUsers.set(doc.emailLower, doc);
       },
+      findMany: async () => Array.from(testUsers.values()),
       updateOne: async (query, update) => {
         const existing = await (async () => {
           if (query._id) {
