@@ -39,12 +39,12 @@ describe("admin audit", () => {
   it("lists audit logs with filters", async () => {
     const res = await supertest(app.server)
       .get("/api/admin/audit")
-      .query({ action: "TEST_ACTION", targetType: "listing", targetId: "listing-123", actorEmail: "admin@easyfinder.ai", dateFrom: "2024-12-31T00:00:00.000Z", dateTo: "2025-12-31T23:59:59.999Z", page: 1, pageSize: 10 })
+      .query({ event: "TEST_ACTION", resource: "listing-123", page: 1, pageSize: 10 })
       .set("Authorization", `Bearer ${adminToken}`);
 
     expect(res.status).toBe(200);
     expect(res.body.data.total).toBeGreaterThan(0);
-    expect(res.body.data.items[0].action).toBe("TEST_ACTION");
-    expect(res.body.data.items[0].createdAt).toBeTypeOf("string");
+    expect(res.body.data.items[0].event).toBe("TEST_ACTION");
+    expect(res.body.data.items[0].timestamp).toBeTypeOf("string");
   });
 });
