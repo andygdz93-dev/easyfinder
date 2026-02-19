@@ -2,7 +2,7 @@ import { ObjectId } from "mongodb";
 import { getCollection } from "./db.js";
 import { env } from "./env.js";
 
-export type AuditTargetType = "listing" | "inquiry" | "scoringConfig" | "ingestion";
+export type AuditTargetType = "listing" | "inquiry" | "scoringConfig" | "ingestion" | "user";
 
 export type AdminAuditEvent = {
   id?: string;
@@ -38,6 +38,7 @@ export type AuditLogFilters = {
   targetType?: AuditTargetType;
   targetId?: string;
   actorEmail?: string;
+  actorUserId?: string;
   dateFrom?: Date;
   dateTo?: Date;
   page: number;
@@ -116,6 +117,7 @@ export const findAuditLogs = async (filters: AuditLogFilters): Promise<{ items: 
     targetType?: AuditTargetType;
     targetId?: string;
     actorEmail?: string;
+  actorUserId?: string;
     createdAt?: { $gte?: Date; $lte?: Date };
   } = {};
 
@@ -123,6 +125,7 @@ export const findAuditLogs = async (filters: AuditLogFilters): Promise<{ items: 
   if (filters.targetType) query.targetType = filters.targetType;
   if (filters.targetId) query.targetId = filters.targetId;
   if (filters.actorEmail) query.actorEmail = filters.actorEmail;
+  if (filters.actorUserId) query.actorUserId = filters.actorUserId;
   if (filters.dateFrom || filters.dateTo) {
     query.createdAt = {};
     if (filters.dateFrom) query.createdAt.$gte = filters.dateFrom;
@@ -149,6 +152,7 @@ export const findAuditLogs = async (filters: AuditLogFilters): Promise<{ items: 
         if (query.targetType && item.targetType !== query.targetType) return false;
         if (query.targetId && item.targetId !== query.targetId) return false;
         if (query.actorEmail && item.actorEmail !== query.actorEmail) return false;
+        if (query.actorUserId && item.actorUserId !== query.actorUserId) return false;
         if (query.createdAt?.$gte && item.createdAt < query.createdAt.$gte) return false;
         if (query.createdAt?.$lte && item.createdAt > query.createdAt.$lte) return false;
         return true;
