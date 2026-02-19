@@ -220,6 +220,8 @@ export default function App() {
               <Route path="users" element={<AdminUsers />} />
               <Route path="listings" element={<AdminListings />} />
               <Route path="inquiries" element={<AdminInquiries />} />
+              <Route path="offers" element={<Offers />} />
+              <Route path="scoring" element={<ScoringConfigs />} />
               <Route path="audit" element={<AdminAudit />} />
               <Route path="sources" element={<AdminSources />} />
               <Route path="settings" element={<AdminSettings />} />

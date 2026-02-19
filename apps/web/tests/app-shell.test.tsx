@@ -1,9 +1,10 @@
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppShell } from "../src/components/AppShell";
 import { AUTH_SESSION_STORAGE_KEY, AuthProvider } from "../src/lib/auth";
 import { RuntimeProvider } from "../src/lib/runtime";
+import AdminLayout from "../src/layouts/AdminLayout";
 
 describe("AppShell NDA warning", () => {
   beforeEach(() => {
@@ -236,7 +237,7 @@ describe("AppShell seller upload navigation", () => {
     expect(screen.queryByRole("link", { name: "Upload listing" })).not.toBeInTheDocument();
   });
 
-  it("renders admin-only navigation without plan", async () => {
+  it("renders admin console nav without global app sidebar", async () => {
     setTestFetchHandler(async (input: RequestInfo | URL) => {
       const url = String(input);
       if (url.endsWith("/api/auth/me")) {
@@ -274,15 +275,29 @@ describe("AppShell seller upload navigation", () => {
       return { ok: true, json: async () => ({ data: {} }) } as Response;
     });
 
-    renderSellerShell(["/app/admin"]);
+    render(
+      <AuthProvider>
+        <RuntimeProvider>
+          <MemoryRouter initialEntries={["/app/admin"]}>
+            <AppShell>
+              <Routes>
+                <Route path="/app/admin" element={<AdminLayout />}>
+                  <Route index element={<div>admin content</div>} />
+                </Route>
+              </Routes>
+            </AppShell>
+          </MemoryRouter>
+        </RuntimeProvider>
+      </AuthProvider>
+    );
 
-    expect(await screen.findByText("Role: Admin")).toBeInTheDocument();
-    expect(screen.queryByText(/Plan:/)).not.toBeInTheDocument();
+    expect((await screen.findAllByRole("heading", { name: "Admin Console" })).length).toBeGreaterThan(0);
+    expect(screen.getByRole("link", { name: "Offers" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Scoring" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Log out" })).toBeInTheDocument();
+    expect(screen.queryByText("Easy Finder AI")).not.toBeInTheDocument();
     expect(screen.queryByText("Buyer")).not.toBeInTheDocument();
     expect(screen.queryByText("Seller")).not.toBeInTheDocument();
-    expect(screen.queryByText("Enterprise")).not.toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: "Listings" })).toHaveLength(1);
-    expect(screen.getAllByRole("link", { name: "Scoring" })).toHaveLength(1);
-    expect(screen.queryByRole("link", { name: "Dashboard" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Welcome to Easy Finder AI")).not.toBeInTheDocument();
   });
 });

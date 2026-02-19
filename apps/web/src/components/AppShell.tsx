@@ -81,8 +81,6 @@ const adminNavSection = {
     { to: "/app/admin/users", label: "Users" },
     { to: "/app/admin/listings", label: "Listings" },
     { to: "/app/admin/inquiries", label: "Inquiries" },
-    { to: "/app/offers", label: "Offers" },
-    { to: "/app/scoring", label: "Scoring" },
     { to: "/app/admin/sources", label: "Sources" },
     { to: "/app/admin/audit", label: "Audit" },
     { to: "/app/admin/settings", label: "Settings" },
@@ -170,6 +168,8 @@ export const AppShell = ({
 
   const roleLabel = displayRoleLabel({ role: effectiveRole });
   const isAdminRole = effectiveRole === "admin";
+  const isAdminConsoleRoute =
+    isAdminRole && location.pathname.startsWith("/app/admin");
   const logoTarget = isAdminRole ? "/app/admin" : "/";
   const isShellLoading =
     !hydrated || billingLoading || (Boolean(token) && !user);
@@ -256,6 +256,19 @@ export const AppShell = ({
     effectiveRole,
     userRoleResolved,
   ]);
+
+  if (isAdminConsoleRoute) {
+    return (
+      <div
+        className={`min-h-screen text-slate-100 ${className ?? ""}`}
+        data-role={userRoleResolved}
+        data-plan={planResolved}
+      >
+        {showDemoBanner ? <DemoBanner /> : null}
+        <div>{children}</div>
+      </div>
+    );
+  }
 
   return (
     <div
