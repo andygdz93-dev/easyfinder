@@ -74,6 +74,21 @@ const navSections = [
   },
 ];
 
+const adminNavSection = {
+  title: "Admin",
+  items: [
+    { to: "/app/admin", label: "Overview" },
+    { to: "/app/admin/users", label: "Users" },
+    { to: "/app/admin/listings", label: "Listings" },
+    { to: "/app/admin/inquiries", label: "Inquiries" },
+    { to: "/app/offers", label: "Offers" },
+    { to: "/app/scoring", label: "Scoring" },
+    { to: "/app/admin/sources", label: "Sources" },
+    { to: "/app/admin/audit", label: "Audit" },
+    { to: "/app/admin/settings", label: "Settings" },
+  ],
+};
+
 export const AppShell = ({
   children,
   className,
@@ -154,6 +169,8 @@ export const AppShell = ({
   }, [planResolved, userRoleResolved]);
 
   const roleLabel = displayRoleLabel({ role: effectiveRole });
+  const isAdminRole = effectiveRole === "admin";
+  const logoTarget = isAdminRole ? "/app/admin" : "/";
   const isShellLoading =
     !hydrated || billingLoading || (Boolean(token) && !user);
   const badgeLabel = isShellLoading ? "Loading…" : roleLabel;
@@ -173,6 +190,10 @@ export const AppShell = ({
     listingLimitLabel = "Unlimited";
   }
   const visibleSections = useMemo(() => {
+    if (effectiveRole === "admin") {
+      return [adminNavSection];
+    }
+
     const csvUploadAllowed = canUseSellerCsvUpload(
       userRoleResolved,
       billing?.plan,
@@ -244,13 +265,15 @@ export const AppShell = ({
     >
       <div className="flex">
         <aside className="min-h-screen w-64 border-r border-slate-800 bg-slate-900/70 px-6 py-8">
-          <Link to="/" className="text-xl font-semibold text-white">
+          <Link to={logoTarget} className="text-xl font-semibold text-white">
             Easy Finder AI
           </Link>
           <p className="mt-2 text-xs text-slate-400">Role: {roleLabel}</p>
-          <p className="text-xs text-slate-400">
-            Plan: {formatPlanLabel(billing ?? undefined)}
-          </p>
+          {!isAdminRole ? (
+            <p className="text-xs text-slate-400">
+              Plan: {formatPlanLabel(billing ?? undefined)}
+            </p>
+          ) : null}
           {userRoleResolved === "seller" ? (
             <p className="text-xs text-slate-400">
               Listings: {listingLimitLabel}
