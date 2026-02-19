@@ -235,4 +235,54 @@ describe("AppShell seller upload navigation", () => {
     expect(await screen.findByText("seller-free@easyfinder.ai")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Upload listing" })).not.toBeInTheDocument();
   });
+
+  it("renders admin-only navigation without plan", async () => {
+    setTestFetchHandler(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith("/api/auth/me")) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              id: "admin-1",
+              email: "admin@easyfinder.ai",
+              name: "Admin",
+              role: "admin",
+              ndaAccepted: true,
+              ndaAcceptedAt: null,
+            },
+          }),
+        } as Response;
+      }
+
+      if (url.endsWith("/api/me")) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              role: "admin",
+              billing: {
+                plan: "free",
+                status: "active",
+                current_period_end: "2099-01-01T00:00:00.000Z",
+              },
+            },
+          }),
+        } as Response;
+      }
+
+      return { ok: true, json: async () => ({ data: {} }) } as Response;
+    });
+
+    renderSellerShell(["/app/admin"]);
+
+    expect(await screen.findByText("Role: Admin")).toBeInTheDocument();
+    expect(screen.queryByText(/Plan:/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Buyer")).not.toBeInTheDocument();
+    expect(screen.queryByText("Seller")).not.toBeInTheDocument();
+    expect(screen.queryByText("Enterprise")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Listings" })).toHaveLength(1);
+    expect(screen.getAllByRole("link", { name: "Scoring" })).toHaveLength(1);
+    expect(screen.queryByRole("link", { name: "Dashboard" })).not.toBeInTheDocument();
+  });
 });
