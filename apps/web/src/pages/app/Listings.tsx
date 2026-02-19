@@ -281,20 +281,20 @@ export const Listings = () => {
             const sourceLabel = listing.source?.startsWith("seller:") ? "Private seller" : listing.source;
             return (
               <Card key={listingId || listing.title || "listing"} className="space-y-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1 pr-2">
+                <div className="flex flex-col gap-2 overflow-hidden sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0 flex-1">
                     <h3 className="truncate text-lg font-semibold">{listing.title}</h3>
                     <Badge className="mt-1">
                       {isSellerListing ? "Seller Listing" : "External Listing"}
                     </Badge>
                     <p className="truncate text-xs text-slate-300">{sourceLabel}</p>
                   </div>
-                  <div className="flex w-[7.5rem] shrink-0 flex-col items-end gap-1 text-right sm:w-[8.5rem]">
-                    <Badge className="border border-emerald-200/80 bg-emerald-400 font-semibold text-slate-950">
+                  <div className="flex w-full max-w-full flex-col gap-1 text-left sm:w-[8.5rem] sm:shrink-0 sm:items-end sm:text-right">
+                    <Badge className="w-fit max-w-full justify-center border border-emerald-200/80 bg-emerald-200 px-2 font-semibold text-emerald-950 sm:w-full">
                       Score {score?.total ?? listing.totalScore ?? 0}
                     </Badge>
                     <span
-                      className="block w-full truncate text-[11px] font-semibold text-slate-200"
+                      className="block w-full max-w-full truncate text-[11px] font-semibold text-slate-200"
                       title="Confidence reflects data completeness."
                     >
                       {((score?.confidence ?? 0) * 100).toFixed(0)}% confidence
