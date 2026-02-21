@@ -6,6 +6,7 @@ export type ListingStatus = "active" | "paused" | "removed" | "pending_review";
 
 export type ListingDocument = Omit<Listing, "createdAt"> & {
   createdAt?: string;
+  currency?: string;
   status?: string;
   isPublished?: boolean;
   publishedAt?: string;
@@ -15,6 +16,7 @@ export type ListingDocument = Omit<Listing, "createdAt"> & {
   imageUrl?: string;
   make?: string;
   model?: string;
+  location?: string;
 };
 
 type AdminListingFilters = {
@@ -52,6 +54,8 @@ const normalizeStatus = (status?: string): ListingStatus => {
   }
   return "active";
 };
+
+const normalizeCurrency = (currency?: string) => currency ?? "USD";
 
 const isLiveListing = (listing: ListingDocument) => {
   return normalizeStatus(listing.status) === "active" && listing.isPublished !== false;
@@ -114,6 +118,7 @@ export const getListingsCollection = (): ListingsCollection => {
         await collection.insertMany(
           listings.map((listing) => ({
             ...listing,
+            currency: normalizeCurrency(listing.currency),
             status: normalizeStatus(listing.status),
             updatedAt: listing.updatedAt ?? now,
           }))
@@ -145,6 +150,7 @@ export const getListingsCollection = (): ListingsCollection => {
               update: {
                 $set: {
                   ...setDoc,
+                  currency: normalizeCurrency(listing.currency),
                   source,
                   sourceExternalId,
                   updatedAt: now,
@@ -246,7 +252,11 @@ export const getListingsCollection = (): ListingsCollection => {
     return {
       insertMany: async (listings) => {
         for (const listing of listings) {
-          testListings.push({ ...listing, status: normalizeStatus(listing.status) });
+          testListings.push({
+            ...listing,
+            currency: normalizeCurrency(listing.currency),
+            status: normalizeStatus(listing.status),
+          });
         }
       },
       findBySourceAndExternalIds: async (source, ids) => {
@@ -277,6 +287,7 @@ export const getListingsCollection = (): ListingsCollection => {
 
           const normalized: ListingDocument = {
             ...listing,
+            currency: normalizeCurrency(listing.currency),
             source,
             sourceExternalId,
             updatedAt: now,
