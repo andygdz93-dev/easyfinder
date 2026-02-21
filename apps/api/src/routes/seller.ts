@@ -18,6 +18,7 @@ import { getSellerEntitlements } from "../entitlements.js";
 import { env } from "../env.js";
 import { uploadImageToGridFs } from "../gridfs-images.js";
 import { parseZipBundle, parseZipImageArchive } from "../zipBundle.js";
+import { getContactBlockReason } from "../lib/contactInfoBlocker.js";
 
 const sellerOnly = new Set(["seller", "admin"]);
 const uploadRoleAllowed = new Set(["seller", "enterprise", "admin"]);
@@ -409,10 +410,22 @@ const toInquiryDto = (inquiry: InquiryDocument, listingTitle: string | null) => 
   id: inquiry._id.toHexString(),
   listingId: inquiry.listingId,
   listingTitle,
-  message: inquiry.message,
+  buyerId: inquiry.buyerId,
+  messagePreview: inquiry.messages?.[inquiry.messages.length - 1]?.body ?? inquiry.message,
   status: inquiry.status,
   createdAt: inquiry.createdAt,
 });
+
+const toThreadMessages = (inquiry: InquiryDocument) => {
+  const initial = {
+    id: `${inquiry._id.toHexString()}-initial`,
+    senderRole: "buyer" as const,
+    body: inquiry.message,
+    createdAt: inquiry.createdAt,
+  };
+
+  return [initial, ...(inquiry.messages ?? [])].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+};
 
 export default async function sellerRoutes(app: FastifyInstance) {
   app.get("/listings", { preHandler: [app.authenticate, requireNDA] }, async (request, reply) => {
@@ -658,6 +671,110 @@ export default async function sellerRoutes(app: FastifyInstance) {
       request,
       inquiries.map((inquiry) => toInquiryDto(inquiry, listingTitles.get(inquiry.listingId) ?? null))
     );
+  });
+
+  app.get("/inquiries/:id", { preHandler: app.authenticate }, async (request, reply) => {
+    if (!sellerOnly.has(request.user.role)) {
+      return fail(request, reply, "FORBIDDEN", "Seller access only.", 403);
+    }
+
+    const { id } = request.params as { id: string };
+    const inquiry = await getInquiriesCollection().findById(id);
+    if (!inquiry) {
+      return fail(request, reply, "NOT_FOUND", "Inquiry not found.", 404);
+    }
+
+    const listing = await getListingsCollection().findById(inquiry.listingId);
+
+    return ok(request, {
+      id: inquiry._id.toHexString(),
+      listingId: inquiry.listingId,
+      listingTitle: listing?.title ?? null,
+      buyerId: inquiry.buyerId,
+      status: inquiry.status,
+      createdAt: inquiry.createdAt,
+      messages: toThreadMessages(inquiry),
+    });
+  });
+
+  app.post("/inquiries/:id/messages", { preHandler: app.authenticate }, async (request, reply) => {
+    if (!sellerOnly.has(request.user.role)) {
+      return fail(request, reply, "FORBIDDEN", "Seller access only.", 403);
+    }
+
+    const { id } = request.params as { id: string };
+    const rawBody = typeof (request.body as { body?: unknown })?.body === "string"
+      ? (request.body as { body: string }).body
+      : "";
+    const body = rawBody.trim();
+
+    if (!body) {
+      return fail(request, reply, "BAD_REQUEST", "Message body is required.", 400);
+    }
+
+    if (body.length > 2000) {
+      return fail(request, reply, "BAD_REQUEST", "Message body must be 2000 characters or less.", 400);
+    }
+
+    const inquiry = await getInquiriesCollection().findById(id);
+    if (!inquiry) {
+      return fail(request, reply, "NOT_FOUND", "Inquiry not found.", 404);
+    }
+
+    const reasonType = getContactBlockReason(body);
+    if (reasonType) {
+      await insertAuditEvent({
+        actorUserId: request.user.id,
+        actorEmail: request.user.email,
+        action: "MESSAGE_BLOCKED",
+        targetType: "inquiry",
+        targetId: inquiry._id.toHexString(),
+        reason: reasonType,
+        before: null,
+        after: {
+          inquiryId: inquiry._id.toHexString(),
+          sellerId: inquiry.sellerId,
+          buyerId: inquiry.buyerId,
+          reasonType,
+        },
+        requestId: request.requestId,
+      });
+
+      return fail(
+        request,
+        reply,
+        "CONTACT_INFO_BLOCKED",
+        "For safety, don’t share phone numbers, emails, or social handles. Use EasyFinder messaging only.",
+        400
+      );
+    }
+
+    const now = new Date();
+    const nextMessages = [
+      ...(inquiry.messages ?? []),
+      {
+        id: randomUUID(),
+        senderRole: "seller" as const,
+        body,
+        createdAt: now,
+      },
+    ];
+
+    await getInquiriesCollection().updateOne(
+      { _id: inquiry._id },
+      {
+        $set: {
+          messages: nextMessages,
+          updatedAt: now,
+        },
+      }
+    );
+
+    const updated = await getInquiriesCollection().findById(id);
+    return ok(request, {
+      id: inquiry._id.toHexString(),
+      messages: toThreadMessages(updated ?? { ...inquiry, messages: nextMessages }),
+    });
   });
 
   app.get("/insights", { preHandler: [app.authenticate, requireNDA] }, async (request, reply) => {

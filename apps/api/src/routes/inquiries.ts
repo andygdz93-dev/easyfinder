@@ -4,12 +4,14 @@ import { ObjectId } from "mongodb";
 import { fail, ok } from "../response.js";
 import { getUsersCollection } from "../users.js";
 import { getInquiriesCollection, InquiryDocument } from "../inquiries.js";
+import { getContactBlockReason } from "../lib/contactInfoBlocker.js";
+import { insertAuditEvent } from "../audit.js";
 
 const buyerOrAdminOnly = new Set(["buyer", "admin"]);
 
 const createInquirySchema = z.object({
   listingId: z.string().min(1),
-  message: z.string().min(1).max(2000),
+  message: z.string().max(2000),
 });
 
 const openStatuses: InquiryDocument["status"][] = ["new", "reviewing", "contacted"];
@@ -31,6 +33,39 @@ export default async function inquiriesRoutes(app: FastifyInstance) {
     }
 
     const payload = createInquirySchema.parse(request.body);
+    const message = payload.message.trim();
+
+    if (!message) {
+      return fail(request, reply, "BAD_REQUEST", "Message is required.", 400);
+    }
+
+    const reasonType = getContactBlockReason(message);
+    if (reasonType) {
+      await insertAuditEvent({
+        actorUserId: request.user.id,
+        actorEmail: request.user.email,
+        action: "MESSAGE_BLOCKED",
+        targetType: "inquiry",
+        targetId: payload.listingId,
+        reason: reasonType,
+        before: null,
+        after: {
+          inquiryId: null,
+          sellerId: null,
+          buyerId: request.user.id,
+          reasonType,
+        },
+        requestId: request.requestId,
+      });
+
+      return fail(
+        request,
+        reply,
+        "CONTACT_INFO_BLOCKED",
+        "For safety, don’t share phone numbers, emails, or social handles. Use EasyFinder messaging only.",
+        400
+      );
+    }
 
     if (!ObjectId.isValid(request.user.id)) {
       return fail(request, reply, "NOT_FOUND", "Buyer not found.", 404);
@@ -68,7 +103,7 @@ export default async function inquiriesRoutes(app: FastifyInstance) {
       buyerId: request.user.id,
       buyerEmail: buyer.email,
       buyerName: buyer.name,
-      message: payload.message,
+      message,
       status: "new",
       createdAt: now,
       updatedAt: now,

@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import SellerInquiries from "../src/pages/app/SellerInquiries";
 
@@ -34,14 +35,15 @@ describe("SellerInquiries blind marketplace rendering", () => {
     });
   });
 
-  it("shows listing title and anonymized buyer label without buyer email", async () => {
+  it("omits helper copy, renders listing title, and uses 3-digit buyer alias", async () => {
     apiFetchMock.mockResolvedValue([
       {
         id: "inq-abcdef123456",
         listingId: "listing-123456",
         listingTitle: "2021 Caterpillar 310 Loader",
+        buyerId: "buyer-123",
         buyerEmail: "hidden@example.com",
-        message: "Still available?",
+        messagePreview: "Still available?",
         status: "new",
         createdAt: "2026-01-01T00:00:00.000Z",
       },
@@ -57,8 +59,40 @@ describe("SellerInquiries blind marketplace rendering", () => {
     );
 
     expect(await screen.findByText("2021 Caterpillar 310 Loader")).toBeInTheDocument();
-    expect(screen.getByText("Buyer #123456")).toBeInTheDocument();
+    expect(screen.queryByText("Buyer interest routed through EasyFinder (no direct seller contact shown to buyers)."))
+      .not.toBeInTheDocument();
+    expect(screen.getByText(/^Buyer #\d{3}$/)).toBeInTheDocument();
     expect(screen.queryByText("hidden@example.com")).not.toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: "Listing" })).toBeInTheDocument();
+  });
+
+  it("navigates to thread when clicking message preview", async () => {
+    apiFetchMock.mockResolvedValue([
+      {
+        id: "inq-1",
+        listingId: "listing-1",
+        listingTitle: "Thread Listing",
+        buyerId: "buyer-1",
+        messagePreview: "Click me",
+        status: "new",
+        createdAt: "2026-01-01T00:00:00.000Z",
+      },
+    ]);
+
+    const user = userEvent.setup();
+    const queryClient = new QueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/app/seller/inquiries"]}>
+          <Routes>
+            <Route path="/app/seller/inquiries" element={<SellerInquiries />} />
+            <Route path="/app/seller/inquiries/:inquiryId" element={<div>Thread Loaded</div>} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+
+    const preview = await screen.findByRole("link", { name: "Click me" });
+    await user.click(preview);
+    expect(await screen.findByText("Thread Loaded")).toBeInTheDocument();
   });
 });

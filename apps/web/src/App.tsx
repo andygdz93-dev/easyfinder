@@ -21,6 +21,7 @@ import SellerEdit from "./pages/app/SellerEdit";
 import { SellerUpload } from "./pages/app/SellerUpload";
 import { SellerDashboard } from "./pages/app/SellerDashboard";
 import SellerInquiries from "./pages/app/SellerInquiries";
+import SellerInquiryThread from "./pages/app/SellerInquiryThread";
 import SellerPipeline from "./pages/app/SellerPipeline";
 import { Settings } from "./pages/app/Settings";
 import { Upgrade } from "./pages/app/Upgrade";
@@ -240,6 +241,7 @@ export default function App() {
               <Route path="seller/dashboard" element={<SellerDashboard />} />
               <Route path="seller/listings" element={<SellerListings />} />
               <Route path="seller/inquiries" element={<SellerInquiries />} />
+              <Route path="seller/inquiries/:inquiryId" element={<SellerInquiryThread />} />
               <Route path="seller/pipeline" element={<SellerPipeline />} />
               <Route path="seller/add" element={<SellerAdd />} />
               <Route path="seller/listings/:id/edit" element={<SellerEdit />} />

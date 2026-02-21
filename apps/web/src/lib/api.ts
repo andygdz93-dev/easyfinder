@@ -38,9 +38,27 @@ export type InquiryDto = {
   buyerId?: string;
   buyerName?: string;
   buyerEmail?: string;
-  message: string;
-  status: "new" | "reviewing" | "contacted" | "closed";
+  message?: string;
+  messagePreview?: string;
+  status: "new" | "reviewing" | "contacted" | "closed" | "open" | "spam";
   createdAt: string;
+};
+
+export type InquiryThreadMessage = {
+  id: string;
+  senderRole: "buyer" | "seller";
+  body: string;
+  createdAt: string;
+};
+
+export type SellerInquiryThread = {
+  id: string;
+  listingId: string;
+  listingTitle: string | null;
+  buyerId: string;
+  status: string;
+  createdAt: string;
+  messages: InquiryThreadMessage[];
 };
 
 export type SellerInquiriesResponse = InquiryDto[];
@@ -517,6 +535,14 @@ export const createInquiry = (input: { listingId: string; message: string }) =>
 // Legacy helper for internal usage
 export const apiFetch = <T>(path: string, options: ApiRequestOptions = {}) =>
   apiRequest<T>(path, options);
+
+export const getSellerInquiryThread = (id: string) => apiFetch<SellerInquiryThread>(`/seller/inquiries/${id}`);
+
+export const sendSellerInquiryMessage = (id: string, input: { body: string }) =>
+  apiFetch<{ id: string; messages: InquiryThreadMessage[] }>(`/seller/inquiries/${id}/messages`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
 
 
 export type AdminOverview = {

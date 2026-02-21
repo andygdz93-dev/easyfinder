@@ -386,6 +386,50 @@ describe("API", () => {
     expect(createdInquiry).toHaveProperty("listingTitle");
   });
 
+
+  it("seller reply endpoint blocks email and phone contact info but allows model strings", async () => {
+    const createRes = await supertest(app.server)
+      .post("/api/inquiries")
+      .set("Authorization", `Bearer ${buyerToken}`)
+      .send({ listingId: "demo-request-info-thread", message: "Hello seller" });
+
+    expect(createRes.status).toBe(200);
+
+    const listRes = await supertest(app.server)
+      .get("/api/seller/inquiries")
+      .set("Authorization", `Bearer ${sellerToken}`);
+
+    const inquiry = listRes.body.data.find((item: any) => item.listingId === "demo-request-info-thread");
+    expect(inquiry).toBeTruthy();
+
+    const emailBlocked = await supertest(app.server)
+      .post(`/api/seller/inquiries/${inquiry.id}/messages`)
+      .set("Authorization", `Bearer ${sellerToken}`)
+      .send({ body: "Email me at seller@example.com" });
+    expect(emailBlocked.status).toBe(400);
+    expect(emailBlocked.body.error.code).toBe("CONTACT_INFO_BLOCKED");
+
+    const phoneBlocked = await supertest(app.server)
+      .post(`/api/seller/inquiries/${inquiry.id}/messages`)
+      .set("Authorization", `Bearer ${sellerToken}`)
+      .send({ body: "Call me at (555) 123-4567" });
+    expect(phoneBlocked.status).toBe(400);
+    expect(phoneBlocked.body.error.code).toBe("CONTACT_INFO_BLOCKED");
+
+    const allowed = await supertest(app.server)
+      .post(`/api/seller/inquiries/${inquiry.id}/messages`)
+      .set("Authorization", `Bearer ${sellerToken}`)
+      .send({ body: "CATD6R2019 price 150000" });
+    expect(allowed.status).toBe(200);
+
+    const threadRes = await supertest(app.server)
+      .get(`/api/seller/inquiries/${inquiry.id}`)
+      .set("Authorization", `Bearer ${sellerToken}`);
+    expect(threadRes.status).toBe(200);
+    expect(Array.isArray(threadRes.body.data.messages)).toBe(true);
+    expect(threadRes.body.data.messages.some((msg: any) => msg.body === "CATD6R2019 price 150000")).toBe(true);
+  });
+
   it("sets role via /api/me/role and persists to backend", async () => {
     const email = `role-${Date.now()}@easyfinder.ai`;
     const registerRes = await supertest(app.server)
