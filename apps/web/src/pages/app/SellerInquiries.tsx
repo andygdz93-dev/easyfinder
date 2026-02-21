@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "../../components/ui/card";
 import { apiFetch, InquiryDto, SellerInquiriesResponse } from "../../lib/api";
@@ -13,6 +14,20 @@ const toDisplayDate = (value: string) => {
 const toMessagePreview = (value: string) => {
   if (value.length <= 120) return value;
   return `${value.slice(0, 120)}…`;
+};
+
+const toShortId = (value?: string) => {
+  if (!value) return "unknown";
+  return value.slice(-6);
+};
+
+const toListingLabel = (inquiry: InquiryDto) => {
+  if (inquiry.listingTitle?.trim()) return inquiry.listingTitle;
+  return `Listing …${toShortId(inquiry.listingId)}`;
+};
+
+const toBuyerLabel = (inquiry: InquiryDto) => {
+  return `Buyer #${toShortId(inquiry.buyerId || inquiry.id)}`;
 };
 
 export default function SellerInquiries() {
@@ -63,7 +78,7 @@ export default function SellerInquiries() {
             <table className="min-w-full text-sm text-slate-200">
               <thead>
                 <tr className="border-b border-slate-700 text-left text-xs uppercase tracking-wide text-slate-400">
-                  <th className="px-2 py-2">Listing ID</th>
+                  <th className="px-2 py-2">Listing</th>
                   <th className="px-2 py-2">Buyer</th>
                   <th className="px-2 py-2">Status</th>
                   <th className="px-2 py-2">Date</th>
@@ -73,14 +88,15 @@ export default function SellerInquiries() {
               <tbody>
                 {inquiries.map((inquiry) => (
                   <tr key={inquiry.id} className="border-b border-slate-800 align-top">
-                    <td className="px-2 py-3">{inquiry.listingId}</td>
-                    <td className="px-2 py-3">
-                      <div>{inquiry.buyerName}</div>
-                      <div className="text-xs text-slate-400">{inquiry.buyerEmail}</div>
+                    <td className="px-2 py-3 max-w-[320px] truncate" title={toListingLabel(inquiry)}>
+                      <Link className="text-cyan-300 hover:underline" to={`/app/listings/${inquiry.listingId}`}>
+                        {toListingLabel(inquiry)}
+                      </Link>
                     </td>
+                    <td className="px-2 py-3 max-w-[320px] truncate" title={toBuyerLabel(inquiry)}>{toBuyerLabel(inquiry)}</td>
                     <td className="px-2 py-3 capitalize">{inquiry.status}</td>
                     <td className="px-2 py-3 text-slate-300">{toDisplayDate(inquiry.createdAt)}</td>
-                    <td className="px-2 py-3 text-slate-300">{toMessagePreview(inquiry.message)}</td>
+                    <td className="px-2 py-3 text-slate-300 max-w-[320px] truncate" title={inquiry.message}>{toMessagePreview(inquiry.message)}</td>
                   </tr>
                 ))}
               </tbody>
