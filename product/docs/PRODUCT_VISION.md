@@ -51,6 +51,8 @@ Scraping can support discovery/onboarding, but sustained supply should come from
 
 ## Canonical references
 
-- Scoring behavior and vocabulary: `docs/product/SCORING_MODEL.md`
-- Engineering/runtime constraints: `docs/engineering/SYSTEM_OVERVIEW.md`
+- Ranking logic - `docs/SCORING.md
+- System design - `docs/ARCHITECTURE.md
+- Admin controls - `docs/ADMIN.md
+- Process flows - `docs/WORKFLOWS.md 
 - API contract and endpoint schemas: `openapi.yml`
