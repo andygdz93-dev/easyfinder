@@ -380,7 +380,10 @@ describe("API", () => {
     expect(listRes.status).toBe(200);
     expect(Array.isArray(listRes.body.data)).toBe(true);
     expect(listRes.body.data.length).toBeGreaterThanOrEqual(1);
-    expect(listRes.body.data.some((inquiry: any) => inquiry.listingId === "demo-request-info-seller-list")).toBe(true);
+    const createdInquiry = listRes.body.data.find((inquiry: any) => inquiry.listingId === "demo-request-info-seller-list");
+    expect(createdInquiry).toBeTruthy();
+    expect(createdInquiry).not.toHaveProperty("buyerEmail");
+    expect(createdInquiry).toHaveProperty("listingTitle");
   });
 
   it("sets role via /api/me/role and persists to backend", async () => {
