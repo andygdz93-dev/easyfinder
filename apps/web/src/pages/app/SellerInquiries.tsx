@@ -21,13 +21,23 @@ const toShortId = (value?: string) => {
   return value.slice(-6);
 };
 
+const stableHash = (value: string) => {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
+  }
+  return hash;
+};
+
 const toListingLabel = (inquiry: InquiryDto) => {
   if (inquiry.listingTitle?.trim()) return inquiry.listingTitle;
   return `Listing …${toShortId(inquiry.listingId)}`;
 };
 
 const toBuyerLabel = (inquiry: InquiryDto) => {
-  return `Buyer #${toShortId(inquiry.buyerId || inquiry.id)}`;
+  const source = inquiry.buyerId || inquiry.id;
+  const alias = (stableHash(source) % 900) + 100;
+  return `Buyer #${alias}`;
 };
 
 export default function SellerInquiries() {
@@ -56,9 +66,6 @@ export default function SellerInquiries() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold text-white">Seller Inquiries</h1>
-      <p className="text-sm text-slate-400">
-        Buyer interest routed through EasyFinder (no direct seller contact shown to buyers).
-      </p>
 
       {inquiriesQuery.isLoading ? (
         <Card className="rounded-xl bg-slate-800 p-4">
@@ -88,15 +95,19 @@ export default function SellerInquiries() {
               <tbody>
                 {inquiries.map((inquiry) => (
                   <tr key={inquiry.id} className="border-b border-slate-800 align-top">
-                    <td className="px-2 py-3 max-w-[320px] truncate" title={toListingLabel(inquiry)}>
+                    <td className="max-w-[320px] truncate px-2 py-3" title={toListingLabel(inquiry)}>
                       <Link className="text-cyan-300 hover:underline" to={`/app/listings/${inquiry.listingId}`}>
                         {toListingLabel(inquiry)}
                       </Link>
                     </td>
-                    <td className="px-2 py-3 max-w-[320px] truncate" title={toBuyerLabel(inquiry)}>{toBuyerLabel(inquiry)}</td>
+                    <td className="max-w-[320px] truncate px-2 py-3" title={toBuyerLabel(inquiry)}>{toBuyerLabel(inquiry)}</td>
                     <td className="px-2 py-3 capitalize">{inquiry.status}</td>
                     <td className="px-2 py-3 text-slate-300">{toDisplayDate(inquiry.createdAt)}</td>
-                    <td className="px-2 py-3 text-slate-300 max-w-[320px] truncate" title={inquiry.message}>{toMessagePreview(inquiry.message)}</td>
+                    <td className="max-w-[320px] truncate px-2 py-3 text-slate-300" title={inquiry.messagePreview ?? inquiry.message ?? ""}>
+                      <Link className="text-cyan-300 hover:underline" to={`/app/seller/inquiries/${inquiry.id}`}>
+                        {toMessagePreview(inquiry.messagePreview ?? inquiry.message ?? "")}
+                      </Link>
+                    </td>
                   </tr>
                 ))}
               </tbody>
