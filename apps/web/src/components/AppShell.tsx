@@ -168,8 +168,8 @@ export const AppShell = ({
 
   const roleLabel = displayRoleLabel({ role: effectiveRole });
   const isAdminRole = effectiveRole === "admin";
-  const isAdminConsoleRoute =
-    isAdminRole && location.pathname.startsWith("/app/admin");
+  const isAdminRoute =
+    user?.role === "admin" && location.pathname.startsWith("/app/admin");
   const logoTarget = isAdminRole ? "/app/admin" : "/";
   const isShellLoading =
     !hydrated || billingLoading || (Boolean(token) && !user);
@@ -257,7 +257,7 @@ export const AppShell = ({
     userRoleResolved,
   ]);
 
-  if (isAdminConsoleRoute) {
+  if (isAdminRoute) {
     return (
       <div
         className={`min-h-screen text-slate-100 ${className ?? ""}`}
