@@ -163,8 +163,10 @@ export const ListingDetail = () => {
             alt={data.title ?? "Listing image"}
             maxThumbs={4}
             imagesKey={data.id ?? data.title}
-            heroClassName="h-72 rounded-lg"
-            thumbClassName="h-20 rounded-md"
+            heroClassName="h-[420px] rounded-lg bg-slate-900"
+            heroImageClassName="object-contain"
+            thumbClassName="h-20 rounded-md bg-slate-800"
+            thumbImageClassName="object-contain"
           />
         )}
 
