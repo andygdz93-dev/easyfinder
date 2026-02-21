@@ -64,7 +64,7 @@ export default function ImageGallery({
   }, [resetKey, normalizedImages]);
 
   const activeHero = hoverHero ?? gallery[0] ?? fallbackSrc;
-  const thumbnails = gallery.slice(1, maxThumbs + 1);
+  const thumbnails = gallery.slice(0, maxThumbs);
   const canCycle = autoCycle && gallery.length > 1 && !hoverHero;
 
   useEffect(() => {
@@ -104,7 +104,7 @@ export default function ImageGallery({
           src={activeHero}
           alt={alt}
           data-testid={heroImageTestId}
-          className={clsx("h-full w-full object-cover", heroImageClassName)}
+          className={clsx("h-full w-full", heroImageClassName)}
           loading="lazy"
           onError={
             fallbackSrc
@@ -122,14 +122,18 @@ export default function ImageGallery({
           data-testid={thumbsTestId}
         >
           {thumbnails.map((src, idx) => {
-            const actualIndex = idx + 1;
+            const actualIndex = idx;
+            const isSelected = actualIndex === 0;
             return (
               <button
                 key={`${src}-${actualIndex}`}
                 type="button"
                 data-testid={getThumbTestId?.(actualIndex)}
                 className={clsx(
-                  "h-10 overflow-hidden rounded-lg bg-slate-100 sm:h-12",
+                  "overflow-hidden rounded-lg transition-opacity",
+                  isSelected
+                    ? "ring-2 ring-emerald-400"
+                    : "opacity-80 hover:opacity-100",
                   thumbClassName
                 )}
                 onMouseEnter={() => setHoverHero(src)}
