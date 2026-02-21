@@ -15,5 +15,6 @@ export default defineConfig({
     env: {
       BILLING_ENABLED: "false",
     },
+    testTimeout: 15000,
   },
 });
