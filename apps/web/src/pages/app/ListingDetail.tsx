@@ -4,7 +4,6 @@ import { useParams } from "react-router-dom";
 import { Card } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
-import ImageGallery from "../../components/ImageGallery";
 import {
   ApiError,
   addToWatchlist,
@@ -17,7 +16,11 @@ import {
 import { WatchlistItem } from "@easyfinderai/shared";
 import { useAuth } from "../../lib/auth";
 import { useRuntime } from "../../lib/runtime";
-import { formatListingHours, formatListingPrice, toPlainText } from "../../lib/formatters";
+import {
+  formatListingHours,
+  formatListingPrice,
+  toPlainText,
+} from "../../lib/formatters";
 
 export const ListingDetail = () => {
   const { id } = useParams();
@@ -29,6 +32,7 @@ export const ListingDetail = () => {
   const [inquiryError, setInquiryError] = useState<string | null>(null);
   const [inquirySuccess, setInquirySuccess] = useState(false);
   const [isSubmittingInquiry, setIsSubmittingInquiry] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(0);
 
   const listingQuery = useQuery({
     queryKey: ["listing", id],
@@ -42,7 +46,7 @@ export const ListingDetail = () => {
   });
 
   const watchlistIds = new Set(
-    (watchlistQuery.data?.items ?? []).map((item: WatchlistItem) => item.listingId)
+    (watchlistQuery.data?.items ?? []).map((item: WatchlistItem) => item.listingId),
   );
 
   if (listingQuery.isLoading) {
@@ -87,7 +91,7 @@ export const ListingDetail = () => {
       setActionError(
         requestId
           ? `Could not update watchlist. Request ID: ${requestId}`
-          : "Could not update watchlist."
+          : "Could not update watchlist.",
       );
     }
   };
@@ -95,8 +99,10 @@ export const ListingDetail = () => {
   const images = data.images?.length
     ? data.images
     : data.imageUrl
-    ? [data.imageUrl]
-    : [];
+      ? [data.imageUrl]
+      : [];
+
+  const activeImage = images[selectedImage] ?? images[0];
   const displayPrice = formatListingPrice(data.price);
   const displayHours = formatListingHours(data.hours);
   const score = data.score;
@@ -104,7 +110,8 @@ export const ListingDetail = () => {
   const rationale = score?.reasons ?? [];
   const listingId = data.id ?? "";
   const isSellerListing = data.source?.startsWith("seller:");
-  const canRequestInfo = !runtime.demoMode && (user?.role === "buyer" || user?.role === "admin");
+  const canRequestInfo =
+    !runtime.demoMode && (user?.role === "buyer" || user?.role === "admin");
 
   const handleSubmitInquiry = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -127,8 +134,8 @@ export const ListingDetail = () => {
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-      <Card className="space-y-4">
+    <div className="flex flex-1 min-w-0 gap-6">
+      <Card className="flex-1 min-w-0 space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-2xl font-semibold">{data.title}</h2>
@@ -137,8 +144,8 @@ export const ListingDetail = () => {
             </Badge>
           </div>
           <div className="flex items-center gap-2">
-            {canRequestInfo && (
-              inquirySuccess ? (
+            {canRequestInfo &&
+              (inquirySuccess ? (
                 <Button variant="secondary" disabled>
                   Request sent
                 </Button>
@@ -146,8 +153,7 @@ export const ListingDetail = () => {
                 <Button variant="secondary" onClick={() => setIsRequestModalOpen(true)}>
                   Request Info
                 </Button>
-              )
-            )}
+              ))}
             <Badge
               className="bg-accent text-slate-900"
               title={`Confidence ${((score?.confidence ?? 0) * 100).toFixed(0)}%`}
@@ -157,18 +163,59 @@ export const ListingDetail = () => {
           </div>
         </div>
 
+        {images.length > 0 && activeImage && (
+          <div className="grid gap-4 md:grid-cols-[96px_1fr]">
+            <div className="hidden md:flex md:flex-col md:gap-3 md:max-h-[520px] md:overflow-y-auto pr-1">
+              {images.map((src, index) => (
+                <button
+                  key={`${src}-${index}`}
+                  type="button"
+                  className={`aspect-square w-24 rounded-md overflow-hidden bg-slate-950/40 ${
+                    selectedImage === index ? "ring-2 ring-emerald-400" : ""
+                  }`}
+                  onClick={() => setSelectedImage(index)}
+                >
+                  <img
+                    src={src}
+                    alt={`${data.title ?? "Listing image"} thumbnail ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </button>
+              ))}
+            </div>
+
+            <div className="w-full aspect-[16/9] bg-slate-950/40 rounded-xl overflow-hidden flex items-center justify-center">
+              <img
+                src={activeImage}
+                alt={data.title ?? "Listing image"}
+                className="w-full h-full object-contain"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        )}
+
         {images.length > 0 && (
-          <ImageGallery
-            images={images}
-            alt={data.title ?? "Listing image"}
-            maxThumbs={6}
-            imagesKey={data.id ?? data.title}
-            heroClassName="w-full aspect-[16/9] bg-slate-950/40 rounded-xl overflow-hidden flex items-center justify-center"
-            heroImageClassName="object-contain"
-            thumbsClassName="flex gap-3 overflow-x-auto py-2"
-            thumbClassName="h-24 sm:h-28 aspect-[4/3] bg-slate-950/40 rounded-md overflow-hidden"
-            thumbImageClassName="object-cover"
-          />
+          <div className="flex md:hidden gap-3 overflow-x-auto py-2">
+            {images.map((src, index) => (
+              <button
+                key={`mobile-${src}-${index}`}
+                type="button"
+                className={`aspect-square w-24 shrink-0 rounded-md overflow-hidden bg-slate-950/40 ${
+                  selectedImage === index ? "ring-2 ring-emerald-400" : ""
+                }`}
+                onClick={() => setSelectedImage(index)}
+              >
+                <img
+                  src={src}
+                  alt={`${data.title ?? "Listing image"} thumbnail mobile ${index + 1}`}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              </button>
+            ))}
+          </div>
         )}
 
         <p className="text-sm text-slate-300">{toPlainText(data.description)}</p>
@@ -180,10 +227,7 @@ export const ListingDetail = () => {
           <span>{data.source ?? "—"}</span>
         </div>
         <div>
-          <Button
-            variant="secondary"
-            onClick={handleWatchlist}
-          >
+          <Button variant="secondary" onClick={handleWatchlist}>
             {listingId && watchlistIds.has(listingId)
               ? "Remove from watchlist"
               : "Add to watchlist"}
@@ -210,14 +254,17 @@ export const ListingDetail = () => {
           </div>
         </div>
       </Card>
-      <Card className="space-y-3">
+
+      <aside className="w-[360px] shrink-0 border-l border-slate-800/60 h-screen overflow-hidden p-6">
         <h3 className="text-lg font-semibold">Score explanation</h3>
-        <ul className="space-y-2 text-sm text-slate-300">
+        <ul className="mt-3 space-y-2 text-sm text-slate-300">
           {rationale.map((item, index) => (
-            <li key={`${index}-${typeof item === "string" ? item : item.message}`}>- {typeof item === "string" ? item : item.message}</li>
+            <li key={`${index}-${typeof item === "string" ? item : item.message}`}>
+              - {typeof item === "string" ? item : item.message}
+            </li>
           ))}
         </ul>
-      </Card>
+      </aside>
 
       {isRequestModalOpen && canRequestInfo && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4">
