@@ -4,6 +4,13 @@ import { getCollection } from "./db.js";
 
 export type InquiryStatus = "new" | "reviewing" | "contacted" | "closed" | "open" | "spam";
 
+export type InquiryMessage = {
+  id: string;
+  senderRole: "buyer" | "seller";
+  body: string;
+  createdAt: Date;
+};
+
 export type InquiryDocument = {
   _id: ObjectId;
   listingId: string;
@@ -12,6 +19,7 @@ export type InquiryDocument = {
   buyerEmail: string;
   buyerName: string;
   message: string;
+  messages?: InquiryMessage[];
   status: InquiryStatus;
   createdAt: Date;
   updatedAt: Date;
