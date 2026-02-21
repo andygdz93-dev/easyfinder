@@ -16,8 +16,10 @@ export default function AdminInquiries() {
       <h2 className="text-lg font-semibold">Inquiries</h2>
       {data?.items?.map((inq) => (
         <div key={inq.id} className="rounded border border-slate-700 p-3">
-          <p className="font-medium">{inq.buyerEmail}</p>
-          <p className="text-xs text-slate-400">{inq.message}</p>
+          <p className="font-medium">Buyer: {inq.buyerId}</p>
+          <p className="text-xs text-slate-400">Listing: {inq.listingId}</p>
+          <p className="text-xs text-slate-400">Created: {new Date(inq.createdAt).toLocaleString()}</p>
+          <p className="text-xs text-slate-400">Status: {inq.status}</p>
           <div className="mt-2 flex gap-2">
             <Button onClick={() => mutation.mutate({ id: inq.id, status: "open" })}>Open</Button>
             <Button onClick={() => mutation.mutate({ id: inq.id, status: "closed" })}>Close</Button>

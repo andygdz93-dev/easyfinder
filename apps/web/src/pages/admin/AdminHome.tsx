@@ -30,7 +30,7 @@ export default function AdminHome() {
       </Card>
       <Card>
         <h2 className="text-lg font-semibold">Inquiries</h2>
-        <p>Total: {data.inquiries.total}</p>
+        <p>Total: {data.inquiries.open + data.inquiries.closed}</p>
         <p>Open: {data.inquiries.open}</p>
         <p>Closed: {data.inquiries.closed}</p>
       </Card>
