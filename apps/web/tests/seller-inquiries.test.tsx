@@ -95,4 +95,29 @@ describe("SellerInquiries blind marketplace rendering", () => {
     await user.click(preview);
     expect(await screen.findByText("Thread Loaded")).toBeInTheDocument();
   });
+  it("shows untitled listing fallback when title is missing", async () => {
+    apiFetchMock.mockResolvedValue([
+      {
+        id: "inq-untitled",
+        listingId: "listing-untitled-123456",
+        buyerId: "buyer-untitled",
+        messagePreview: "Need details",
+        status: "new",
+        createdAt: "2026-01-01T00:00:00.000Z",
+      },
+    ]);
+
+    const queryClient = new QueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <SellerInquiries />
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+
+    expect(await screen.findByText("Untitled listing")).toBeInTheDocument();
+    expect(screen.queryByText(/Listing …/)).not.toBeInTheDocument();
+  });
+
 });

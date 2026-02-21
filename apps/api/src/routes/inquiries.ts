@@ -4,6 +4,7 @@ import { ObjectId } from "mongodb";
 import { fail, ok } from "../response.js";
 import { getUsersCollection } from "../users.js";
 import { getInquiriesCollection, InquiryDocument } from "../inquiries.js";
+import { getListingsCollection } from "../listings.js";
 import { getContactBlockReason } from "../lib/contactInfoBlocker.js";
 import { insertAuditEvent } from "../audit.js";
 
@@ -26,7 +27,61 @@ const toInquiryDto = (inquiry: InquiryDocument) => ({
   createdAt: inquiry.createdAt,
 });
 
+const toThreadMessages = (inquiry: InquiryDocument) => {
+  const initial = {
+    id: `${inquiry._id.toHexString()}-initial`,
+    senderRole: "buyer" as const,
+    body: inquiry.message,
+    createdAt: inquiry.createdAt,
+  };
+
+  return [initial, ...(inquiry.messages ?? [])].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+};
+
 export default async function inquiriesRoutes(app: FastifyInstance) {
+  app.get("/", { preHandler: app.authenticate }, async (request, reply) => {
+    if (!buyerOrAdminOnly.has(request.user.role)) {
+      return fail(request, reply, "FORBIDDEN", "Buyer or admin access required.", 403);
+    }
+
+    const isAdmin = request.user.role === "admin";
+    const inquiries = isAdmin
+      ? await getInquiriesCollection().findMany()
+      : (await getInquiriesCollection().findMany()).filter((inquiry) => inquiry.buyerId === request.user.id);
+
+    inquiries.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return ok(request, inquiries.map(toInquiryDto));
+  });
+
+  app.get("/:id", { preHandler: app.authenticate }, async (request, reply) => {
+    if (!buyerOrAdminOnly.has(request.user.role)) {
+      return fail(request, reply, "FORBIDDEN", "Buyer or admin access required.", 403);
+    }
+
+    const { id } = request.params as { id: string };
+    const inquiry = await getInquiriesCollection().findById(id);
+    if (!inquiry) {
+      return fail(request, reply, "NOT_FOUND", "Inquiry not found.", 404);
+    }
+
+    const isAdmin = request.user.role === "admin";
+    if (!isAdmin && inquiry.buyerId !== request.user.id) {
+      return fail(request, reply, "FORBIDDEN", "You do not have access to this inquiry.", 403);
+    }
+
+    const listing = await getListingsCollection().findById(inquiry.listingId);
+
+    return ok(request, {
+      id: inquiry._id.toHexString(),
+      listingId: inquiry.listingId,
+      listingTitle: listing?.title ?? null,
+      buyerId: inquiry.buyerId,
+      status: inquiry.status,
+      createdAt: inquiry.createdAt,
+      messages: toThreadMessages(inquiry),
+    });
+  });
+
   app.post("/", { preHandler: app.authenticate }, async (request, reply) => {
     if (!buyerOrAdminOnly.has(request.user.role)) {
       return fail(request, reply, "FORBIDDEN", "Buyer or admin access required.", 403);
@@ -95,11 +150,14 @@ export default async function inquiriesRoutes(app: FastifyInstance) {
       );
     }
 
+    const listing = await getListingsCollection().findById(payload.listingId);
+    const sellerId = listing?.source?.startsWith("seller:") ? listing.source.replace("seller:", "") : null;
+
     const now = new Date();
     const inquiry: InquiryDocument = {
       _id: new ObjectId(),
       listingId: payload.listingId,
-      sellerId: null,
+      sellerId,
       buyerId: request.user.id,
       buyerEmail: buyer.email,
       buyerName: buyer.name,

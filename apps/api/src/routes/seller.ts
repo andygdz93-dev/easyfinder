@@ -409,7 +409,7 @@ const createSellerListingFromRow = (
 const toInquiryDto = (inquiry: InquiryDocument, listingTitle: string | null) => ({
   id: inquiry._id.toHexString(),
   listingId: inquiry.listingId,
-  listingTitle,
+  listingTitle: listingTitle?.trim() ? listingTitle : null,
   buyerId: inquiry.buyerId,
   messagePreview: inquiry.messages?.[inquiry.messages.length - 1]?.body ?? inquiry.message,
   status: inquiry.status,
@@ -654,7 +654,10 @@ export default async function sellerRoutes(app: FastifyInstance) {
       return fail(request, reply, "FORBIDDEN", "Seller access only.", 403);
     }
 
-    const inquiries = await getInquiriesCollection().findMany();
+    const isAdmin = request.user.role === "admin";
+    const inquiries = isAdmin
+      ? await getInquiriesCollection().findMany()
+      : await getInquiriesCollection().findMany({ sellerId: request.user.id });
     inquiries.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
     const listingTitles = new Map<string, string>();
@@ -682,6 +685,11 @@ export default async function sellerRoutes(app: FastifyInstance) {
     const inquiry = await getInquiriesCollection().findById(id);
     if (!inquiry) {
       return fail(request, reply, "NOT_FOUND", "Inquiry not found.", 404);
+    }
+
+    const isAdmin = request.user.role === "admin";
+    if (!isAdmin && inquiry.sellerId !== request.user.id) {
+      return fail(request, reply, "FORBIDDEN", "You do not have access to this inquiry.", 403);
     }
 
     const listing = await getListingsCollection().findById(inquiry.listingId);
@@ -719,6 +727,11 @@ export default async function sellerRoutes(app: FastifyInstance) {
     const inquiry = await getInquiriesCollection().findById(id);
     if (!inquiry) {
       return fail(request, reply, "NOT_FOUND", "Inquiry not found.", 404);
+    }
+
+    const isAdmin = request.user.role === "admin";
+    if (!isAdmin && inquiry.sellerId !== request.user.id) {
+      return fail(request, reply, "FORBIDDEN", "You do not have access to this inquiry.", 403);
     }
 
     const reasonType = getContactBlockReason(body);
