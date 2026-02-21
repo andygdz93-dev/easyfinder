@@ -16,11 +16,6 @@ const toMessagePreview = (value: string) => {
   return `${value.slice(0, 120)}…`;
 };
 
-const toShortId = (value?: string) => {
-  if (!value) return "unknown";
-  return value.slice(-6);
-};
-
 const stableHash = (value: string) => {
   let hash = 0;
   for (let index = 0; index < value.length; index += 1) {
@@ -31,7 +26,7 @@ const stableHash = (value: string) => {
 
 const toListingLabel = (inquiry: InquiryDto) => {
   if (inquiry.listingTitle?.trim()) return inquiry.listingTitle;
-  return `Listing …${toShortId(inquiry.listingId)}`;
+  return "Untitled listing";
 };
 
 const toBuyerLabel = (inquiry: InquiryDto) => {
