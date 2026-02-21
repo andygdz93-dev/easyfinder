@@ -272,12 +272,12 @@ export const AppShell = ({
 
   return (
     <div
-      className={`min-h-screen text-slate-100 ${className ?? ""}`}
+      className={`h-screen overflow-hidden text-slate-100 ${className ?? ""}`}
       data-role={userRoleResolved}
       data-plan={planResolved}
     >
-      <div className="flex">
-        <aside className="min-h-screen w-64 border-r border-slate-800 bg-slate-900/70 px-6 py-8">
+      <div className="flex h-screen overflow-hidden">
+        <aside className="w-[260px] shrink-0 overflow-y-auto border-r border-slate-800/60 bg-slate-900/70 px-6 py-8">
           <Link to={logoTarget} className="text-xl font-semibold text-white">
             Easy Finder AI
           </Link>
@@ -338,40 +338,42 @@ export const AppShell = ({
             </Link>
           )}
         </aside>
-        <main className="flex-1">
+        <div className="flex flex-1 min-w-0">
           {showDemoBanner ? <DemoBanner /> : null}
-          <header className="flex items-center justify-between border-b border-slate-800 px-8 py-6">
-            <div>
-              <h2 className="text-lg font-semibold">
-                {user?.ndaAccepted
-                  ? "Welcome back"
-                  : "Welcome to Easy Finder AI"}
-              </h2>
-              <p className="text-sm text-slate-400">
-                Premium equipment intelligence
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              {isDemoMode ? (
-                <button
-                  className="rounded-full border border-slate-700 px-4 py-2 text-xs text-slate-300"
-                  onClick={() =>
-                    document.documentElement.classList.toggle("dark")
-                  }
-                >
-                  Switch Mode
-                </button>
-              ) : null}
-              <div className="rounded-full border border-[rgb(var(--accent)/0.45)] px-4 py-2 text-xs text-[rgb(var(--accent))]">
-                {badgeLabel}
+          <main className="flex-1 min-w-0 h-screen overflow-y-auto px-6 py-6">
+            <header className="mb-6 flex items-center justify-between border-b border-slate-800 pb-6">
+              <div>
+                <h2 className="text-lg font-semibold">
+                  {user?.ndaAccepted
+                    ? "Welcome back"
+                    : "Welcome to Easy Finder AI"}
+                </h2>
+                <p className="text-sm text-slate-400">
+                  Premium equipment intelligence
+                </p>
               </div>
-              <div className="rounded-full bg-slate-800 px-3 py-2 text-xs text-slate-200">
-                {user?.email ?? "demo"}
+              <div className="flex items-center gap-3">
+                {isDemoMode ? (
+                  <button
+                    className="rounded-full border border-slate-700 px-4 py-2 text-xs text-slate-300"
+                    onClick={() =>
+                      document.documentElement.classList.toggle("dark")
+                    }
+                  >
+                    Switch Mode
+                  </button>
+                ) : null}
+                <div className="rounded-full border border-[rgb(var(--accent)/0.45)] px-4 py-2 text-xs text-[rgb(var(--accent))]">
+                  {badgeLabel}
+                </div>
+                <div className="rounded-full bg-slate-800 px-3 py-2 text-xs text-slate-200">
+                  {user?.email ?? "demo"}
+                </div>
               </div>
-            </div>
-          </header>
-          <div className="px-8 py-6">{children}</div>
-        </main>
+            </header>
+            {children}
+          </main>
+        </div>
       </div>
     </div>
   );
