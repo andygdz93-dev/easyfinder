@@ -36,6 +36,10 @@ export const connectToDatabase = async () => {
         await db
           .collection("password_reset_tokens")
           .createIndex({ expires_at: 1 }, { expireAfterSeconds: 0 });
+        await db.collection("offers").createIndex({ listingId: 1 });
+        await db.collection("offers").createIndex({ buyerId: 1 });
+        await db.collection("offers").createIndex({ sellerId: 1 });
+        await db.collection("offers").createIndex({ status: 1 });
         return db;
       })
       .catch((error: unknown) => {

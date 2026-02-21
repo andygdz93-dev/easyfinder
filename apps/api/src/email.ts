@@ -21,3 +21,26 @@ export const sendPasswordResetEmail = async (to: string, token: string) => {
     `,
   });
 };
+
+export const sendOfferStatusEmail = async (args: {
+  to: string;
+  listingId: string;
+  status: "pending" | "countered" | "accepted" | "rejected" | "expired";
+  amount: number;
+  message?: string;
+}) => {
+  if (!resend || !env.RESEND_FROM) {
+    return;
+  }
+
+  await resend.emails.send({
+    from: env.RESEND_FROM,
+    to: args.to,
+    subject: `Offer ${args.status}: ${args.amount}`,
+    html: `
+      <p>Your offer on listing <strong>${args.listingId}</strong> is now <strong>${args.status}</strong>.</p>
+      <p>Amount: ${args.amount}</p>
+      ${args.message ? `<p>Message: ${args.message}</p>` : ""}
+    `,
+  });
+};
