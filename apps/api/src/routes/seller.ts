@@ -405,11 +405,10 @@ const createSellerListingFromRow = (
   return { listing };
 };
 
-const toInquiryDto = (inquiry: InquiryDocument) => ({
+const toInquiryDto = (inquiry: InquiryDocument, listingTitle: string | null) => ({
   id: inquiry._id.toHexString(),
   listingId: inquiry.listingId,
-  buyerName: inquiry.buyerName,
-  buyerEmail: inquiry.buyerEmail,
+  listingTitle,
   message: inquiry.message,
   status: inquiry.status,
   createdAt: inquiry.createdAt,
@@ -645,9 +644,19 @@ export default async function sellerRoutes(app: FastifyInstance) {
     const inquiries = await getInquiriesCollection().findMany();
     inquiries.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
+    const listingTitles = new Map<string, string>();
+    await Promise.all(
+      Array.from(new Set(inquiries.map((inquiry) => inquiry.listingId))).map(async (listingId) => {
+        const listing = await getListingsCollection().findById(listingId);
+        if (listing?.title) {
+          listingTitles.set(listingId, listing.title);
+        }
+      })
+    );
+
     return ok(
       request,
-      inquiries.map((inquiry) => toInquiryDto(inquiry))
+      inquiries.map((inquiry) => toInquiryDto(inquiry, listingTitles.get(inquiry.listingId) ?? null))
     );
   });
 
