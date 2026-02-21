@@ -19,7 +19,7 @@ import { WatchlistItem } from "@easyfinderai/shared";
 import { useAuth } from "../../lib/auth";
 import { useRuntime } from "../../lib/runtime";
 
-const FREE_BUYER_LISTING_LIMIT = 10;
+const FREE_BUYER_LISTING_LIMIT = 25;
 
 export const Listings = () => {
   const { token, user } = useAuth();
