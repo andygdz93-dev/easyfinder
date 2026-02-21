@@ -161,12 +161,13 @@ export const ListingDetail = () => {
           <ImageGallery
             images={images}
             alt={data.title ?? "Listing image"}
-            maxThumbs={4}
+            maxThumbs={6}
             imagesKey={data.id ?? data.title}
-            heroClassName="h-[420px] rounded-lg bg-slate-900"
+            heroClassName="w-full aspect-[16/9] bg-slate-950/40 rounded-xl overflow-hidden flex items-center justify-center"
             heroImageClassName="object-contain"
-            thumbClassName="h-20 rounded-md bg-slate-800"
-            thumbImageClassName="object-contain"
+            thumbsClassName="flex gap-3 overflow-x-auto py-2"
+            thumbClassName="h-24 sm:h-28 aspect-[4/3] bg-slate-950/40 rounded-md overflow-hidden"
+            thumbImageClassName="object-cover"
           />
         )}
 
