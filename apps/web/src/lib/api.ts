@@ -34,8 +34,10 @@ export type NdaStatus = {
 export type InquiryDto = {
   id: string;
   listingId: string;
-  buyerName: string;
-  buyerEmail: string;
+  listingTitle?: string | null;
+  buyerId?: string;
+  buyerName?: string;
+  buyerEmail?: string;
   message: string;
   status: "new" | "reviewing" | "contacted" | "closed";
   createdAt: string;
