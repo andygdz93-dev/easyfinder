@@ -31,15 +31,21 @@ export default function SellerInquiryThread() {
 
   const mutation = useMutation({
     mutationFn: (input: { body: string }) => sendSellerInquiryMessage(inquiryId, input),
-    onSuccess: async () => {
+    onSuccess: async (result) => {
       setBody("");
       setInlineError(null);
-      await queryClient.invalidateQueries({ queryKey: ["seller-inquiry-thread", inquiryId] });
+      queryClient.setQueryData(["seller-inquiry-thread", inquiryId], (existing: unknown) => {
+        if (!existing || typeof existing !== "object") return existing;
+        return {
+          ...(existing as Record<string, unknown>),
+          messages: result.messages,
+        };
+      });
       await queryClient.invalidateQueries({ queryKey: ["seller-inquiries"] });
     },
     onError: (error: unknown) => {
-      if (error instanceof ApiError && error.code === "CONTACT_INFO_BLOCKED") {
-        setInlineError("For safety, don’t share phone numbers, emails, or social handles. Use EasyFinder messaging only.");
+      if (error instanceof ApiError) {
+        setInlineError(error.message || "Failed to send message. Please try again.");
         return;
       }
       setInlineError("Failed to send message. Please try again.");
@@ -51,7 +57,7 @@ export default function SellerInquiryThread() {
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
-    mutation.mutate({ body });
+    mutation.mutate({ body: body.trim() });
   };
 
   return (
@@ -89,7 +95,7 @@ export default function SellerInquiryThread() {
           <button
             type="submit"
             className="rounded-md bg-cyan-600 px-4 py-2 text-sm font-medium text-white hover:bg-cyan-500 disabled:opacity-50"
-            disabled={mutation.isPending}
+            disabled={mutation.isPending || body.trim().length === 0}
           >
             Send
           </button>

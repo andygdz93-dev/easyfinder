@@ -10,8 +10,10 @@ process.env.STRIPE_PRICE_ID_ENTERPRISE =
 
 let app: ReturnType<(typeof import("../src/server.js"))["buildServer"]>;
 let getUsersCollection: (typeof import("../src/users.js"))["getUsersCollection"];
+let getListingsCollection: (typeof import("../src/listings.js"))["getListingsCollection"];
 let buyerToken: string;
 let sellerToken: string;
+let sellerUserId: string;
 
 const acceptNda = async (token: string) => {
   const res = await supertest(app.server)
@@ -25,8 +27,10 @@ const acceptNda = async (token: string) => {
 beforeAll(async () => {
   const serverModule = await import("../src/server.js");
   const usersModule = await import("../src/users.js");
+  const listingsModule = await import("../src/listings.js");
   app = serverModule.buildServer();
   getUsersCollection = usersModule.getUsersCollection;
+  getListingsCollection = listingsModule.getListingsCollection;
   await app.ready();
 
   const users = getUsersCollection();
@@ -43,8 +47,10 @@ beforeAll(async () => {
     name: buyer.name,
   });
 
+  sellerUserId = seller._id.toHexString();
+
   sellerToken = app.jwt.sign({
-    id: seller._id.toHexString(),
+    id: sellerUserId,
     email: seller.email,
     role: "seller",
     name: seller.name,
@@ -366,10 +372,31 @@ describe("API", () => {
   });
 
   it("seller can list inquiries", async () => {
+    const listingId = `seller:${Date.now()}:seller-list-inquiry`;
+    await getListingsCollection().insertMany([
+      {
+        id: listingId,
+        title: "Seller Inquiry Listing",
+        description: "desc",
+        state: "TX",
+        category: "excavator",
+        operable: true,
+        images: [],
+        source: `seller:${sellerUserId}`,
+        location: "Austin, TX",
+        price: 1000,
+        hours: 10,
+        isPublished: true,
+        status: "active",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ]);
+
     const createRes = await supertest(app.server)
       .post("/api/inquiries")
       .set("Authorization", `Bearer ${buyerToken}`)
-      .send({ listingId: "demo-request-info-seller-list", message: "Interested" });
+      .send({ listingId, message: "Interested" });
 
     expect(createRes.status).toBe(200);
 
@@ -380,18 +407,40 @@ describe("API", () => {
     expect(listRes.status).toBe(200);
     expect(Array.isArray(listRes.body.data)).toBe(true);
     expect(listRes.body.data.length).toBeGreaterThanOrEqual(1);
-    const createdInquiry = listRes.body.data.find((inquiry: any) => inquiry.listingId === "demo-request-info-seller-list");
+    const createdInquiry = listRes.body.data.find((inquiry: any) => inquiry.listingId === listingId);
     expect(createdInquiry).toBeTruthy();
     expect(createdInquiry).not.toHaveProperty("buyerEmail");
     expect(createdInquiry).toHaveProperty("listingTitle");
   });
 
 
+
   it("seller reply endpoint blocks email and phone contact info but allows model strings", async () => {
+    const listingId = `seller:${Date.now()}:seller-thread-inquiry`;
+    await getListingsCollection().insertMany([
+      {
+        id: listingId,
+        title: "Seller Thread Listing",
+        description: "desc",
+        state: "TX",
+        category: "excavator",
+        operable: true,
+        images: [],
+        source: `seller:${sellerUserId}`,
+        location: "Austin, TX",
+        price: 1000,
+        hours: 10,
+        isPublished: true,
+        status: "active",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ]);
+
     const createRes = await supertest(app.server)
       .post("/api/inquiries")
       .set("Authorization", `Bearer ${buyerToken}`)
-      .send({ listingId: "demo-request-info-thread", message: "Hello seller" });
+      .send({ listingId, message: "Hello seller" });
 
     expect(createRes.status).toBe(200);
 
@@ -399,7 +448,7 @@ describe("API", () => {
       .get("/api/seller/inquiries")
       .set("Authorization", `Bearer ${sellerToken}`);
 
-    const inquiry = listRes.body.data.find((item: any) => item.listingId === "demo-request-info-thread");
+    const inquiry = listRes.body.data.find((item: any) => item.listingId === listingId);
     expect(inquiry).toBeTruthy();
 
     const emailBlocked = await supertest(app.server)
@@ -429,6 +478,60 @@ describe("API", () => {
     expect(Array.isArray(threadRes.body.data.messages)).toBe(true);
     expect(threadRes.body.data.messages.some((msg: any) => msg.body === "CATD6R2019 price 150000")).toBe(true);
   });
+  it("seller reply is visible in buyer thread and seller inquiries return listing title", async () => {
+    const listingId = `seller:${Date.now()}:thread-visible`;
+    await getListingsCollection().insertMany([
+      {
+        id: listingId,
+        title: "Ultra Long Listing Title For Thread Visibility",
+        description: "desc",
+        state: "TX",
+        category: "excavator",
+        operable: true,
+        images: [],
+        source: `seller:${sellerUserId}`,
+        location: "Austin, TX",
+        price: 1000,
+        hours: 10,
+        isPublished: true,
+        status: "active",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ]);
+
+    const createRes = await supertest(app.server)
+      .post("/api/inquiries")
+      .set("Authorization", `Bearer ${buyerToken}`)
+      .send({ listingId, message: "Hello seller" });
+
+    expect(createRes.status).toBe(200);
+
+    const sellerListRes = await supertest(app.server)
+      .get("/api/seller/inquiries")
+      .set("Authorization", `Bearer ${sellerToken}`);
+
+    expect(sellerListRes.status).toBe(200);
+    const inquiry = sellerListRes.body.data.find((item: any) => item.listingId === listingId);
+    expect(inquiry).toBeTruthy();
+    expect(inquiry.listingTitle).toBe("Ultra Long Listing Title For Thread Visibility");
+
+    const replyRes = await supertest(app.server)
+      .post(`/api/seller/inquiries/${inquiry.id}/messages`)
+      .set("Authorization", `Bearer ${sellerToken}`)
+      .send({ body: "Thanks, still available." });
+
+    expect(replyRes.status).toBe(200);
+
+    const buyerThreadRes = await supertest(app.server)
+      .get(`/api/inquiries/${inquiry.id}`)
+      .set("Authorization", `Bearer ${buyerToken}`);
+
+    expect(buyerThreadRes.status).toBe(200);
+    expect(Array.isArray(buyerThreadRes.body.data.messages)).toBe(true);
+    expect(buyerThreadRes.body.data.messages.some((msg: any) => msg.body === "Thanks, still available." && msg.senderRole === "seller")).toBe(true);
+  });
+
 
   it("sets role via /api/me/role and persists to backend", async () => {
     const email = `role-${Date.now()}@easyfinder.ai`;
