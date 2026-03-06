@@ -1,0 +1,3 @@
+STRIPE_SECRET_KEY=sk_live_xxxxx
+STRIPE_PRICE_ID_PRO=price_cheap_plan
+STRIPE_PRICE_ID_ENTERPRISE=price_high_plan
