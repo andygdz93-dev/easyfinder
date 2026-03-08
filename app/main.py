@@ -25,7 +25,7 @@ def score_machine(payload: dict):
     return {
         "fair_market_value": fair_market_value,
         "listing_price": listing_price,
-        "overpriced_percent": round((listing_price - fair_market_value) / fair_market_value * 100, 1),
+        "overpriced_percent": round((listing_price - fair_market_value) / fair_market_value * 100, 1) if fair_market_value else None,
         "risk_score": risk_score,
         "recommended_max_bid": recommended_max_bid,
         "negotiation_plan": negotiation_plan
