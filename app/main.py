@@ -20,7 +20,12 @@ def score_machine(payload: dict):
     recommended_max_bid = get_bid_cap(fair_market_value, risk_score)
     negotiation_plan = generate_rebuttals(listing_price, recommended_max_bid, fair_market_value)
 
-    save_machine(payload, fair_market_value, risk_score, recommended_max_bid)
+    try:
+        save_machine(payload, fair_market_value, risk_score, recommended_max_bid)
+    except Exception as e:
+        # Log error and continue - scoring result is still valid
+        # Consider: return partial response or raise HTTPException
+        pass
 
     return {
         "fair_market_value": fair_market_value,
