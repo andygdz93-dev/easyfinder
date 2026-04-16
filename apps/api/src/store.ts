@@ -4,17 +4,17 @@ import type { Listing, User, WatchlistItem, ScoringConfig } from "@easyfinderai/
 export type StoredUser = User & { passwordHash?: string };
 
 const seedPasswords: Record<string, string> = {
-  "demo@easyfinder.ai":   process.env.SEED_PASS_DEMO   || "DemoPass123!",
-  "buyer@easyfinder.ai":  process.env.SEED_PASS_BUYER  || "BuyerPass123!",
-  "seller@easyfinder.ai": process.env.SEED_PASS_SELLER || "SellerPass123!",
-  "admin@easyfinder.ai":  process.env.SEED_PASS_ADMIN  || "AdminPass123!",
+  "demo@easyfinder.ai":   process.env.SEED_PASS_DEMO   || "$2a$10$5U6St8TEFAR/E0ThTeK0MuS4l0h8UBkPW17fCBYz3RdjxhwqRW6qS",
+  "buyer@easyfinder.ai":  process.env.SEED_PASS_BUYER  || "$2a$10$Bd/KAg4Z7ELtUG77yvGHy.U60Iyp9iqQ6ZHfnUMQrvsrW78/HQ2Gu",
+  "seller@easyfinder.ai": process.env.SEED_PASS_SELLER || "$2a$10$Q7CVytQv0WuR9ZHlgjqCXuYFOxUSBqJwc.8DMyYp8Ssi2x1OT3yGG",
+  "admin@easyfinder.ai":  process.env.SEED_PASS_ADMIN  || "$2a$10$9Lh2res.OD2qeeRwrXi..OmJWGVVwQPvm4DFhnJxVakbuRnw2OeLG",
 };
 
 export const listings: Listing[] = demoListings;
 export const users: StoredUser[] = demoUsers.map((user) => {
   if (!user.email) throw new Error("Seed user must have an email");
   const seed = seedPasswords[user.email];
-  return { ...user, passwordHash: seed ? bcrypt.hashSync(seed, 10) : undefined };
+  return { ...user, passwordHash: seed ? (seed.startsWith("$2") ? seed : bcrypt.hashSync(seed, 10)) : undefined };
 });
 
 export const demoUserId = users[0]?.id ?? "demo-user";

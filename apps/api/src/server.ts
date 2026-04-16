@@ -17,7 +17,7 @@ import listingRoutes  from "./routes/listings.js";
 import scoringRoutes  from "./routes/scoring.js";
 import watchlistRoutes from "./routes/watchlist.js";
 import healthRoutes   from "./routes/health.js";
-import paymentRoutes  from "./routes/payments.js";
+import billingRoutes from "./routes/billing.js";
 import authRoutes     from "./routes/auth.js";
 import adminRoutes    from "./routes/admin.js";
 import intelligenceRoutes from "./routes/intelligence.js";
@@ -27,7 +27,7 @@ import { dealRoutes } from "./routes/deal.js";
 // import ndaRoutes       from "./routes/nda.js";
 // import inquiriesRoutes from "./routes/inquiries.js";
 // import offersRoutes    from "./routes/offers.js";
-// import billingRoutes   from "./routes/billing.js";
+
 // import imageRoutes     from "./routes/images.js";
 
 declare module "fastify" {
@@ -125,7 +125,7 @@ app.register(rawBody, {
   app.register(brokerRoutes, { prefix: "/api/broker" });
   app.register(scoringRoutes,  { prefix: "/api/scoring-configs" });
   app.register(watchlistRoutes,{ prefix: "/api/watchlist" });
-  app.register(paymentRoutes,  { prefix: "/api/payments" });
+  app.register(billingRoutes, { prefix: "/api/billing" });
   app.register(adminRoutes,    { prefix: "/api/admin" });
   app.register(intelligenceRoutes, { prefix: "/api/intelligence" });
   app.register(sellerRoutes,   { prefix: "/api/seller" });
@@ -134,7 +134,7 @@ app.register(rawBody, {
   // app.register(ndaRoutes,        { prefix: "/api/nda" });
   // app.register(inquiriesRoutes,  { prefix: "/api/inquiries" });
   // app.register(offersRoutes,     { prefix: "/api/offers" });
-  // app.register(billingRoutes,    { prefix: "/api/billing" });
+;
   // app.register(imageRoutes,      { prefix: "/api/images" });
   
   return app;
