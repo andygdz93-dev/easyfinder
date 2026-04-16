@@ -1,154 +1,112 @@
-import type { FastifyInstance } from "fastify";
-import { defaultScoringConfig, scoreListing } from "@easyfinderai/shared";
-import { fail, ok } from "../response.js";
-import { getListingsCollection } from "../listings.js";
-import { requireNDA } from "../middleware/requireNDA.js";
-import { config } from "../config.js";
-import { disableWritesInDemo } from "../middleware/disableWritesInDemo.js";
-import { audit } from "../lib/audit.js";
-import { env } from "../env.js";
+import { FastifyInstance } from "fastify";
+import { z } from "zod";
+import { listings, getScoringConfig } from "../store.js";
+import { scoreListing } from "@easyfinderai/shared";
+import type { Listing } from "@easyfinderai/shared";
+import { ok, fail } from "../response.js";
+import { demoListings } from "../demo/demoListings.js";
+import { getRealListings } from "../db.js";
 
+const querySchema = z.object({
+  state:    z.string().length(2).optional(),
+  maxPrice: z.coerce.number().int().positive().optional(),
+  maxHours: z.coerce.number().int().positive().optional(),
+  // Optional buyer-supplied filter. Default: show ALL listings including
+  // non-operable (SCORING_MODEL.md §6 locked policy — they score low, not hidden).
+  operable: z.enum(["true"]).optional(),
+});
 
-const apiBaseUrl = env.PUBLIC_API_BASE_URL.replace(/\/+$/, "");
+// Map a PostgreSQL row to the shared Listing shape.
+// state defaults to "UNKNOWN" (not "TX") so missing state is surfaced as a
+// confidence penalty rather than silently misrepresenting location.
+const dbRowToListing = (row: any): Listing => ({
+  id:          String(row.id),
+  title:       row.equipment,
+  description: `${row.equipment} — Market Value: $${Number(row.market_value).toLocaleString()}`,
+  state:       row.state || "UNKNOWN",
+  price:       Number(row.price),
+  hours:       Number(row.hours_used) || 0,
+  operable:    row.operable !== false,
+  category:    row.equipment,
+  source:      "database",
+  createdAt:   row.scraped_at
+    ? new Date(row.scraped_at).toISOString()
+    : new Date().toISOString(),
+  ...(row.market_value        && { marketValue: Number(row.market_value) }),
+  ...(row.year                && { year:        Number(row.year) }),
+  ...(row.condition_score     && { condition:   Number(row.condition_score) }),
+  ...(row.distance_from_buyer && { distance:    Number(row.distance_from_buyer) }),
+});
 
-const toAbsoluteImageUrl = (url: string): string => {
-  if (/^https?:\/\//i.test(url)) return url;
-  if (url.startsWith("/")) return `${apiBaseUrl}${url}`;
-  return `${apiBaseUrl}/${url}`;
-};
+const getSourceListings = () =>
+  process.env.DEMO_MODE === "true" ? demoListings : listings;
 
-const normalizeListingImagesForResponse = <T extends { imageUrl?: string; images?: string[] }>(listing: T): T => {
-  const deduped = Array.from(
-    new Set([listing.imageUrl, ...(listing.images ?? [])].filter((value): value is string => Boolean(value)))
-  )
-    .slice(0, 5)
-    .map((url) => toAbsoluteImageUrl(url));
+export default async function listingRoutes(app: FastifyInstance) {
+  app.get("/", async (request) => {
+    const query = querySchema.parse(request.query);
+    const demoMode = process.env.DEMO_MODE === "true";
 
-  if (deduped.length === 0) {
-    const placeholder = toAbsoluteImageUrl("/demo-images/other/1.jpg");
-    return {
-      ...listing,
-      imageUrl: placeholder,
-      images: Array(5).fill(placeholder),
-    };
-  }
+    const dbRows         = await getRealListings();
+    const sourceListings = dbRows ? dbRows.map(dbRowToListing) : getSourceListings();
+    const isRealData     = !!dbRows;
 
-  const hero = deduped[0];
-  while (deduped.length < 5) {
-    deduped.push(hero);
-  }
-
-  return {
-    ...listing,
-    imageUrl: hero,
-    images: deduped,
-  };
-};
-
-export default async function listingsRoutes(app: FastifyInstance) {
-  /**
-   * GET /api/listings
-   * Returns ranked live listings
-   */
-  app.get("/", { preHandler: [app.authenticate, requireNDA] }, async (request, reply) => {
-    if (config.demoMode && process.env.NODE_ENV !== "test") {
-      return fail(
-        request,
-        reply,
-        "DEMO_MODE_ACTIVE",
-        "LIVE listings are disabled while DEMO_MODE is enabled.",
-        503
-      );
-    }
-
-    reply.header("Cache-Control", "no-store");
-
-    const activeListings = await getListingsCollection().findLiveListings();
-
-    const scored = activeListings.map((listing) => {
-      const score = scoreListing({ ...listing, createdAt: listing.createdAt ?? new Date(0).toISOString() }, defaultScoringConfig);
-      return {
-        ...normalizeListingImagesForResponse(listing),
-        totalScore: score.total,
-        scoreV2: score.scoreV2,
-        confidenceScore: score.confidenceScore,
-        reasons: score.reasons,
-        flags: score.flags,
-        bestOptionEligible: score.bestOptionEligible,
-        score,
-      };
+    // Non-operable listings remain in results unless buyer explicitly opts out
+    // with ?operable=true. The scoring engine applies the -60 penalty (§6 locked).
+    const filtered = sourceListings.filter((listing) => {
+      if (query.operable && !listing.operable) return false;
+      if (query.state    && listing.state !== query.state) return false;
+      if (query.maxPrice && listing.price > query.maxPrice) return false;
+      if (query.maxHours && listing.hours > query.maxHours) return false;
+      return true;
     });
 
-    const data = scored.sort((a, b) => {
-      const scoreDiff = (b.totalScore ?? 0) - (a.totalScore ?? 0);
-      if (scoreDiff !== 0) return scoreDiff;
-      return (a.price ?? 0) - (b.price ?? 0);
-    });
-
-    return ok(request, data);
-  });
-
-  /**
-   * GET /api/listings/:id
-   * Live listing detail
-   */
-  app.get<{ Params: { id: string } }>(
-    "/:id",
-    { preHandler: [app.authenticate, requireNDA] },
-    async (request, reply) => {
-    const { id } = request.params;
-
-    if (config.demoMode && process.env.NODE_ENV !== "test") {
-      return fail(
-        request,
-        reply,
-        "DEMO_MODE_ACTIVE",
-        "LIVE listings are disabled while DEMO_MODE is enabled.",
-        503
-      );
-    }
-
-    reply.header("Cache-Control", "no-store");
-
-    const listing = await getListingsCollection().findLiveListingById(id);
-
-    if (!listing) {
-      return fail(request, reply, "NOT_FOUND", "Listing not found", 404);
-    }
-
-    const score = scoreListing({ ...listing, createdAt: listing.createdAt ?? new Date(0).toISOString() }, defaultScoringConfig);
+    const scoringConfig = getScoringConfig();
+    const scored = filtered
+      .map((listing) => ({
+        listing,
+        result: scoreListing(listing, scoringConfig),
+      }))
+      .sort((a, b) => b.result.total - a.result.total || a.listing.price - b.listing.price);
 
     return ok(request, {
-      ...normalizeListingImagesForResponse(listing),
-      totalScore: score.total,
-      scoreV2: score.scoreV2,
-      confidenceScore: score.confidenceScore,
-      reasons: score.reasons,
-      flags: score.flags,
-      bestOptionEligible: score.bestOptionEligible,
-      score,
+      total:  scored.length,
+      source: isRealData ? "database" : "demo",
+      listings: scored.map(({ listing, result }) => ({
+        ...listing,
+        score:           result,
+        totalScore:      result.total,
+        scoreBreakdown:  result.components,
+        rationale:       result.rationale,
+        confidenceScore: result.confidenceScore,
+        flags:           result.flags,
+        isBestOption:    result.isBestOption,
+      })),
     });
+  });
+
+  app.get("/:id", async (request, reply) => {
+    const id = z.string().parse((request.params as { id: string }).id);
+
+    const dbRows         = await getRealListings();
+    const sourceListings = dbRows ? dbRows.map(dbRowToListing) : getSourceListings();
+
+    const listing = sourceListings.find((item) => item.id === id);
+    if (!listing) {
+      return fail(request, reply, "NOT_FOUND", "Listing not found.", 404);
     }
-  );
 
-  const writeHandlers = {
-    preHandler: [app.authenticate, requireNDA, disableWritesInDemo],
-  };
+    const scoringConfig = getScoringConfig();
+    const result        = scoreListing(listing, scoringConfig);
 
-  app.post("/", writeHandlers, async (request, reply) => {
-    audit("LISTING_CREATED", {
-      userId: request.user.id,
-      ip: request.ip,
+    return ok(request, {
+      ...listing,
+      score:           result,
+      totalScore:      result.total,
+      scoreBreakdown:  result.components,
+      rationale:       result.rationale,
+      confidenceScore: result.confidenceScore,
+      flags:           result.flags,
+      isBestOption:    result.isBestOption,
     });
-
-    return fail(request, reply, "NOT_IMPLEMENTED", "Listing creation is not available yet.", 501);
-  });
-
-  app.put("/", writeHandlers, async (request, reply) => {
-    return fail(request, reply, "NOT_IMPLEMENTED", "Listing updates are not available yet.", 501);
-  });
-
-  app.delete("/", writeHandlers, async (request, reply) => {
-    return fail(request, reply, "NOT_IMPLEMENTED", "Listing deletion is not available yet.", 501);
   });
 }

@@ -1,17 +1,14 @@
-import "dotenv/config";
 import Fastify, { FastifyReply, FastifyRequest } from "fastify";
 import cors        from "@fastify/cors";
 import helmet      from "@fastify/helmet";
 import jwt         from "@fastify/jwt";
 import rateLimit   from "@fastify/rate-limit";
 import multipart   from "@fastify/multipart";
-import rawBody from "fastify-raw-body";
 import { nanoid }  from "nanoid";
 import { ZodError } from "zod";
 
 import { config }             from "./config.js";
 import { getRoleFromRequest } from "./auth.js";
-import brokerRoutes from "./routes/broker.js";
 
 import listingRoutes  from "./routes/listings.js";
 import scoringRoutes  from "./routes/scoring.js";
@@ -22,13 +19,6 @@ import authRoutes     from "./routes/auth.js";
 import adminRoutes    from "./routes/admin.js";
 import intelligenceRoutes from "./routes/intelligence.js";
 import sellerRoutes   from "./routes/seller.js";
-import { dealRoutes } from "./routes/deal.js";
-import meRoutes        from "./routes/me.js";
-import ndaRoutes       from "./routes/nda.js";
-import inquiriesRoutes from "./routes/inquiries.js";
-import offersRoutes    from "./routes/offers.js";
-import billingRoutes   from "./routes/billing.js";
-import imageRoutes     from "./routes/images.js";
 
 declare module "fastify" {
   interface FastifyRequest  { requestId: string; }
@@ -41,7 +31,8 @@ export const buildServer = () => {
   if (config.demoMode) {
     app.log.warn("DEMO_MODE enabled — serving seeded inventory");
   
-  
+  return app;
+  return app;
   }
 
   app.decorateRequest("requestId", "");
@@ -87,14 +78,6 @@ export const buildServer = () => {
 
   // File uploads — 5MB cap
   app.register(multipart, { limits: { fileSize: 5 * 1024 * 1024 } });
-// Stripe webhook raw body
-app.register(rawBody, {
-  field: "rawBody",
-  global: false,
-  encoding: "utf8",
-  runFirst: true,
-});
-
 
   // Request ID + optional auth on every request
   app.addHook("onRequest", async (request, reply) => {
@@ -122,22 +105,12 @@ app.register(rawBody, {
   app.register(healthRoutes,   { prefix: "/api/health" });
   app.register(authRoutes,     { prefix: "/api/auth" });
   app.register(listingRoutes,  { prefix: "/api/listings" });
-  app.register(brokerRoutes, { prefix: "/api/broker" });
   app.register(scoringRoutes,  { prefix: "/api/scoring-configs" });
   app.register(watchlistRoutes,{ prefix: "/api/watchlist" });
   app.register(paymentRoutes,  { prefix: "/api/payments" });
   app.register(adminRoutes,    { prefix: "/api/admin" });
   app.register(intelligenceRoutes, { prefix: "/api/intelligence" });
   app.register(sellerRoutes,   { prefix: "/api/seller" });
-  app.register(dealRoutes,     { prefix: "/api" });
-  app.register(meRoutes,         { prefix: "/api/me" });
-  app.register(ndaRoutes,        { prefix: "/api/nda" });
-  app.register(inquiriesRoutes,  { prefix: "/api/inquiries" });
-  app.register(offersRoutes,     { prefix: "/api/offers" });
-  app.register(billingRoutes,    { prefix: "/api/billing" });
-  app.register(imageRoutes,      { prefix: "/api/images" });
-  
-  return app;
 
   
 };
