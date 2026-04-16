@@ -1,58 +1,82 @@
-// db.ts — PostgreSQL connection pool
-// Uses env config. Falls back gracefully to demo data if DB is unavailable.
+import { Collection, Db, Document, GridFSBucket, MongoClient } from "mongodb";
+import { env } from "./env.js";
 
-import pg from "pg";
-import { config } from "./config.js";
+let client: MongoClient | null = null;
+let db: Db | null = null;
+let connectPromise: Promise<Db> | null = null;
 
-const { Pool } = pg;
+export const connectToDatabase = async () => {
+  if (db) return db;
 
-export const pool = new Pool({
-  user:     config.db.user     ?? "postgres",
-  host:     config.db.host     ?? "localhost",
-  database: config.db.name     ?? "easyfinder",
-  password: config.db.password ?? "",
-  port:     config.db.port     ?? 5432,
-});
-
-pool.connect((err, _client, release) => {
-  if (err) {
-    console.warn("⚠️  PostgreSQL unavailable — running in demo mode");
-    return;
+  if (!env.MONGO_URL || !env.DB_NAME) {
+    throw new Error("Missing required Mongo configuration (MONGO_URL, DB_NAME).");
   }
-  release();
-  console.log("✅ PostgreSQL connected");
-});
 
-export async function getRealListings() {
-  try {
-    const result = await pool.query(`
-      SELECT
-        id::text,
-        equipment,
-        price::float,
-        market_value::float,
-        hours::float,
-        score::float,
-        state,
-        source,
-        operable,
-        category,
-        description,
-        created_at
-      FROM listings
-      ORDER BY score DESC
-      LIMIT 50
-    `);
-    return result.rows.length > 0 ? result.rows : null;
-  } catch {
-    return null;
+  if (!connectPromise) {
+    client = new MongoClient(env.MONGO_URL);
+    connectPromise = client
+      .connect()
+      .then(async (connected: MongoClient) => {
+        db = connected.db(env.DB_NAME);
+        await db.collection("users").createIndex({ emailLower: 1 }, { unique: true });
+        await db.collection("users").createIndex({ "billing.stripe_customer_id": 1 });
+        await db.collection("listings").createIndex({ status: 1, isPublished: 1 });
+        await db.collection("listings").createIndex({ source: 1, updatedAt: -1 });
+        await db
+          .collection("listings")
+          .createIndex(
+            { source: 1, sourceExternalId: 1 },
+            {
+              unique: true,
+              name: "source_1_sourceExternalId_1",
+              partialFilterExpression: { sourceExternalId: { $exists: true } },
+            }
+          );
+        await db.collection("password_reset_tokens").createIndex({ token: 1 }, { unique: true });
+        await db
+          .collection("password_reset_tokens")
+          .createIndex({ expires_at: 1 }, { expireAfterSeconds: 0 });
+        await db.collection("offers").createIndex({ listingId: 1 });
+        await db.collection("offers").createIndex({ buyerId: 1 });
+        await db.collection("offers").createIndex({ sellerId: 1 });
+        await db.collection("offers").createIndex({ status: 1 });
+        return db;
+      })
+      .catch((error: unknown) => {
+        connectPromise = null;
+        throw error;
+      });
   }
-}
 
-export async function getListingById(id: string) {
-  const result = await pool.query(
-    "SELECT * FROM listings WHERE id = $1 LIMIT 1",
-    [id]
-  );
-  return result.rows[0] || null;
-}
+  return connectPromise;
+};
+
+
+export const closeDatabaseConnection = async () => {
+  if (client) {
+    await client.close();
+  }
+  client = null;
+  db = null;
+  connectPromise = null;
+};
+
+export const getDb = () => {
+  if (!db) {
+    throw new Error("Database not initialized. Call connectToDatabase() on startup.");
+  }
+  return db;
+};
+
+export const getCollection = <T extends Document = Document>(name: string): Collection<T> =>
+  getDb().collection<T>(name);
+
+let uploadsBucket: GridFSBucket | null = null;
+
+export const getUploadsBucket = () => {
+  if (!uploadsBucket) {
+    uploadsBucket = new GridFSBucket(getDb(), { bucketName: "uploads" });
+  }
+
+  return uploadsBucket;
+};
