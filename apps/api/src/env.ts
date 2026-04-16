@@ -2,157 +2,65 @@ import "dotenv/config";
 import { z } from "zod";
 
 /**
- * EasyFinder API environment validation (Zod)
- * - Fails fast with readable errors
- * - Avoids "optional integration takes down prod" footguns
- *
- * IMPORTANT:
- * - Core app (auth, listings, etc.) must boot in production even if Stripe isn't configured yet.
- * - Stripe + Resend are OPTIONAL unless explicitly enabled via BILLING_ENABLED / EMAIL_ENABLED.
+ * EasyFinder API — environment validation
+ * Fails fast with readable errors on startup.
+ * No secrets are ever logged or exposed via endpoints.
  */
+const EnvSchema = z.object({
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 
-const EnvSchema = z
-  .object({
-    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  // Server
+  PORT: z
+    .string()
+    .optional()
+    .transform((v) => (v ? Number(v) : 8080))
+    .refine((n) => Number.isFinite(n) && n > 0 && n < 65536, "PORT must be a valid port number"),
 
-    // Backend runtime
-    PORT: z
-      .string()
-      .optional()
-      .transform((v) => (v ? Number(v) : 8080))
-      .refine(
-        (n) => Number.isFinite(n) && n > 0 && n < 65536,
-        "PORT must be a valid port"
-      ),
+  // Demo mode — serves seeded listings instead of hitting the DB
+  DEMO_MODE: z
+    .string()
+    .optional()
+    .transform((v) => v === "true"),
 
-    // Demo Mode
-    DEMO_MODE: z
-      .string()
-      .optional()
-      .transform((v) => v === "true"),
+  // Auth — required, minimum 16 chars
+  JWT_SECRET: z
+    .string()
+    .min(16, "JWT_SECRET must be at least 16 characters"),
 
-    ADMIN_ENABLED: z
-      .string()
-      .optional()
-      .transform((v) => (v === undefined ? true : v === "true")),
-    ADMIN_EMAIL_ALLOWLIST: z.string().optional(),
+  // CORS — comma-separated list of allowed origins
+  CORS_ORIGINS: z
+    .string()
+    .default("http://localhost:5173")
+    .transform((s) => s.split(",").map((x) => x.trim()).filter(Boolean))
+    .refine((arr) => arr.length > 0, "CORS_ORIGINS must include at least one origin"),
 
-    // Feature toggles (prevents optional integrations from bricking prod)
-    BILLING_ENABLED: z
-      .enum(["true", "false"])
-      .default("false")
-      .transform((v) => v === "true"),
-    BILLING_STUB_PLAN: z.enum(["free", "pro", "enterprise"]).optional(),
-    EMAIL_ENABLED: z
-      .string()
-      .optional()
-      .transform((v) => v === "true")
-      .default("true")
-      .pipe(z.boolean()),
+  // PostgreSQL — optional, falls back to demo data if not set
+  DB_USER:     z.string().optional(),
+  DB_HOST:     z.string().optional(),
+  DB_NAME:     z.string().optional(),
+  DB_PASSWORD: z.string().optional(),
+  DB_PORT: z
+    .string()
+    .optional()
+    .transform((v) => (v ? Number(v) : 5432)),
 
-    // Security / Auth (required)
-    JWT_SECRET: z
-      .string()
-      .min(16, "JWT_SECRET must be at least 16 characters (use a long random string)"),
+  // Stripe — optional, payments disabled if not set
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_PRICE_ID:   z.string().optional(),
+  CLIENT_URL:        z.string().optional().default("http://localhost:5173"),
 
-    // CORS (comma-separated list of origins)
-    CORS_ORIGINS: z
-      .string()
-      .default("http://localhost:5173")
-      .transform((s) => s.split(",").map((x) => x.trim()).filter(Boolean))
-      .refine((arr) => arr.length > 0),
+  // Anthropic — optional, AI broker disabled if not set
+  ANTHROPIC_API_KEY: z.string().optional(),
+});
 
-    // Mongo (required)
-    MONGO_URL: z.string().min(1, "MONGO_URL is required"),
-    DB_NAME: z.string().min(1, "DB_NAME is required"),
-
-    // App base URL (used for building absolute links in emails)
-    // Local: http://localhost:5173
-    // Prod:  https://<your-vercel-domain>
-    APP_BASE_URL: z.string().url().default("http://localhost:5173"),
-
-    // Public API base URL (used for storing absolute image links)
-    // Local: http://localhost:8080
-    // Prod:  https://easyfinder.fly.dev
-    PUBLIC_API_BASE_URL: z
-      .string()
-      .url()
-      .default("http://localhost:8080")
-      .transform((value) => value.replace(/\/+$/, "")),
-
-    // Resend (for password reset emails, etc.)
-    RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY is required").optional(),
-    // Must be a verified sender in Resend, e.g. "EasyFinder <no-reply@yourdomain.com>"
-    RESEND_FROM: z.string().min(1, "RESEND_FROM is required").optional(),
-
-    // Stripe (billing)
-    STRIPE_SECRET_KEY: z.string().min(1, "STRIPE_SECRET_KEY is required").optional(),
-    STRIPE_WEBHOOK_SECRET: z.string().min(1, "STRIPE_WEBHOOK_SECRET is required").optional(),
-    STRIPE_PRICE_ID_PRO: z.string().min(1, "STRIPE_PRICE_ID_PRO is required").optional(),
-    STRIPE_PRICE_ID_ENTERPRISE: z
-      .string()
-      .min(1, "STRIPE_PRICE_ID_ENTERPRISE is required")
-      .optional(),
-
-    LAUNCH_DATE: z.string().datetime().default("2026-02-01T00:00:00.000Z"),
-  })
-  .superRefine((values, ctx) => {
-    if (values.NODE_ENV !== "production") return;
-
-    // Only enforce Stripe if billing is enabled
-    if (values.BILLING_ENABLED) {
-      const stripeRequired = [
-        "STRIPE_SECRET_KEY",
-        "STRIPE_WEBHOOK_SECRET",
-        "STRIPE_PRICE_ID_PRO",
-        "STRIPE_PRICE_ID_ENTERPRISE",
-      ] as const;
-
-      for (const key of stripeRequired) {
-        if (!values[key]) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: [key],
-            message: `${key} is required in production when BILLING_ENABLED=true`,
-          });
-        }
-      }
-    }
-
-    // Only enforce Resend if emails are enabled
-    if (values.EMAIL_ENABLED) {
-      const resendRequired = ["RESEND_API_KEY", "RESEND_FROM"] as const;
-      for (const key of resendRequired) {
-        if (!values[key]) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: [key],
-            message: `${key} is required in production when EMAIL_ENABLED=true`,
-          });
-        }
-      }
-    }
-  });
-
-const testDefaults =
-  process.env.NODE_ENV === "test"
-    ? {
-        JWT_SECRET: "test-secret-1234567890",
-        MONGO_URL: "mongodb://localhost:27017",
-        DB_NAME: "easyfinder_test",
-        APP_BASE_URL: "http://localhost:5173",
-        PUBLIC_API_BASE_URL: "http://localhost:8080",
-        BILLING_ENABLED: "false",
-        EMAIL_ENABLED: "false",
-      }
-    : {};
-
-const parsed = EnvSchema.safeParse({ ...process.env, ...testDefaults });
+const parsed = EnvSchema.safeParse(process.env);
 
 if (!parsed.success) {
   throw new Error(
     "❌ Invalid environment variables:\n" +
-      parsed.error.issues.map((i) => `- ${i.path.join(".")}: ${i.message}`).join("\n")
+      parsed.error.issues
+        .map((i) => `  - ${i.path.join(".")}: ${i.message}`)
+        .join("\n")
   );
 }
 

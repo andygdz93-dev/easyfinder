@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
 import { BillingInfo, defaultBilling, normalizeBilling } from "./billing.js";
 import { env } from "./env.js";
-import { getCollection } from "./db.js";
+import { pool } from "./db.js";
 import { users as demoUsers } from "./store.js";
 
 export type UserDocument = {
