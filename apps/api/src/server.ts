@@ -1,3 +1,4 @@
+import rawBody from "fastify-raw-body";
 import Fastify, { FastifyReply, FastifyRequest } from "fastify";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
@@ -27,6 +28,8 @@ import { ZodError } from "zod";
 import { env } from "./env.js";
 import meRoutes from "./routes/me.js";
 import ironPlanetScraperRoutes from "./routes/scrapers.ironplanet.js";
+import dealRoutes from "./routes/deal.js";
+import emailRoutes from "./routes/emails.js";
 
 const normalizeRole = (role: unknown): UserRole => {
   if (
@@ -249,6 +252,8 @@ export const buildServer = () => {
   app.register(ndaRoutes, { prefix: "/api/nda" });
   // Always mount billing routes so promo activation is available in all environments.
   app.register(billingRoutes, { prefix: "/api/billing" });
+  app.register(dealRoutes, { prefix: "/api/deal" });
+  app.register(emailRoutes, { prefix: "/api/emails" });
 
   return app;
 };
