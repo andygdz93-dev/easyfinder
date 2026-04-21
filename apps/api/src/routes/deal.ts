@@ -1,18 +1,39 @@
 import { FastifyInstance } from "fastify";
 import { evaluateDeal } from "../lib/dealEngine.js";
-import { getListingById } from "../db.js";
+import { getListingsCollection } from "../listings.js";
+import { verifyToken } from "../lib/verifyHmac.js";
 
-export async function dealRoutes(app: FastifyInstance) {
+export default async function dealRoutes(app: FastifyInstance) {
   app.post("/evaluate", async (req, reply) => {
     try {
       const input = req.body as any;
-      if (!input?.listing_id || !input?.asking_price || !input?.category)
-        return reply.status(400).send({ error: "Missing required fields: listing_id, asking_price, category" });
 
+      if (!input?.listing_id || !input?.asking_price || !input?.category) {
+        return reply.status(400).send({
+          error: "Missing required fields: listing_id, asking_price, category",
+        });
+      }
+
+      // HMAC anti-cheat (optional header)
+      const token = req.headers["x-hmac-token"] as string | undefined;
+      if (token) {
+        const payload = `${input.listing_id}:${input.asking_price}`;
+        if (!verifyToken(payload, token)) {
+          return reply.status(401).send({ error: "Invalid HMAC token" });
+        }
+      }
+
+      // Enrich from DB if market_p50 not supplied
       if (!input.market_p50) {
-        const row = await getListingById(input.listing_id);
-        if (row?.market_value) input.market_p50 = row.market_value;
-        if (row?.hours && !input.hours) input.hours = row.hours;
+        const listing = await getListingsCollection().findById(input.listing_id);
+        if (listing) {
+          if ((listing as any).marketValue && !input.market_p50) {
+            input.market_p50 = (listing as any).marketValue;
+          }
+          if (listing.hours != null && !input.hours) {
+            input.hours = listing.hours;
+          }
+        }
       }
 
       return reply.send({ data: evaluateDeal(input) });
@@ -22,7 +43,7 @@ export async function dealRoutes(app: FastifyInstance) {
     }
   });
 
-  app.get("/deal/health", async (_req, reply) =>
+  app.get("/health", async (_req, reply) =>
     reply.send({ status: "ok", engine: "dealEngine.ts", version: "1.0.0" })
   );
 }
