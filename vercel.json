@@ -1,6 +1,6 @@
 {
-  "buildCommand": "pnpm --filter @easyfinderai/shared build && pnpm --filter @easyfinderai/frontend build",
-  "outputDirectory": "packages/frontend/dist",
+  "buildCommand": "pnpm --filter @easyfinderai/shared build && pnpm --filter @easyfinderai/web build",
+  "outputDirectory": "apps/web/dist",
   "installCommand": "pnpm install",
   "rewrites": [
     {
