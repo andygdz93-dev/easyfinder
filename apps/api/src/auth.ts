@@ -2,11 +2,15 @@ import type { FastifyRequest } from "fastify";
 import type { StoredUser } from "./store.js";
 import { users } from "./store.js";
 
+export type UserRole = "demo" | "buyer" | "seller" | "enterprise" | "admin";
+
 export type AuthUser = {
   id: string;
   email: string;
   name: string;
-  role: "demo" | "buyer" | "seller" | "admin";
+  role: UserRole;
+  ndaAccepted?: boolean;
+  ndaAcceptedAt?: Date | null;
 };
 
 export const getUserByEmail = (email: string): StoredUser | undefined =>

@@ -5,7 +5,7 @@ import { requireNDA } from "../middleware/requireNDA.js";
 import { requirePlan } from "../middleware/requirePlan.js";
 import { disableWritesInDemo } from "../middleware/disableWritesInDemo.js";
 import { fail, ok } from "../response.js";
-import { getUploadsBucket } from "../db.ts";
+import { getUploadsBucket } from "../db.js";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);

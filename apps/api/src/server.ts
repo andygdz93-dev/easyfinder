@@ -1,4 +1,3 @@
-import rawBody from "fastify-raw-body";
 import Fastify, { FastifyReply, FastifyRequest } from "fastify";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
@@ -29,9 +28,9 @@ import { env } from "./env.js";
 import meRoutes from "./routes/me.js";
 import ironPlanetScraperRoutes from "./routes/scrapers.ironplanet.js";
 import dealRoutes from "./routes/deal.js";
+import emailRoutes from "./routes/emails.js";
 import brokerRoutes from "./routes/broker.js";
 import intelligenceRoutes from "./routes/intelligence.js";
-import emailRoutes from "./routes/emails.js";
 
 const normalizeRole = (role: unknown): UserRole => {
   if (
@@ -234,6 +233,7 @@ export const buildServer = () => {
   app.register(scoringRoutes, { prefix: "/api/scoring-configs" });
   app.register(watchlistRoutes, { prefix: "/api/watchlist" });
   app.register(offersRoutes, { prefix: "/api/offers" });
+  app.register(emailRoutes, { prefix: "/api/emails" });
   app.register(inquiriesRoutes, { prefix: "/api/inquiries" });
   app.register(authRoutes, { prefix: "/api/auth" });
   if (env.ADMIN_ENABLED) {
@@ -257,7 +257,6 @@ export const buildServer = () => {
   app.register(dealRoutes, { prefix: "/api/deal" });
   app.register(brokerRoutes, { prefix: "/api/broker" });
   app.register(intelligenceRoutes, { prefix: "/api/intelligence" });
-  app.register(emailRoutes, { prefix: "/api/emails" });
 
   return app;
 };

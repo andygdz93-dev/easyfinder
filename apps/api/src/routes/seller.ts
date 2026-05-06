@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { ok, fail } from "../response.js";
+import { getListingsCollection } from "../listings.js";
 
 const sellerOnly = new Set(["seller"]);
 

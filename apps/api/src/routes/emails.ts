@@ -1,8 +1,11 @@
 import { FastifyInstance } from "fastify";
 import { evaluateDeal } from "../lib/dealEngine.js";
 import { getListingsCollection } from "../listings.js";
+import { Resend } from "resend";
+import { env } from "../env.js";
 
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
+const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
 
 async function draftNegotiationEmail(deal: any, round: number, category: string) {
   const counter = deal.negotiation[round - 1];
@@ -47,19 +50,32 @@ Best regards`;
     if (!response.ok) throw new Error(`API ${response.status}`);
     return { email: data?.content?.[0]?.text || "Failed to generate email", fallback: false };
   } catch (e: any) {
-    app_log(e.message);
+    console.error("Email generation error:", e.message);
     return { email: fallbackEmail, fallback: true };
   }
 }
 
-// standalone logger (no app ref needed here)
-function app_log(msg: string) { console.error("Email generation error:", msg); }
+async function sendViaResend(to: string, subject: string, body: string): Promise<{ sent: boolean; reason: string }> {
+  if (!resend || !env.RESEND_FROM) return { sent: false, reason: "Resend not configured" };
+  try {
+    await resend.emails.send({
+      from: env.RESEND_FROM,
+      to,
+      subject,
+      html: `<pre style="font-family:sans-serif;white-space:pre-wrap;">${body}</pre>`,
+    });
+    return { sent: true, reason: "" };
+  } catch (e: any) {
+    console.error("Resend error:", e.message);
+    return { sent: false, reason: e.message };
+  }
+}
 
 export default async function emailRoutes(app: FastifyInstance) {
   app.post("/draft-negotiation", { preHandler: app.authenticate }, async (request, reply) => {
     try {
       const input = request.body as any;
-      const { listing_id, asking_price, category, market_p50, hours, condition, round = 1 } = input;
+      const { listing_id, asking_price, category, market_p50, hours, condition, round = 1, send_to } = input;
 
       let deal: any;
 
@@ -72,8 +88,8 @@ export default async function emailRoutes(app: FastifyInstance) {
           category:       listing.category ?? "equipment",
           market_p50:     (listing as any).marketValue ?? null,
           hours:          listing.hours ?? null,
-          condition:      (listing.operable !== false && listing.is_operable !== false) ? "good" : "fair",
-          operable:       listing.operable !== false && listing.is_operable !== false,
+          condition:      (listing.operable !== false) ? "good" : "fair",
+          operable:       listing.operable !== false,
           distance_miles: 150,
         });
       } else if (asking_price && category && market_p50) {
@@ -101,8 +117,14 @@ export default async function emailRoutes(app: FastifyInstance) {
         });
       }
 
-      const roundNum = Math.min(Math.max(round, 1), deal.negotiation.length || 1);
+      const roundNum = Math.min(Math.max(Number(round), 1), deal.negotiation.length || 1);
       const emailResult = await draftNegotiationEmail(deal, roundNum, category);
+
+      let sendResult: { sent: boolean; reason: string } = { sent: false, reason: "No recipient provided" };
+      if (send_to) {
+        const subject = `Counter-Offer Round ${roundNum}: ${category}`;
+        sendResult = await sendViaResend(send_to, subject, emailResult.email);
+      }
 
       return reply.send({
         decision:          deal.decision,
@@ -113,6 +135,8 @@ export default async function emailRoutes(app: FastifyInstance) {
         total_acquisition: deal.costs.total_acquisition,
         email:             emailResult.email,
         fallback:          emailResult.fallback,
+        sent:              sendResult.sent,
+        send_reason:       sendResult.reason ?? null,
       });
     } catch (e: any) {
       app.log.error(e, "email/draft error");
