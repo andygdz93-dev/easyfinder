@@ -1,0 +1,16 @@
+apps/api/src/routes/admin.ts
+apps/api/src/routes/auth.ts
+apps/api/src/routes/billing.ts
+apps/api/src/routes/demo-listings.ts
+apps/api/src/routes/health.ts
+apps/api/src/routes/images.ts
+apps/api/src/routes/inquiries.ts
+apps/api/src/routes/listings.ts
+apps/api/src/routes/me.ts
+apps/api/src/routes/nda.ts
+apps/api/src/routes/offers.ts
+apps/api/src/routes/scoring.ts
+apps/api/src/routes/scrapers.ironplanet.ts
+apps/api/src/routes/seller.ts
+apps/api/src/routes/uploads.ts
+apps/api/src/routes/watchlist.ts

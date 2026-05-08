@@ -7,7 +7,7 @@ const { buildServer } = await import("./server.js");
 const { config } = await import("./config.js");
 const { connectToDatabase } = await import("./db.js");
 
-await connectToDatabase();
+try { await connectToDatabase(); } catch (e) { console.warn("⚠️  MongoDB unavailable — some features disabled."); }
 
 const app = await buildServer();
 const host = "0.0.0.0";

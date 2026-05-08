@@ -1,0 +1,13 @@
+EasyFinder AI Technical Summary
+
+Stack:
+- Fastify API
+- React + Vite Frontend
+- TypeScript Monorepo
+- Stripe Billing
+- OpenAPI Support
+- TurboRepo + PNPM
+- Docker Deployment
+- Seller Marketplace Workflows
+- AI Scoring Engine
+- CSV + Scraper Ingestion Pipelines

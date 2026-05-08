@@ -1,0 +1,78 @@
+.
+├── ARCHITECTURE.txt
+├── Dockerfile
+├── README.md
+├── apps
+│   ├── api
+│   │   ├── package.json
+│   │   ├── scripts
+│   │   ├── seed.cjs
+│   │   ├── src
+│   │   ├── tests
+│   │   ├── tsconfig.json
+│   │   ├── tsconfig.test.json
+│   │   └── vitest.config.ts
+│   └── web
+│       ├── index.html
+│       ├── package.json
+│       ├── postcss.config.js
+│       ├── public
+│       ├── src
+│       ├── tailwind.config.js
+│       ├── tests
+│       ├── tsconfig.json
+│       ├── vercel.json
+│       └── vite.config.ts
+├── archive
+│   └── docs
+│       ├── README.md
+│       ├── engineering
+│       └── product
+├── docs
+│   ├── ADMIN.md
+│   ├── ARCHITECTURE.md
+│   ├── ARCHITECTURE_MAP.md
+│   ├── SCORING.md
+│   └── WORKFLOWS.md
+├── eslint.config.js
+├── fly.toml
+├── openapi.yml
+├── ops
+│   └── snapshots
+│       ├── FILE_INDEX.json
+│       └── REPO_SNAPSHOT.md
+├── package.json
+├── packages
+│   └── shared
+│       ├── package.json
+│       ├── src
+│       ├── tests
+│       ├── tsconfig.json
+│       └── tsconfig.tsbuildinfo
+├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
+├── product
+│   └── docs
+│       └── PRODUCT_VISION.md
+├── project docs
+│   ├── ADDENDUM_LISTINGS_STRATEGY.md
+│   ├── ADMIN_SPECS.md
+│   ├── API_REFERENCE.md
+│   ├── EasyFinder_Product_Vision.md
+│   ├── EasyFinder_System_Overview.md
+│   ├── FRONTEND_CONTRACT.md
+│   ├── README.md
+│   ├── SCORING.md
+│   ├── STRIPE_WEBHOOK_VERIFICATION.md
+│   └── _archive
+│       └── SCORING_MODEL.v1.md
+├── scripts
+│   ├── clean.ps1
+│   ├── cors-smoke-test.sh
+│   ├── repo-snapshot.ps1
+│   └── setup.ps1
+├── tash
+├── turbo.json
+└── vercel.json
+
+26 directories, 50 files

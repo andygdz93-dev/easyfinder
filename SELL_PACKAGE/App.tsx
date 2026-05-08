@@ -30,7 +30,6 @@ import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { ForgotPassword } from "./pages/ForgotPassword";
 import { ResetPassword } from "./pages/ResetPassword";
-import BrokerChat from "./pages/app/BrokerChat";
 import { DemoTour } from "./pages/demo/Tour";
 import { DemoLayout } from "./layouts/DemoLayout";
 import { LiveLayout } from "./layouts/LiveLayout";
@@ -209,7 +208,6 @@ export default function App() {
               <Route path="watchlist" element={<Watchlist />} />
               <Route path="scoring" element={<ScoringConfigs />} />
               <Route path="offers" element={<Offers />} />
-              <Route path="broker" element={<BrokerChat />} />
             </Route>
             <Route
               path="admin"
@@ -224,7 +222,6 @@ export default function App() {
               <Route path="listings" element={<AdminListings />} />
               <Route path="inquiries" element={<AdminInquiries />} />
               <Route path="offers" element={<Offers />} />
-              <Route path="broker" element={<BrokerChat />} />
               <Route path="scoring" element={<ScoringConfigs />} />
               <Route path="audit" element={<AdminAudit />} />
               <Route path="sources" element={<AdminSources />} />

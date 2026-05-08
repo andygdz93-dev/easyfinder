@@ -1,0 +1,1019 @@
+[33m1b84a59[m[33m ([m[1;33mtag: [m[1;33mv1.0-working[m[33m, [m[1;31morigin/deal-engine[m[33m)[m chore: security cleanup — remove token, backup files; update deal engine and scoring
+[33m9cf7d01[m[33m ([m[1;31morigin/coderabbitai/utg/9cf7d01[m[33m)[m Merge pull request #328 from whattemup/codex/fix-seller-reply-issue-and-inquiries-table
+[33mcc1758e[m Fix seller inquiry replies and listing titles in inbox
+[33m9e540e2[m Merge pull request #327 from whattemup/codex/implement-seller-inquiry-thread-view
+[33m16b184f[m Add seller inquiry threads with privacy-safe messaging
+[33m36f543d[m Merge pull request #326 from whattemup/codex/fix-inquiries-table-for-blind-marketplace-compliance
+[33ma0bd98a[m Make seller inquiries blind-marketplace compliant
+[33mbe7dc4b[m Merge pull request #325 from whattemup/codex/restructure-app-shell-and-listing-detail-layout
+[33me858d81[m Refactor app shell scrolling and listing gallery layout
+[33ma2f0bd7[m Merge pull request #324 from whattemup/codex/fix-image-gallery-cropping-and-thumbnails
+[33m624faf3[m Fix listing detail gallery hero fit and thumbnail readability
+[33mc379a92[m Merge pull request #323 from whattemup/codex/fix-image-cropping-in-listing-details
+[33mad3f87b[m fix(web): prevent listing detail image cropping
+[33m50e2410[m Merge pull request #322 from whattemup/codex/fix-admin-appshell-layout-rendering
+[33mff5917b[m fix(web): hide global app shell on admin context
+[33m019dbbc[m Merge pull request #321 from whattemup/codex/fix-type-alignment-in-admin-pages
+[33m8a5e453[m fix(web): align admin page types with backend responses
+[33maeb90bf[m Merge pull request #320 from whattemup/codex/add-optional-currency-field-to-listingdocument
+[33m2cf81dd[m fix(api): support optional listing currency with USD default
+[33m68250d9[m Merge pull request #319 from whattemup/codex/fix-admin-layout-to-remove-global-sidebar
+[33m5a726a4[m Fix admin app routes to bypass global AppShell sidebar
+[33m1b8934f[m Merge pull request #318 from whattemup/codex/update-free-buyer-listing-limit-to-25
+[33m80ef804[m Increase free buyer listing limit to 25
+[33mc35826a[m modified file
+[33m328cf46[m Merge pull request #317 from whattemup/codex/implement-offer-negotiation-system
+[33mf9fbb2f[m api: implement offer negotiation backend
+[33m882de46[m Merge pull request #316 from whattemup/codex/cleanup-admin-ui-by-removing-global-sidebar
+[33me2613cc[m Refine admin layout to use console nav only
+[33mfdaf5f8[m Merge pull request #315 from whattemup/codex/implement-admin-only-navigation-rendering
+[33m8bdf874[m web: simplify admin sidebar navigation
+[33m9efc5ac[m Merge pull request #314 from whattemup/codex/add-admin-dashboard-and-api-endpoints
+[33m86fc842[m Add dedicated admin dashboard routes and admin API endpoints
+[33m96022cf[m Merge pull request #313 from whattemup/codex/fix-listing-card-header-layout
+[33maec2360[m Fix listing card score header overflow on narrow widths
+[33m1b067bd[m Merge pull request #312 from whattemup/codex/update-score-badge-styling
+[33mf7f1538[m Adjust listings score badge contrast
+[33me2595fa[m Merge pull request #311 from whattemup/codex/fix-listings-card-header-layout-and-styling
+[33m25f2ca2[m Improve listings card score header layout and contrast
+[33m747fe9d[m modified files
+[33m1e1868b[m Merge pull request #310 from whattemup/codex/add-cors-configuration-to-api-server
+[33ma4d98bd[m api: enable permissive fastify cors plugin config
+[33mf05a6fb[m modified files
+[33me2c135e[m Merge pull request #309 from whattemup/codex/fix-image-rendering-and-badge-overflow-issues
+[33mb764ecb[m Fix upload image CORS headers and listing card badge overflow
+[33m6534f08[m Merge pull request #308 from whattemup/codex/implement-seller-only-checkbox-gating
+[33m7997736[m Fix seller-only filter gating and visible listing counts
+[33mafc2203[m Merge pull request #307 from whattemup/codex/update-seller.ts-for-api-base-url-hardening-and-zip-key
+[33mae00d15[m Harden seller API base URL and zip image key parsing
+[33m7689f34[m Merge pull request #306 from whattemup/codex/fix-api-tests-for-absolute-image-urls-and-zip-parsing
+[33mf04e3a6[m fix(api): normalize seller image URLs and ZIP image keys
+[33m86566d7[m Merge pull request #305 from whattemup/codex/add-seller-first-ui-changes
+[33mf3cf02d[m feat(web): prioritize seller listings UI on marketplace
+[33mff91d46[m Merge pull request #304 from whattemup/codex/update-documentation-for-product-changes
+[33m50bccde[m docs: refresh product and architecture documentation
+[33m7f8a89a[m Merge pull request #303 from whattemup/codex/implement-seller-image-handling-and-zip-upload
+[33m83eb1f7[m Fix seller image delivery, ZIP bundle routes, and seller listings UI actions
+[33m8f48f73[m Merge pull request #302 from whattemup/codex/modify-security-headers-for-images
+[33mf6ab354[m api: allow cross-origin image resource policy
+[33m6589c56[m Merge pull request #301 from whattemup/codex/fix-image-url-handling-for-vercel
+[33ma8ff431[m Store absolute API image URLs for seller listings
+[33mb8b3ca6[m Merge pull request #300 from whattemup/codex/add-bulk-upload-support-for-zip-bundles
+[33mfe47c61[m Add seller ZIP bundle validate/upload flows
+[33m90102e8[m Merge pull request #299 from whattemup/codex/implement-multiple-fixes-for-listings-functionality
+[33m51eb4cb[m Fix listings layout overflow and add seller listing delete flow
+[33m08a652e[m Merge pull request #298 from whattemup/codex/update-listing-card-ui-for-source-display
+[33mbf62fca[m Adjust listing card source label and header truncation
+[33m00f180f[m Merge pull request #297 from whattemup/codex/update-listings-grid-classnames
+[33m345957d[m Adjust listings grid breakpoints
+[33m3892345[m Merge pull request #296 from whattemup/codex/add-csv-upload-with-optional-zip-support
+[33md6cf019[m Add multipart seller CSV upload with optional ZIP image mapping
+[33ma01ab53[m Merge pull request #295 from whattemup/codex/implement-seller-image-upload-ux
+[33m6ba0df2[m Add seller multi-image picker and upload flow
+[33ma76a733[m Merge pull request #294 from whattemup/codex/implement-mongo-gridfs-image-upload-routes
+[33m1482cd4[m Add GridFS-backed seller image upload and image serving routes
+[33m8818f81[m Merge pull request #293 from whattemup/codex/fix-button-variant-in-seller-pages
+[33m82857bd[m fix(web): remove unsupported Button variant ghost
+[33mcdcdad7[m Merge pull request #292 from whattemup/codex/fix-typecheck-for-isadmin-guard
+[33me2d692d[m fix(web): restore isAdmin guard in App.tsx
+[33mf61ebdc[m Merge pull request #291 from whattemup/codex/add-patch-support-for-seller-listings
+[33m6f54164[m fix(api): support PATCH for seller listing updates
+[33m6c8e81f[m Merge pull request #290 from whattemup/codex/implement-seller-listing-edit-functionality
+[33ma2b3a41[m feat(seller): align listing edit with GET+PUT ownership rules
+[33mf9656ca[m Merge pull request #289 from whattemup/codex/fix-api-remove-backfill-feature
+[33m1c802f7[m fix(api): allow sourceExternalId in seller import listing type
+[33m4a637d8[m Merge pull request #288 from whattemup/codex/add-file-upload-for-seller-listings
+[33m1025a35[m feat(seller): image uploads + listing edit; fix admin landing; remove backfill
+[33mffe5ae2[m Merge pull request #287 from whattemup/codex/remove-ironplanet-backfill-feature
+[33m51679c5[m Remove IronPlanet backfill command and fix seller import typing
+[33m6cd29de[m Merge pull request #286 from whattemup/codex/fix-manual-listing-submit-404-error
+[33m45617a5[m Fix seller listing submit URL handling and actionable API errors
+[33m7af4356[m Merge pull request #285 from whattemup/codex/fix-manual-seller-listing-flow-and-csv-validation
+[33m45d7dd0[m Fix seller manual submit URL/error handling and tighten CSV validation
+[33m421e7a2[m Merge pull request #284 from whattemup/codex/fix-manual-listing-creation-and-csv-upload-validation
+[33m8542bf6[m Add seller manual listing API and harden CSV ingestion
+[33m4d5e65c[m Merge pull request #283 from whattemup/codex/implement-manual-seller-listing-flow
+[33mb20edfa[m feat(seller): manual listings + csv hardening
+[33m0183f62[m Merge pull request #282 from whattemup/codex/move-ironplanet-scraper-to-ingestion-module
+[33m8480291[m chore(ingestion): move ironplanet scraper into services
+[33mc549c1e[m Merge pull request #281 from whattemup/codex/fix-listings-upsert-helper-to-avoid-conflicts
+[33mf3beaf6[m fix(db): remove status/isPublished conflicts in listings upsert helper
+[33m0adef8f[m Merge pull request #280 from whattemup/codex/fix-createdat-upsert-conflict-in-listings-helper
+[33m60030d6[m fix(db): prevent createdAt upsert conflicts in listings upsert helper
+[33mb9e51ca[m Merge pull request #279 from whattemup/codex/fix-eslint-errors-in-backfill-script
+[33mb4684e1[m Fix backfill sanitization to avoid unused destructuring vars
+[33m6693dc6[m Merge pull request #278 from whattemup/codex/fix-backfill-script-to-avoid-upsert-conflict
+[33m91a1cb0[m fix(script): ironplanet backfill avoid createdAt upsert conflict
+[33m3794bf3[m Merge pull request #277 from whattemup/codex/add-explicit-flag-for-real-writes-in-backfill
+[33m9bbef20[m fix(script): backfill-ironplanet support real writes
+[33m3478cfb[m Merge pull request #276 from whattemup/codex/add-ironplanet-backfill-cli-and-improve-scraper
+[33md7d4c71[m feat(scraper): ironplanet backfill + safe enhancements
+[33m554a2e9[m Merge pull request #275 from whattemup/codex/fix-ironplanet-backfill-to-be-non-destructive
+[33mfcda123[m fix(scraper): make ironplanet backfill non-destructive + meter reading
+[33mb42e896[m Merge pull request #274 from whattemup/codex/add-cli-script-for-ironplanet-backfill
+[33m115a8c2[m feat(scraper): add ironplanet backfill script
+[33mfc8bdf6[m Merge pull request #273 from whattemup/codex/refactor-ironplanet-scraper-and-frontend-display
+[33meeaae00[m Harden IronPlanet data hygiene and listing display
+[33m690d2cb[m Merge pull request #272 from whattemup/codex/add-backfill-script-for-ironplanet-listings
+[33m619e516[m chore(api): add ironplanet listings backfill script
+[33mfd581e4[m Merge pull request #271 from whattemup/codex/sanitize-ironplanet-description-string
+[33mfe49092[m fix(scraper): sanitize ironplanet meta description fragments
+[33ma56d6d8[m Merge pull request #270 from whattemup/codex/normalize-ironplanet-description-field
+[33m07b2d8f[m fix(scraper): normalize ironplanet description to plain text
+[33m42496a0[m Merge pull request #269 from whattemup/codex/fix-eslint-unused-variable-in-listings.ts
+[33m716d06e[m chore(lint): fix unused var in listings upsert
+[33me0ef3d3[m Merge pull request #268 from whattemup/codex/add-regression-tests-for-ironplanet-price-priority
+[33m704d33b[m test(scraper): enforce ironplanet price priority
+[33m3ed5aec[m Merge pull request #267 from whattemup/codex/fix-ironplanet-scraper-to-prefer-buy-now-price
+[33m1b9229c[m fix(scraper): prefer ironplanet buy-now price, avoid body regex
+[33meab1214[m Merge pull request #266 from whattemup/codex/fix-ironplanet-scraper-price-extraction-logic
+[33m3441438[m fix(scraper): avoid body-wide price regex false positives
+[33me3711f9[m Merge pull request #265 from whattemup/codex/fix-scraper-to-handle-price-and-images
+[33m276b4c8[m fix(scraper): prevent numeric ids as price and prefer real photos
+[33m36d1e1b[m Merge pull request #264 from whattemup/codex/fix-ironplanet-listing-parsing
+[33mbe0e40d[m fix(scraper): correct ironplanet price/state/images parsing
+[33mdb3a38e[m Merge pull request #263 from whattemup/codex/fix-status-update-conflicts-in-upsert
+[33m6b3f0ef[m fix(listings): prevent status update conflicts in upsert
+[33mbd10a86[m Merge pull request #262 from whattemup/codex/fix-ironplanet-scraper-reliability-and-diagnostics
+[33m0c15afd[m fix(scraper): add ironplanet fetch diagnostics and headers
+[33mdecb0c3[m Merge pull request #261 from whattemup/codex/fix-ironplanet-price/hours/state-extraction
+[33mc4468cd[m fix(scraper): improve ironplanet price/hours/state extraction
+[33m7ac932f[m Merge pull request #260 from whattemup/chore/remove-staging
+[33m93ca3fb[m chore: remove staging config and docs
+[33m30fe29c[m Merge pull request #259 from whattemup/codex/add-fly-staging-config-and-deployment-docs
+[33mbcbd011[m chore(staging): add fly staging config + staging deployment docs
+[33m1fd18a7[m Merge pull request #258 from whattemup/codex/enforce-canonical-only-docs-folder
+[33m2e6e507[m docs: enforce canonical-only docs folder
+[33m89075a1[m Merge pull request #257 from whattemup/codex/separate-canonical-docs-from-generated-artifacts
+[33m66d1a12[m docs: separate canonical docs from generated snapshots
+[33mc51de8a[m Merge pull request #256 from whattemup/codex/enforce-4-canonical-docs-policy
+[33mf151282[m docs: consolidate docs into 4 canonical files
+[33m4b0561a[m Merge pull request #255 from whattemup/codex/update-canonical-docs-and-regenerate-openapi-types
+[33m92793aa[m docs: refresh canonical docs and workflow guidance
+[33mfcc547f[m created repo snaphot tool
+[33m1d39cea[m created file index
+[33mdaeda80[m Merge pull request #254 from whattemup/codex/update-get-relativepath-function-to-remove-file-dependency
+[33mca1c83d[m Harden repo snapshot path handling and exclusions
+[33mf9ac825[m Merge pull request #253 from whattemup/codex/fix-get-relativepath-for-windows-powershell-5.1
+[33mffceed1[m Fix Get-RelativePath for Windows PowerShell 5.1
+[33mfcc4603[m Merge pull request #252 from whattemup/codex/add-repo-snapshot-tool-for-project
+[33ma9c2b5e[m Add repo snapshot script and improve admin navigation
+[33m352f635[m Merge pull request #251 from whattemup/codex/fix-admin-ui-role-display-and-access
+[33m3f3c5aa[m fix(admin-ui): render admin role correctly + remove upgrade + unlock all nav
+[33m170094b[m Merge pull request #250 from whattemup/fix/admin-readme-email
+[33m4f26f68[m docs(admin): restore primary owner admin email
+[33mc422c16[m Merge pull request #249 from whattemup/codex/update-default-admin-email
+[33mef5a801[m docs: update default admin bootstrap email
+[33m18c512b[m Merge pull request #248 from whattemup/codex/add-promote-admin-script-for-user-role
+[33mcb6f708[m chore(admin): add promote-admin bootstrap script
+[33mb2f5ffb[m Merge pull request #247 from whattemup/codex/add-admin-detail-view-for-listings
+[33m2bbce05[m Add admin listing detail API and UI history view
+[33me6bd56b[m Merge pull request #246 from whattemup/codex/change-delete-policy-to-soft-delete-by-default
+[33m8f07183[m Enforce safer hard-delete confirmation for admin listings
+[33mecbdc69[m Merge pull request #245 from whattemup/codex/add-audit-log-search-to-admin-ui
+[33m2ab4edb[m Add admin audit log API and viewer
+[33m9ee0285[m Merge pull request #244 from whattemup/codex/add-promote-admin-script-for-safe-admin-setup
+[33m2d16dd9[m feat(api): add promote-admin bootstrap script
+[33m37a987c[m Merge pull request #243 from whattemup/codex/add-locked-down-admin-control-center
+[33m3022985[m feat(admin): add locked-down admin control center
+[33m4956c53[m Merge pull request #242 from whattemup/codex/add-v2-scoring-implementation-and-documentation
+[33m6692d9c[m feat(scoring): v2 pillars + canonical scoring docs
+[33m7982204[m Merge pull request #241 from whattemup/codex/implement-v2-scoring-pillars-and-listing-schema
+[33m3834341[m feat(scoring): add v2 pillars and listing schema signals
+[33m1650ebf[m Merge pull request #240 from whattemup/codex/deprecate-legacy-documentation-files
+[33m5be1adb[m chore(docs): deprecate legacy docs after consolidation
+[33m361d292[m Merge pull request #239 from whattemup/codex/consolidate-project-documentation-and-cleanup
+[33m9a89847[m docs: consolidate product and engineering docs, add deprecation stubs
+[33mc8d440d[m Merge pull request #238 from whattemup/codex/generate-architectural-inventory-documentation
+[33mf97290f[m docs: add comprehensive monorepo architecture map
+[33mcd9be43[m Merge pull request #237 from whattemup/codex/fix-typescript-typecheck-errors-in-ironplanet-test
+[33mebcd3a4[m fix(test): satisfy strict null checks in ironplanet scraper test
+[33mcaf0fca[m Merge pull request #236 from whattemup/codex/harden-ironplanet-scraper
+[33m33d2a66[m chore(scraper): harden ironplanet scraper
+[33mf274ebc[m Merge pull request #235 from whattemup/codex/choreci-enforce-openapi-typegen-consistency
+[33m718d3fb[m chore(ci): enforce openapi typegen consistency
+[33m749a7a7[m Merge branch 'app' of https://github.com/whattemup/EasyFinder into app
+[33m6ab1675[m modified file
+[33m26f3667[m Merge pull request #234 from whattemup/codex/fix-api-unit-test-for-demo-mode
+[33m79a855d[m fix(api): stabilize demo write-disable test and refresh openapi types
+[33mafe3072[m updated the sources of truth
+[33md3f404b[m modified file
+[33m3b13e8a[m Merge pull request #233 from whattemup/codex/fix-upsertmanybysourceexternalid-fields-exclusion
+[33m162ff4f[m Fix IronPlanet upsert set doc field overlap
+[33ma7acbf6[m Merge pull request #232 from whattemup/codex/fix-mongodb-conflict-in-ironplanet-scraper
+[33m9bc7bff[m fix(api): avoid createdAt upsert conflict in ironplanet scraper
+[33md62568e[m Merge pull request #231 from whattemup/codex/update-listings-index-creation
+[33m7ccaf0e[m Fix listings source external ID index options
+[33md49d059[m Merge pull request #230 from whattemup/codex/implement-upsert-for-ironplanet-listings
+[33me7cb088[m Implement IronPlanet listing upserts by external ID
+[33m62975ec[m modified files
+[33mbef1193[m Merge pull request #229 from whattemup/codex/implement-mongodb-persistence-for-ironplanet-scraper
+[33m97900b5[m Persist IronPlanet scraper listings with Mongo upserts
+[33m5b914de[m Merge pull request #228 from whattemup/codex/fix-type-error-in-ironplanet.ts
+[33m0bad6af[m fix(api): use domhandler AnyNode in ironplanet scraper types
+[33mb0bb590[m Merge pull request #227 from whattemup/codex/fix-cheerio-typescript-typing-errors
+[33m157e153[m fix(api): align ironplanet scraper cheerio typings
+[33m79a74ac[m Merge pull request #226 from whattemup/codex/fix-typescript-errors-in-ironplanet-scraper
+[33mf9de262[m Fix IronPlanet listing typing and deduplicated persistence
+[33m62a7a64[m Merge pull request #225 from whattemup/codex/persist-ironplanet-listings-to-mongo
+[33m4051d22[m feat(scraper): persist ironplanet listings to Mongo
+[33mbadda89[m Merge pull request #224 from whattemup/codex/add-ironplanet-scraper-to-easyfinder
+[33m0554961[m feat(scraper): add IronPlanet search scraper endpoint
+[33mae30b2f[m modified file
+[33m93a195e[m Merge pull request #223 from whattemup/revert-222-codex/add-ironplanet-scraper-to-easyfinder
+[33ma6e5951[m Revert "feat(scraper): add IronPlanet search scraper endpoint"
+[33m6c1849f[m Merge pull request #222 from whattemup/codex/add-ironplanet-scraper-to-easyfinder
+[33m03acf97[m feat(scraper): add IronPlanet search scraper endpoint
+[33mf059ff9[m modified apps/api/package.json pnpm-lock.yaml and created folder apps/api/src/scrapers/
+[33mb0425c7[m Merge pull request #221 from whattemup/codex/fix-demo-write-blocking-for-tests
+[33mc298e17[m fix(api): gate demo write bypass behind explicit test env flag
+[33m04306bb[m Merge pull request #220 from whattemup/codex/fix-listing-detail-503-in-demo-mode
+[33mab13b58[m fix(api): allow listing detail in tests when demo mode enabled
+[33m91e41cc[m Merge pull request #219 from whattemup/codex/fix-ts-typecheck-for-dot-path-updates-and-listings
+[33m2879850[m fix(api): allow dot-path user updates and test listings fallback
+[33m386860c[m Merge pull request #218 from whattemup/codex/fix-seller-upload-tests-for-test-mode
+[33mfec36c5[m fix(api): allow writes in tests (disable demo write block)
+[33m8e02004[m Merge pull request #217 from whattemup/codex/fix-pro-promo-activation-logic
+[33m5b04298[m fix(api): make pro promo activation fully effective
+[33m1b2c945[m Merge pull request #216 from whattemup/codex/fix-pro-promo-persistence-in-users-collection
+[33mcfa6a4f[m fix(api): persist pro promo in users collection
+[33mc7b9d6b[m Merge pull request #215 from whattemup/codex/fix-seller-upload-403-issue
+[33m325577e[m fix(api): persist pro promo so requirePlan passes
+[33mae6a37c[m Merge pull request #214 from whattemup/codex/fix-seller-upload-blockage-when-billing-disabled
+[33me4bcaa4[m fix(api): allow plan gating when billing disabled
+[33mb5d49a1[m Merge pull request #213 from whattemup/codex/fix-api-to-always-mount-promo-route
+[33mad8c34b[m fix(api): always mount seller pro promo route
+[33m09aef37[m Merge pull request #212 from whattemup/codex/fix-ts-typecheck-error-in-listings.ts
+[33m61f46f7[m fix(api): make listings updatedAt sort type-safe
+[33mf4367c5[m Merge pull request #211 from whattemup/codex/implement-persistent-listings-storage-in-mongo
+[33m0eb9335[m feat(api): persist listings in Mongo
+[33ma3dcef2[m Merge pull request #210 from whattemup/codex/remove-unsafe-non-null-assertion-in-seller.ts
+[33m044773d[m fix(api): remove non-null assertion in seller upload
+[33m8671996[m Merge pull request #209 from whattemup/codex/fix-ts2345-error-in-seller.ts
+[33m6eaabcb[m Merge branch 'app' into codex/fix-ts2345-error-in-seller.ts
+[33m0913b1c[m fix(api): narrow seller userId to satisfy TS2345
+[33m5df7f01[m Merge pull request #208 from whattemup/codex/establish-codex-operational-guidelines
+[33md7ac00e[m docs: add production build safety checklist
+[33ma553f0c[m Merge pull request #207 from whattemup/codex/fix-ts2345-error-in-seller.ts
+[33m9ab9279[m fix(api): guard and narrow seller user id in import handler
+[33meeae5d8[m Merge pull request #206 from whattemup/codex/fix-buyer-visibility-for-seller-listings
+[33mc9e179e[m Fix seller CSV listings to publish live for buyers
+[33m841a65f[m Merge pull request #205 from whattemup/codex/fix-buyer-badge-and-csv-listing-visibility
+[33m07b80fe[m Fix buyer plan badge and publish seller CSV listings
+[33me9f4052[m Merge pull request #204 from whattemup/codex/fix-pro-seller-access-to-csv-upload
+[33mb1005bd[m fix: allow pro sellers to access CSV upload
+[33m4854e12[m Merge pull request #203 from whattemup/codex/fix-pro-seller-csv-upload-access
+[33m7c1c9de[m Fix seller CSV access gating and relax non-prod rate limits
+[33md3fce0d[m Merge pull request #202 from whattemup/codex/fix-seller-pro-promo-access-issue
+[33mb9f2725[m Allow seller pro promo access in requirePlan
+[33m9244d02[m Merge pull request #201 from whattemup/codex/fix-seller-pro-promo-access-control
+[33mca98410[m Fix promo pro billing gating for seller upload
+[33m7668519[m Merge pull request #200 from whattemup/codex/implement-role-based-billing-logic
+[33mb91e17d[m Fix role-based billing gating and seller promo flow
+[33mf528e5e[m Merge pull request #199 from whattemup/codex/verify-stripe-webhook-and-backend-url
+[33m4fafb49[m docs: add verified Fly Stripe webhook endpoint details
+[33m9344ae9[m Merge pull request #198 from whattemup/codex/fix-pro-seller-csv-upload-gating-issue
+[33m99b8eaf[m Fix seller CSV upload access to use role+plan gating
+[33mbcd6914[m modified files
+[33m50df5cc[m Merge pull request #197 from whattemup/codex/fix-csv-upload-access-for-pro-sellers
+[33mefd895d[m Fix CSV upload gating for pro seller plans
+[33m5bcbaaf[m Merge pull request #196 from whattemup/codex/implement-multiple-updates-and-fixes-for-seller-app
+[33ma53c0ea[m Implement seller CSV import flow and rate-limit UX fixes
+[33mcec8849[m Merge pull request #195 from whattemup/codex/fix-refresh-crash-on-seller-upload-page
+[33me9a15f8[m Fix seller upload refresh crash with access guard
+[33m48c802b[m Merge pull request #194 from whattemup/codex/implement-csv-upload-for-pro-sellers
+[33m6a61aa4[m Implement pro-seller CSV upload flow end-to-end
+[33m84aacf3[m Merge pull request #193 from whattemup/codex/fix-auth-rate-limiting-and-improve-ux
+[33m25f7c07[m Adjust auth rate limits and register 429 UX
+[33m50d3f50[m Merge pull request #192 from whattemup/codex/fix-csv-template-download-for-excel
+[33m99ac4ff[m Fix CSV template download for Excel compatibility
+[33m2201a37[m modified files
+[33m3fb88fc[m Merge pull request #191 from whattemup/codex/remove-demo-text-and-restrict-seller-upload
+[33m4f3faed[m Add pro-only seller upload page with CSV validation
+[33me02c497[m Merge pull request #190 from whattemup/codex/fix-navigation-for-seller-users
+[33mae01b80[m Fix role-based nav isolation and route access guards
+[33me33c5fe[m Merge pull request #189 from whattemup/codex/implement-seller-promo-and-ui-fixes
+[33m03426a3[m Fix seller promo upgrade, badge, limits, and NDA routing
+[33mac2817f[m Merge pull request #188 from whattemup/codex/fix-upgrade-to-pro-promo-flow
+[33m47fe322[m Fix promo activation route when billing is disabled
+[33m8e9ced2[m Merge pull request #187 from whattemup/codex/fix-seller-plan-limits-and-nda-redirects
+[33m87083e1[m Fix seller plan/nda flows and build add listing form
+[33ma610ac7[m Merge pull request #186 from whattemup/codex/fix-seller-pro-promo-activation-ui-refresh
+[33m368209c[m fix(web): refresh seller promo entitlements immediately
+[33m5d93ea6[m Merge pull request #185 from whattemup/codex/add-api-endpoint-for-seller-promo-upgrade
+[33m123d541[m Add seller pro promo activation billing endpoint
+[33m5891417[m Merge pull request #184 from whattemup/codex/update-upgrade-page-for-seller-users
+[33m007ed16[m Update seller upgrade plans and billing placeholder
+[33m1d1f1ed[m Merge pull request #183 from whattemup/codex/update-csv-upload-condition
+[33m0e98ad3[m Restrict CSV upload to explicit entitlement
+[33m66efc04[m Merge pull request #182 from whattemup/codex/hide-upload-csv-button-for-users-without-entitlement
+[33m786e917[m web: hide seller Upload CSV quick action without csv entitlement
+[33mcc89899[m Merge pull request #181 from whattemup/codex/update-seller-ui-based-on-billing-entitlements
+[33m7d105f2[m Merge branch 'app' into codex/update-seller-ui-based-on-billing-entitlements
+[33m8314341[m web: avoid seller upload nav flicker default
+[33m616c67d[m Merge pull request #180 from whattemup/codex/update-seller-ui-based-on-billing-entitlements
+[33m369f5ca[m web: use billing entitlements for seller upload nav and promo label
+[33m1ece8f9[m Merge pull request #179 from whattemup/codex/update-seller-ui-with-billing-entitlements
+[33m51285fe[m Use billing entitlements in seller sidebar
+[33m85e3513[m Merge pull request #178 from whattemup/codex/remove-seller-listing-limit-enforcement
+[33mf57455f[m Remove listing limit checks from not-implemented create route
+[33ma5710af[m modified file
+[33mb946099[m Merge pull request #177 from whattemup/codex/implement-server-side-entitlements-for-sellers
+[33m75678f0[m Add seller plan entitlements and me API billing metadata
+[33ma3c4982[m Merge pull request #176 from whattemup/codex/fix-typescript-error-ts2550-in-appshell
+[33mfb15dcd[m fix(web): replace replaceAll with split/join for status label
+[33mba2f738[m Merge pull request #175 from whattemup/codex/update-sidebar-to-show-promo-labels
+[33m8d88d38[m web: update sidebar plan label formatting
+[33me564b59[m Merge pull request #174 from whattemup/codex/fix-post-login-and-post-register-redirects
+[33md117023[m Fix auth redirects to use dashboard route
+[33mfe5326c[m modified files
+[33mb03effc[m Merge pull request #173 from whattemup/codex/add-typed-openapi-client-generation
+[33m81903cd[m chore(web): add OpenAPI type generation scaffolding
+[33mac1f1be[m Merge pull request #172 from whattemup/codex/fix-openapi-contract-mismatches
+[33m0d10b99[m fix(openapi): align me routes and response envelopes
+[33m9395add[m Merge pull request #171 from whattemup/codex/update-openapi-spec-in-repo-root
+[33ma487b94[m docs: align OpenAPI spec with implemented API routes
+[33m144679d[m Merge pull request #170 from whattemup/codex/add-ci-guardrails-for-openapi-validation
+[33mda06e9f[m ci: add OpenAPI and context-file guardrails
+[33mfa7f098[m Merge pull request #169 from whattemup/codex/add-request-info-feature-for-buyers
+[33mfe88482[m api: load dotenv in env bootstrap
+[33md339055[m Merge pull request #168 from whattemup/codex/implement-seller-inquiries-api-and-ui
+[33m82ab3b3[m web+api: seller inquiries (create + list)
+[33m72eb9ca[m Merge pull request #167 from whattemup/codex/implement-seller-dashboard-data-fetching
+[33m989b77b[m web: authenticate seller dashboard listings fetch
+[33maad185d[m Merge pull request #166 from whattemup/codex/implement-real-sellerdashboard-ui
+[33m3041bb9[m web: make seller dashboard real (inventory + quick links)
+[33m753d24e[m Merge pull request #165 from whattemup/codex/add-seller-role-dashboard-and-stubs
+[33mcd4ed78[m web: route sellers to dashboard and add nav stubs
+[33m75e7bf5[m Merge pull request #164 from whattemup/codex/add-seller-capability-system-to-frontend
+[33m99c866f[m web: add seller capability resolver
+[33me927aaa[m Merge pull request #163 from whattemup/codex/replace-static-header-text-dynamically
+[33m42635a4[m web: make app shell greeting NDA-aware
+[33me10c719[m Merge pull request #162 from whattemup/codex/fix-nda-warning-duplication-and-behavior
+[33m4255f22[m web: unify nda warning rendering and refresh persisted user state
+[33m41441fa[m Merge pull request #161 from whattemup/codex/fix-nda-warning-handling-in-sidebar
+[33m969a731[m web: sync NDA gating with auth user state
+[33mb8f6766[m Merge pull request #160 from whattemup/codex/update-nda-acceptance-handling
+[33mace2689[m Refresh auth user after NDA acceptance
+[33m4bc4a8b[m Merge pull request #159 from whattemup/codex/implement-role-specific-landing-navigation
+[33m4f76b68[m web: role-specific landing after role selection
+[33m75b0b73[m Merge branch 'app' of https://github.com/whattemup/EasyFinder into app
+[33m46687b8[m Merge pull request #157 from whattemup/codex/require-explicit-role-selection-before-nda
+[33me3731aa[m modified file
+[33mb4f0df1[m Merge pull request #158 from whattemup/codex/update-login-flow-to-select-role-route
+[33m95d2167[m Enforce role selection before NDA and app routes
+[33m6ef747c[m api: require explicit role selection (remove default buyer role)
+[33m1489834[m Merge pull request #156 from whattemup/codex/app-require-explicit-role-selection-+-billing-gate-stub
+[33mf9e407d[m app: require explicit role selection + billing gate stub
+[33mcc81786[m modified file
+[33md0ebb48[m Merge pull request #155 from whattemup/codex/add-lint-and-test-steps-to-ci-workflow
+[33m8f858f5[m ci: run lint + tests in workflow
+[33mcb87542[m Merge pull request #154 from whattemup/codex/fix-lint-errors-and-failing-tests
+[33m0edc070[m fix: make lint + tests pass (api)
+[33m0722c84[m Merge pull request #153 from whattemup/codex/ci-run-lint-+-tests-in-workflow
+[33m40e5685[m ci: run lint and tests in workflow
+[33ma51793c[m chore: remove tsbuildinfo from repo
+[33m550745e[m modified file
+[33m0f2ec79[m chore: tighten Fly config
+[33m93b35f1[m chore: tighten Fly config
+[33me5b2f34[m chore: enforce LF for config files
+[33m87302ac[m chore: tighten Fly config + ignore tsbuildinfo
+[33mc9af8f4[m Merge pull request #152 from whattemup/codex/finalize-dockerfile-after-debugging
+[33m53506c6[m chore(docker): remove debug gate, keep clean shared build
+[33m02b1a7a[m Merge pull request #151 from whattemup/codex/update-dockerfile-for-clean-shared-build
+[33m969a869[m chore(docker): force clean shared build to emit index.d.ts
+[33ma9c0790[m Merge pull request #150 from whattemup/codex/fix-index.d.ts-emission-by-updating-exports
+[33ma11b299[m fix(shared): stabilize index.d.ts by replacing export-star barrel
+[33m2d12693[m Merge pull request #149 from whattemup/codex/add-debug-line-before-api-build-step
+[33mc117eed[m chore(debug): print shared resolution evidence in Docker build
+[33m883ae55[m Merge pull request #148 from whattemup/codex/remove-failing-debug-from-dockerfile
+[33mb7035c7[m chore(fly): remove failing debug and keep api build flow
+[33m124cdb6[m Merge pull request #147 from whattemup/codex/fix-shared-build-for-nodenext-compatibility
+[33m40bceb6[m fix(shared): NodeNext-safe imports + stable d.ts emit
+[33md41b4d0[m Merge pull request #146 from whattemup/codex/fix-.js-specifiers-to-restore-d.ts-emit
+[33m4e87d95[m fix(shared): remove .js internal specifiers in shared src
+[33mb24efc2[m Merge pull request #145 from whattemup/codex/update-dockerfile-for-build-log-changes
+[33m476d1a5[m chore(debug): fail build with shared dist evidence
+[33m5f3daca[m Merge pull request #144 from whattemup/codex/update-dockerfile-debug-output-for-shared-dist
+[33mc63b641[m chore(debug): print shared dist files in Docker build
+[33m626765b[m Merge pull request #143 from whattemup/codex/modify-dockerfile-for-debug-build
+[33m813a8dd[m chore(debug): stop after shared dist listing
+[33m290eb17[m Merge pull request #142 from whattemup/codex/update-dockerfile-to-bust-cache-for-debug-step
+[33mbabafa1[m chore(fly): bust cache for shared dist debug step
+[33m72f67f8[m Merge pull request #141 from whattemup/codex/add-debug-listing-to-dockerfile
+[33m5c54bde[m chore(fly): debug shared dist declarations in Docker build
+[33m0ca7e79[m Merge pull request #140 from whattemup/codex/fix-docker-build-for-pnpm-workspace
+[33m7d67c39[m fix(fly): make Docker build workspace-consistent for pnpm
+[33m1e98111[m Merge pull request #139 from whattemup/codex/update-health-check-frequency-in-fly.toml
+[33m0b62ca5[m chore(fly): reduce healthcheck frequency
+[33m27db3af[m docs: add persistent AI development context
+[33m689e9b6[m fix(web): stabilize scoring weights typing
+[33mdc9bc58[m Merge pull request #138 from whattemup/codex/fix-typescript-errors-in-scoringconfigs
+[33mc3938d1[m fix(web): tighten ScoringConfigs weights typing
+[33m7de8e26[m Merge pull request #137 from whattemup/codex/fix-typescript-errors-in-apps/web
+[33m893c30f[m fix(web): restore typecheck
+[33md099b94[m Merge pull request #136 from whattemup/codex/add-step-to-block-committing-forbidden-files
+[33mb355b5b[m chore(ci): block tracked env and build artifacts
+[33me38d7f2[m modified file
+[33me4ede9d[m Merge pull request #135 from whattemup/codex/fix-typescript-build-errors-in-apps/api
+[33m7805e88[m fix(shared): use import export condition for NodeNext types
+[33m7fe25ca[m Merge pull request #134 from whattemup/codex/fix-typescript-strict-errors-in-api-tests
+[33mb4f29b8[m fix(shared): export declaration types for api typecheck
+[33mc09673b[m Merge pull request #133 from whattemup/codex/fix-typescript-build-errors-in-apps/api
+[33m94caeca[m fix(api): normalize auth role values for jwt payloads
+[33mf8f9517[m Merge pull request #125 from whattemup/codex/implement-billing_stub_plan-for-pro/enterprise-ux
+[33m08f77da[m Add billing stub plan fallback for /api/me and UI plan badges
+[33m361a561[m Merge pull request #124 from whattemup/codex/add-upgrade-notice-for-free-buyers
+[33mfc20f7c[m Use /api/me plan in listings free-buyer gating
+[33m69e5a27[m Merge pull request #123 from whattemup/codex/remove-duplicate-upgrade-button-and-live-mode-label
+[33m6ca9f86[m Merge branch 'app' into codex/remove-duplicate-upgrade-button-and-live-mode-label
+[33mb0281be[m Fix ModeLayout live badge sourcing and role styling
+[33m0c20a48[m Merge pull request #122 from whattemup/codex/remove-duplicate-upgrade-button-and-live-mode-label
+[33m63bc2d4[m Fix live mode header badges and duplicate upgrade CTA
+[33m373f49d[m Merge pull request #121 from whattemup/codex/remove-switch-mode-and-add-upgrade-cta
+[33m0703557[m web: replace live switch mode link with upgrade CTA
+[33m404600f[m Merge pull request #120 from whattemup/codex/add-role-based-theme-colors
+[33mc311a09[m fix(web): propagate role theme attrs to document root
+[33mbead511[m Merge pull request #119 from whattemup/codex/replace-badge-text-with-plan-and-role-labels
+[33mfc3d66d[m Merge branch 'app' into codex/replace-badge-text-with-plan-and-role-labels
+[33m626a244[m Use existing roleLabel for AppShell badge text
+[33mbb13a8a[m Merge pull request #118 from whattemup/codex/replace-badge-text-with-plan-and-role-labels
+[33m8cee52b[m Update app shell badge to plan and role label
+[33m8ddfc71[m Merge pull request #117 from whattemup/codex/remove-switch-mode-from-live-view
+[33m66e1e0f[m Merge branch 'app' into codex/remove-switch-mode-from-live-view
+[33m2a1f068[m Route live Upgrade CTA to upgrade page
+[33medefdce[m Merge pull request #116 from whattemup/codex/remove-switch-mode-from-live-view
+[33m04d13e5[m Fix header mode CTA visibility in live mode
+[33m9b8da37[m Merge pull request #115 from whattemup/codex/remove-experience-separator-label-from-appshell
+[33ma83dd34[m Remove experience separator banner label
+[33m7a13497[m Merge pull request #114 from whattemup/codex/implement-buyer-listings-for-free-users
+[33m6d16098[m Fix auth flow tests for token-only session storage
+[33mde4097e[m Merge pull request #113 from whattemup/codex/add-role-selection-on-first-login
+[33mdc124e3[m Make role selection server-authoritative
+[33m04addc4[m Merge pull request #112 from whattemup/codex/modify-switch-mode-button-display
+[33maeb7b7b[m Update AppShell mode action by account type
+[33m830ccb4[m Merge pull request #111 from whattemup/codex/remove-static-labels-and-add-dynamic-labels
+[33m9468447[m Harden AppShell mode badge defaults and loading state
+[33m55ff34f[m Merge pull request #110 from whattemup/codex/fix-demo-tour-navigation-for-view-details
+[33m03e2262[m Reset selected listing on tour exit and role change
+[33m86cf5e6[m Merge pull request #109 from whattemup/codex/fix-demo-tour-navigation-for-view-details
+[33m4544c84[m Track selected listing for buyer demo tour detail step
+[33m05ba58a[m Merge pull request #108 from whattemup/codex/fix-watchlist-button-text-visibility
+[33mcbc265f[m Fix watchlist button contrast in demo listings
+[33m5c72147[m Merge pull request #107 from whattemup/codex/make-right-side-tour-panel-sticky
+[33m2313b5f[m Merge branch 'app' into codex/make-right-side-tour-panel-sticky
+[33ma6e2a2f[m Constrain demo tour scrolling to listings column
+[33mec7d172[m Merge pull request #106 from whattemup/codex/make-right-side-tour-panel-sticky
+[33m4b164db[m Make demo tour side panel sticky during scroll
+[33m52af2aa[m Merge pull request #105 from whattemup/codex/fix-demo-tour-intro-paragraph-role-wording
+[33ma4065b6[m Make demo tour intro role label dynamic
+[33m16ab881[m test(web): stabilize runtime boot + NDA checks
+[33m51925a2[m Merge pull request #104 from whattemup/codex/fix-failing-web-tests-for-demo/runtime-changes
+[33m3ea1160[m test(web): align runtime boot tests with /health mocks
+[33mfce32f1[m Merge pull request #103 from whattemup/codex/update-audit-logs-with-fixed-token
+[33mb60e7b7[m Prefix audit logs with AUDIT_EVENT and include request IP
+[33m1d97d52[m Merge pull request #102 from whattemup/codex/expose-demo-state-in-health-endpoint
+[33m1a4dc0b[m Use backend health as runtime demo-mode source
+[33md98c996[m Merge pull request #101 from whattemup/codex/fix-shared-resolution-in-api-build
+[33medd0bca[m fix(api): add shared project reference for build order
+[33m66c9a08[m Merge pull request #100 from whattemup/codex/make-billing-tests-conditional-on-billing_enabled
+[33mebd34d3[m Gate billing routes and tests behind BILLING_ENABLED
+[33mdcd963d[m Merge pull request #99 from whattemup/codex/add-minimal-audit-logging-functionality
+[33m60f9c99[m Add minimal audit logging in API routes
+[33m70d3b06[m Merge pull request #98 from whattemup/codex/add-demo-environment-banner-component
+[33mc970a05[m Add demo mode banner and update listings messaging
+[33m4f853e6[m Merge pull request #97 from whattemup/codex/disable-write-operations-in-demo_mode
+[33m64f6877[m Disable write actions when demo mode is enabled
+[33m4822b5b[m Merge pull request #96 from whattemup/codex/enforce-nda-acceptance-for-protected-routes
+[33m76dbdff[m Enforce NDA acceptance on protected API routes
+[33mc5184e8[m Merge pull request #95 from whattemup/codex/add-feature-flag-for-stripe-billing
+[33m0692597[m feat(api): gate billing routes behind BILLING_ENABLED
+[33md40096e[m modifies file so that Stripe would not take down prod
+[33m0ccb3b3[m Merge pull request #94 from whattemup/codex/implement-password-reset-flow-using-resend
+[33md7ac461[m Implement full password reset flow with Resend
+[33m52fb3fd[m Add Resend env vars and APP_BASE_URL
+[33m6299d14[m modified files for resend emails
+[33mbecb5d8[m Merge pull request #93 from whattemup/codex/implement-stripe-webhook-idempotency
+[33mac743be[m Add Stripe webhook idempotency
+[33mb13c51e[m Merge pull request #92 from whattemup/codex/fix-stripe-secrets-usage-and-errors
+[33m3b480a7[m Clarify shared package build outputs
+[33mb9b6d1b[m Merge pull request #91 from whattemup/codex/fix-stripe-secrets-usage-and-errors
+[33mcf036a6[m Refactor Stripe client initialization
+[33m4672cfd[m Merge pull request #90 from whattemup/codex/implement-demo-routes-redirection
+[33mf454e42[m Redirect legacy demo routes
+[33m7d4a456[m Merge pull request #89 from whattemup/codex/update-demo-button-and-routing
+[33m68a5884[m Make demo tour title reflect role
+[33m9216f3b[m Merge pull request #88 from whattemup/codex/update-demo-button-and-routing
+[33mcb459f4[m Route demo CTA to tour
+[33mcb591b9[m modified files
+[33mb43f463[m Merge pull request #87 from whattemup/codex/add-enterprise-tour-to-/demo/tour
+[33med532da[m Merge branch 'app' into codex/add-enterprise-tour-to-/demo/tour
+[33m4de815e[m Pass listing id into demo detail view
+[33m9717e45[m Merge pull request #86 from whattemup/codex/add-enterprise-tour-to-/demo/tour
+[33m533c3ef[m Remove nested router from demo tour
+[33m716e210[m Merge pull request #85 from whattemup/codex/add-enterprise-tour-to-/demo/tour
+[33m4524632[m Use deterministic listing ids in tour
+[33m3ba6c54[m Merge pull request #84 from whattemup/codex/implement-buyer-tour-overlay-at-/demo/tour
+[33m7587337[m Add seller tour steps to demo tour
+[33mf9b4866[m Merge pull request #83 from whattemup/codex/implement-fixes-for-billing-route-and-env-vars
+[33me60c5d4[m Default NODE_ENV to development
+[33m423201f[m Merge pull request #82 from whattemup/codex/remove-legacy-raw-body-dependency
+[33ma9f18f1[m Require audit action type
+[33ma825d68[m fix(api): add fastify-raw-body and refresh lockfile
+[33m3019912[m modified files
+[33m9581bdc[m modified file
+[33m5ca64d8[m Merge pull request #81 from whattemup/codex/remove-legacy-raw-body-dependency
+[33mb363446[m Restore fastify-raw-body for Stripe webhooks
+[33m08768bf[m Merge pull request #80 from whattemup/codex/remove-legacy-raw-body-dependency
+[33me84dea2[m Remove legacy fastify raw-body plugin
+[33m2622939[m Refactor lockfile refresh workflow steps
+[33m07b0cc7[m Merge pull request #79 from whattemup/codex/implement-stripe-subscription-infrastructure
+[33m624bc4f[m Merge branch 'app' into codex/implement-stripe-subscription-infrastructure
+[33m78a5317[m Fix pnpm setup in CI workflow
+[33m9872a0b[m Refactor lockfile refresh workflow steps
+[33m4524830[m Merge pull request #78 from whattemup/codex/implement-stripe-subscription-infrastructure
+[33mec34195[m Merge branch 'app' into codex/implement-stripe-subscription-infrastructure
+[33m3f2ab85[m Harden lockfile refresh workflow
+[33m7bac9bd[m updated file
+[33ma3429f3[m Merge pull request #77 from whattemup/codex/implement-stripe-subscription-infrastructure
+[33m419859b[m Add Stripe billing and plan enforcement
+[33m23910e9[m Merge pull request #76 from whattemup/codex/replace-elementary-scoring-logic-with-new-engine
+[33maca203d[m feat: build configurable scoring engine
+[33m96fc003[m Merge pull request #75 from whattemup/codex/refactor-sidebar-navigation-and-routing
+[33mfe1a806[m Refactor app navigation structure
+[33m3ccf1f3[m Merge pull request #74 from whattemup/codex/fix-nda-status-checking-logic
+[33m759eccb[m Fix NDA guard and API URL handling
+[33m22afdc8[m Merge pull request #73 from whattemup/codex/fix-production-cors-and-nda-status-blocking
+[33m3a148c9[m Merge branch 'app' into codex/fix-production-cors-and-nda-status-blocking
+[33m6190be3[m Add CORS tests and guard base URL
+[33m8d550fa[m Merge pull request #72 from whattemup/codex/fix-production-cors-and-nda-status-blocking
+[33m766d850[m Merge branch 'app' into codex/fix-production-cors-and-nda-status-blocking
+[33m357871a[m Fix CORS preflight handling
+[33me478722[m Merge pull request #71 from whattemup/codex/fix-production-cors-and-nda-status-blocking
+[33m41b0c6f[m Merge branch 'app' into codex/fix-production-cors-and-nda-status-blocking
+[33mec5b3aa[m Ensure Fly health checks and API startup
+[33mddf2248[m Merge pull request #70 from whattemup/codex/fix-production-cors-and-nda-status-blocking
+[33m75b8bf7[m Fix CORS and NDA responses
+[33m6948743[m Merge pull request #69 from whattemup/codex/fix-nda-screen-request-failures
+[33m319ca62[m Merge branch 'app' into codex/fix-nda-screen-request-failures
+[33mf88bd59[m Adjust NDA guard fetch gating
+[33m7b9f5d2[m Merge pull request #68 from whattemup/codex/fix-nda-screen-request-failures
+[33m1f1595f[m Merge branch 'app' into codex/fix-nda-screen-request-failures
+[33me4e1854[m Fix ApiError status handling
+[33ma6a3bb1[m Merge pull request #67 from whattemup/codex/fix-nda-screen-request-failures
+[33m4ce1687[m Merge branch 'app' into codex/fix-nda-screen-request-failures
+[33m0e7f038[m Add NDA status timeout error UI
+[33mea3cbc0[m Merge pull request #66 from whattemup/codex/fix-nda-screen-request-failures
+[33md209a53[m Merge branch 'app' into codex/fix-nda-screen-request-failures
+[33m878c049[m Adjust Vercel SPA rewrite
+[33m39f48ff[m Merge pull request #65 from whattemup/codex/fix-nda-screen-request-failures
+[33m49725f9[m Merge branch 'app' into codex/fix-nda-screen-request-failures
+[33m33b2926[m Improve NDA status handling and Vercel rewrites
+[33mee7a6ce[m Merge pull request #64 from whattemup/codex/fix-nda-screen-request-failures
+[33m1de5384[m Fix NDA API requests
+[33mbb1bca1[m Merge pull request #63 from whattemup/codex/standardize-vite_api_base_url-and-ensure-routing
+[33m62cda38[m Merge branch 'app' into codex/standardize-vite_api_base_url-and-ensure-routing
+[33ma3c0537[m Fix api path normalization for host-only base URLs
+[33m067d2c4[m Merge pull request #62 from whattemup/codex/standardize-vite_api_base_url-and-ensure-routing
+[33me96bd50[m Fix auth API paths and default API base URL
+[33m5fc34f4[m Merge pull request #61 from whattemup/codex/standardize-vite_api_base_url-and-ensure-routing
+[33me587f95[m Fix auth refresh handling and route aliases
+[33mb7b55bb[m Merge pull request #60 from whattemup/codex/make-monorepo-install-and-run-reproducibly
+[33mf771c0e[m Merge branch 'app' into codex/make-monorepo-install-and-run-reproducibly
+[33m13dc752[m Use host-only VITE_API_BASE_URL in docs
+[33mb0fce5a[m Merge pull request #59 from whattemup/codex/make-monorepo-install-and-run-reproducibly
+[33mf7bf762[m Merge branch 'app' into codex/make-monorepo-install-and-run-reproducibly
+[33m00b154c[m Use 127.0.0.1 in local dev docs
+[33m3981d78[m Merge pull request #58 from whattemup/codex/make-monorepo-install-and-run-reproducibly
+[33mb10ab52[m Add local dev setup docs and env examples
+[33md1c881f[m Delete project docs/README.md
+[33m8b6c982[m Create README.md for EasyFinder project
+[33mcdb654b[m Merge pull request #57 from whattemup/codex/update-jwt-payload-to-include-email
+[33m3990639[m Merge branch 'app' into codex/update-jwt-payload-to-include-email
+[33m89d2466[m fix(api): preserve jwt payload fields on request.user
+[33ma636929[m Merge pull request #56 from whattemup/codex/update-jwt-payload-to-include-email
+[33m3cd4f9e[m Ensure JWT payload includes user identity
+[33m3cb5c02[m updated file
+[33ma311d06[m Merge pull request #55 from whattemup/codex/update-get-route-in-me.ts-for-tests
+[33m0e5e8cc[m Handle /api/me without database
+[33m790add4[m updated file
+[33m1b12213[m updated file
+[33mcfe5dea[m Merge pull request #54 from whattemup/codex/fix-404-error-for-get-/api/me
+[33m04986a1[m Fix /api/me route registration and tests
+[33m2621fdc[m fix(api): register me and nda routes in server
+[33m6a6126d[m Merge pull request #53 from whattemup/codex/add-reusable-auto-cycling-imagegallery-component
+[33m19391db[m Add auto-cycling image galleries in demo
+[33m4d53c4a[m Merge pull request #52 from whattemup/codex/add-per-card-gallery-image-swap-functionality
+[33m2404f42[m feat(web): swap hero/thumbnail images on hover+click
+[33maced7c9[m Merge pull request #51 from whattemup/codex/fix-cors-issues-for-fly-api
+[33mbad542b[m Defer Mongo access in auth routes for tests
+[33mf79d99f[m Merge pull request #50 from whattemup/codex/fix-cors-issues-for-fly-api
+[33m268ed3c[m Fix CORS handling for Vercel previews
+[33m993a598[m Merge pull request #49 from whattemup/codex/implement-live-only-nda-gating-in-app
+[33m37d84bc[m Add live NDA gating
+[33m45dd5cc[m Merge pull request #48 from whattemup/codex/add-github-actions-ci-workflow
+[33m3e16112[m Update CI workflow for pnpm checks
+[33m1391d58[m Revert "Add NDA gate for demo access"
+[33m1839032[m Merge pull request #47 from whattemup/codex/implement-feature-with-minimal-diffs
+[33m8607344[m Add NDA gate for demo access
+[33m5143246[m chore(api): remove mongodb type shim
+[33mce3fae4[m Merge pull request #46 from whattemup/codex/make-authentication-persistent-with-mongodb
+[33md6424b8[m Remove MongoDB type shim
+[33m772c0bb[m Merge pull request #45 from whattemup/codex/make-authentication-persistent-with-mongodb
+[33mb1acb5d[m Merge branch 'app' into codex/make-authentication-persistent-with-mongodb
+[33m2ec158c[m Fix MongoDB type constraints
+[33mc807d93[m modified file
+[33m61e090b[m Merge pull request #44 from whattemup/codex/make-authentication-persistent-with-mongodb
+[33m0411975[m Persist auth users in MongoDB
+[33mb0f6df8[m Merge pull request #43 from whattemup/codex/implement-route-separation-for-demo-and-live
+[33md4fce63[m Merge branch 'app' into codex/implement-route-separation-for-demo-and-live
+[33m61aa473[m Handle non-array live listings responses
+[33m48b95eb[m Merge pull request #42 from whattemup/codex/implement-route-separation-for-demo-and-live
+[33m1a9df6c[m Merge branch 'app' into codex/implement-route-separation-for-demo-and-live
+[33ma18976a[m Fix typecheck after route refactor
+[33mab87ccf[m Merge pull request #41 from whattemup/codex/implement-route-separation-for-demo-and-live
+[33mc9a286f[m Separate demo and live experiences
+[33mfee56eb[m updated file
+[33m587b114[m Merge pull request #40 from whattemup/codex/enforce-pnpm-only-and-add-cleanup-script
+[33mcd20bfc[m Ensure shared builds during dev
+[33m043dd3f[m Merge pull request #39 from whattemup/codex/enforce-pnpm-only-and-add-cleanup-script
+[33m05fdc55[m Add pnpm guardrails and cleanup script
+[33mbe08271[m updated file
+[33m707bf8d[m updated file
+[33m72f1abe[m Merge branch 'app' of https://github.com/whattemup/EasyFinder into app
+[33mb7ddf28[m updated file
+[33m952f0bd[m Update api-env.test.ts
+[33mc026002[m updated files
+[33m515a64f[m updated files
+[33m4591c24[m Update api-env.test.ts
+[33m680727c[m Merge pull request #38 from whattemup/codex/fix-failing-vitest-test-for-api-url
+[33m497ba24[m test(web): mock env helper for api env URL test
+[33m68e7ac3[m Merge pull request #37 from whattemup/codex/fix-web-env-tests-alignment
+[33mf5ae8bb[m Merge branch 'app' into codex/fix-web-env-tests-alignment
+[33m81e78f0[m Stabilize api env URL test with explicit env stubs
+[33m5d8644f[m Merge pull request #36 from whattemup/codex/fix-web-env-tests-alignment
+[33m7ad9b40[m Merge branch 'app' into codex/fix-web-env-tests-alignment
+[33ma4922b7[m Fix api env test isolation for example.com base URL
+[33ma697863[m Merge pull request #35 from whattemup/codex/fix-web-env-tests-alignment
+[33m80648d2[m Fix env tests to match fallback API base URL behavior
+[33me026c73[m Merge pull request #34 from whattemup/codex/gather-current-git-info-and-confirm-root
+[33mf0f945d[m Add API-backed per-user watchlist CRUD across app pages
+[33mc86b2c9[m Merge pull request #33 from whattemup/codex/gather-current-git-info-and-confirm-root
+[33mf4759f8[m Merge branch 'app' into codex/gather-current-git-info-and-confirm-root
+[33m80f5576[m Wire auth session token into API requests and add auth flow tests
+[33m6582bab[m Merge pull request #32 from whattemup/codex/gather-current-git-info-and-confirm-root
+[33md95270e[m Make app listings pages API-backed with detail coverage
+[33m2f64acf[m Merge pull request #31 from whattemup/codex/gather-current-git-info-and-confirm-root
+[33m48c8f7a[m Configure Turbo global env for VITE_API_BASE_URL
+[33me25c383[m Merge pull request #30 from whattemup/codex/gather-current-git-info-and-confirm-root
+[33mc509bd6[m Add explicit Demo CTA on landing and validate demo links
+[33mfdae97e[m Merge pull request #29 from whattemup/codex/gather-current-git-info-and-confirm-root
+[33m2f9aa02[m Update web route map and add auth redirect regression test
+[33m1194cb0[m Merge pull request #28 from whattemup/codex/gather-current-git-info-and-confirm-root
+[33m8ca41c5[m Defer web API base URL errors until request time
+[33mef82eef[m Merge pull request #27 from whattemup/codex/gather-current-git-info-and-confirm-root
+[33mea2fe86[m Merge branch 'app' into codex/gather-current-git-info-and-confirm-root
+[33m7c62e11[m Use standard response envelope for listings routes
+[33m1acd1f1[m Merge pull request #26 from whattemup/codex/gather-current-git-info-and-confirm-root
+[33m38e2f1b[m Fix listings route paths for /api/listings prefix
+[33md2d8966[m Merge pull request #25 from whattemup/codex/implement-demo-improvements-and-fixes
+[33m0105728[m Merge branch 'app' into codex/implement-demo-improvements-and-fixes
+[33m09e9c1b[m Scope auth guard to app routes only
+[33m9e94e0d[m Merge pull request #24 from whattemup/codex/implement-demo-improvements-and-fixes
+[33m1301c1a[m Merge branch 'app' into codex/implement-demo-improvements-and-fixes
+[33m3410411[m Add demo entry points and thumbnail hero swap
+[33m3361ca9[m Merge pull request #23 from whattemup/codex/implement-demo-improvements-and-fixes
+[33m2a04625[m Merge branch 'app' into codex/implement-demo-improvements-and-fixes
+[33m8c8bb83[m Defer API env errors and guard app with error boundary
+[33m3d33991[m Merge pull request #22 from whattemup/codex/implement-demo-improvements-and-fixes
+[33mdb2d990[m Merge branch 'app' into codex/implement-demo-improvements-and-fixes
+[33mc501eb9[m Final tighten demo image and panel proportions
+[33m05883a3[m Merge pull request #21 from whattemup/codex/implement-demo-improvements-and-fixes
+[33m074a2c0[m Merge branch 'app' into codex/implement-demo-improvements-and-fixes
+[33mf383822[m Further compact demo UI proportions
+[33m0d09c97[m Merge pull request #20 from whattemup/codex/implement-demo-improvements-and-fixes
+[33mae91edf[m Merge branch 'app' into codex/implement-demo-improvements-and-fixes
+[33m5368bf3[m Refine demo page layouts
+[33m18f8816[m Merge pull request #19 from whattemup/codex/implement-demo-improvements-and-fixes
+[33m8594a61[m Tighten demo listings and detail layout
+[33m5382f51[m Merge pull request #18 from whattemup/codex/make-demo-fully-functional-with-images
+[33m455d561[m Merge pull request #17 from whattemup/app
+[33mea4d32b[m Merge pull request #16 from whattemup/main
+[33md16cfaa[m modified file
+[33m7a219e9[m Merge pull request #15 from whattemup/codex/fix-easyfinder-demo-for-static-deployment
+[33m00cf58f[m Add demo watchlist route and Vercel rewrite
+[33m4effe84[m Merge pull request #14 from whattemup/main
+[33m0b0e977[m Update demoListings.ts
+[33m274c8d6[m updated files
+[33m6aaaa26[m Update demoListings.ts
+[33m550d796[m Update demoListings.ts
+[33m4aca141[m Update Listings.tsx
+[33mc32355b[m Update ListingDetail.tsx
+[33mee3f45a[m updated files
+[33m05cdb08[m Update DemoListingDetail.tsx
+[33mcacceb9[m Update Demo.tsx
+[33ma68a87f[m updated files
+[33m637f546[m Create demoImages.ts
+[33mcd2cc4b[m Merge pull request #13 from whattemup/codex/make-demo-fully-functional-with-images
+[33mcb7a20b[m Add demo image fallbacks for listings
+[33mf6033d5[m updated files
+[33m2ac508b[m updated files
+[33m1c04ba4[m updated project
+[33m03e2d11[m Merge pull request #12 from whattemup/codex/enhance-investor-demo-visuals
+[33m7b0839e[m Expose Vite dev server for screenshots
+[33m81adf38[m Merge pull request #11 from whattemup/main
+[33mad01c98[m updated file
+[33m13421cd[m Fix API runtime path (dist/index.js)
+[33m6bca719[m Fix API runtime path (dist/index.js)
+[33m200b390[m Merge pull request #10 from whattemup/main
+[33ma47623c[m Merge origin/app, keep local demo fixes
+[33md187ce3[m WIP: local fixes and demo improvements
+[33m58f075b[m Merge pull request #9 from whattemup/codex/add-product-detail-view-with-carousel
+[33mf2463c0[m Merge branch 'app' into codex/add-product-detail-view-with-carousel
+[33m03b38f9[m Refine demo listing gallery images
+[33mc67d7d0[m Merge pull request #8 from whattemup/codex/add-product-detail-view-with-carousel
+[33m0072867[m Add demo listing image galleries
+[33m265c1bb[m Update env.ts
+[33m4d846da[m Create .env
+[33m5dd0c34[m Update env.ts
+[33ma70594a[m Update EasyFinder_System_Overview.md
+[33mb3e5898[m Update EasyFinder_System_Overview.md
+[33m9e77922[m Merge pull request #7 from whattemup/stable-clean-baseline
+[33mf7215af[m renamed file
+[33m0cabe42[m updated files
+[33m2cd1bbd[m updated file
+[33m516ad5a[m updated file
+[33m251a879[m updated files
+[33m15b5c87[m vscode coderabbit env vars
+[33m675ac7c[m rename files
+[33mdb17964[m modified 3 files and created env file
+[33m6a08764[m Fix ESM imports for config
+[33ma6e2f2a[m Merge pull request #6 from whattemup/stable-clean-baseline
+[33m3bb2d3a[m modified Scoring Model and created the rest
+[33ma178061[m Create FRONTEND_CONTRACT.md
+[33m75e8f39[m Update ADMIN_SPECS.md
+[33m859080a[m Create ADMIN_SPECS.md
+[33m467931f[m Create API_REFERENCE.md
+[33m1eec75c[m Update SCORING_MODEL.md
+[33m11997ca[m Update SCORING_MODEL.md
+[33m0a8334b[m Merge pull request #5 from whattemup/stable-clean-baseline
+[33m8ca019e[m Merge branch 'app' into stable-clean-baseline
+[33m7467002[m created file
+[33m199f008[m deleted file
+[33md1cbcd2[m Merge pull request #4 from whattemup/stable-clean-baseline
+[33m1adde4e[m deleted these 4 .docx files
+[33ma90ca30[m created 5 README files
+[33me863fd8[m Create EasyFinder_System_Overview.md
+[33m685a976[m Create EasyFinder_Product_Vision.md
+[33m0992ec3[m Create SCORING_MODEL.md
+[33m8d7f6b5[m Create ADDENDUM_LISTINGS_STRATEGY.md
+[33m609a463[m Create README.md
+[33mf095560[m Delete README.md
+[33m516fa42[m Delete ADDENDUM_LISTINGS_ACQUISITION_STRATEGY.docx
+[33mc9bb15b[m Delete SCORING_MODEL.docx
+[33m8427656[m Delete EasyFinder — Product Vision.docx
+[33m4ca0ddd[m Added files via an upload
+[33m117cd9b[m Delete README.md
+[33m5fd59fc[m Delete SCORING_MODEL.docx
+[33m9f2466f[m Delete EasyFinder — System Overview.docx
+[33m4a4e9c4[m Delete EasyFinder — Product Vision.docx
+[33m8fd26a4[m Delete ADDENDUM_LISTINGS_ACQUISITION_STRATEGY.docx
+[33m51ab568[m Merge pull request #3 from whattemup/stable-clean-baseline
+[33m6b8674a[m created 4 .docx files and modified the README.md file
+[33m3698c07[m Rename ci.yml.yml to ci.yml
+[33mefd6388[m Merge pull request #2 from whattemup/stable-clean-baseline
+[33m7334451[m Update tsconfig.json
+[33m915bd2a[m Update tsconfig.json
+[33m0ee0e7b[m Update tsconfig.json
+[33m52049f7[m Update tsconfig.json
+[33md88c723[m modified file
+[33m59f4a4d[m Update api.test.ts
+[33md9ef524[m Merge pull request #1 from whattemup/stable-clean-baseline
+[33m7df4696[m Create tsconfig.test.json
+[33mc45b4ca[m modified file
+[33m7e0b8bd[m deleted unused import
+[33mb7acfa6[m eliminated unnecessary comma
+[33m4097e1b[m rewrote README file
+[33m5d354d0[m Fix config typings + update health route for Mongo
+[33m9078a2c[m Fix entrypoint + package.json + mongo config
+[33m5272b86[m fix fly entrypoint to dist/index.js
+[33m6d64724[m modified file
+[33m418abe6[m modified file
+[33m594908b[m modified files
+[33mf4d52fb[m added file
+[33m3f9907f[m updated files
+[33mb648a39[m modified version of file
+[33m6e020c6[m added missing comma
+[33m4d6ca05[m modified file
+[33ma10b705[m modified files
+[33m8d7ffdd[m updated file
+[33mc300d3b[m updated files
+[33mb3dae5e[m remove one module
+[33m27bab16[m modified file
+[33mb122dd2[m Fix Fly start command (dist/index.js)
+[33m75e9dcf[m fix bad line
+[33m43154a7[m changed file name
+[33mad08ff0[m deleted file
+[33m38ebe82[m modified files
+[33mb27f7f3[m removed file
+[33m205c0e5[m Fix .dockerignore: remove line producing error
+[33m1194a43[m Fix Docker build: remove line producing error
+[33m619a889[m Fix Docker build: remove incorrect zod check for pnpm
+[33m2321614[m fix: install workspace deps before shared build
+[33m9b7e663[m Fix Fly monorepo build: install deps before building shared
+[33m30231ff[m Move fly.toml to repo root
+[33m497951f[m Rename app name to easyfinder inside of fly.toml
+[33m1b1dcc4[m Add packages/shared to monorepo
+[33maf68639[m Rename root package to easyfinder
+[33m872a08d[m Clean repo: remove legacy frontend/backend and keep monorepo apps
+[33m778be4e[m update files
+[33meeed22f[m updated files
+[33mb59dfda[m updated frontend
+[33mbf0013f[m apply fix
+[33m7c4dd7c[m apply fix
+[33m1692418[m apply fix
+[33m287e686[m updated files
+[33m6373b0a[m apply fix
+[33m92c684b[m app fix
+[33m9fbb78c[m updated files
+[33m4d564c2[m updated files
+[33m691932d[m apply fix
+[33m956467f[m apply fix
+[33m34f907c[m apply fix
+[33m2e9786b[m apply fix
+[33m954250a[m updated fix
+[33mdbe3702[m apply fix
+[33mb9eaddf[m apply fix
+[33m6189448[m apply fix
+[33m9a9f157[m apply fix
+[33m42af7fb[m apply fix
+[33mf6c12f4[m updated files
+[33m3a8298b[m updated auth.py
+[33mc59164d[m update fix
+[33m14b669a[m updated mongo.py and auth.py
+[33ma86946a[m update swagger files
+[33m2d16688[m updated file
+[33m39e64f8[m updated main.py
+[33m0a4c8fd[m update .env in backend
+[33m1b2a4ba[m update file
+[33m36fb1ed[m create __init__.py
+[33me22569e[m update mongo.py
+[33m69a4b38[m apply fix
+[33m5de3b10[m update .gitignore
+[33mdbc0cec[m deleted venv
+[33m329ddef[m Remove venv from repo and rely on root .gitignore
+[33md564e5b[m updated file
+[33mdb0a9b2[m updated settings.json
+[33mce97210[m update .env in backend
+[33m028432a[m updated .env in backend
+[33m13d96a5[m update auth.py
+[33ma07764c[m update jwt.py and billing.py
+[33m29f97ab[m updated inventory.py
+[33m3dbe856[m updated core elements
+[33mef33c15[m apply fix
+[33m99e115a[m updated files
+[33mb0fad0f[m updated core files
+[33m11b83c5[m apply fix
+[33me25769b[m updated .env file
+[33mfdd1cb3[m update core folder
+[33m8ae3307[m update models.py
+[33mb6fb24a[m update models.py
+[33mdb40d36[m update .gitignore
+[33ma12beb1[m delete vscode folder
+[33mc963272[m clean .github folder
+[33mc42aa60[m apply fix
+[33m4475da5[m apply fix
+[33mde63040[m apply fix
+[33mfe95e5d[m apply fix
+[33ma7b2155[m apply fix
+[33m852a411[m apply fix
+[33me113d12[m apply fix
+[33mf7436ef[m apply fix
+[33madab8c5[m apply fix
+[33mdfb3273[m apply fix
+[33mcbb70a9[m apply fix
+[33m7adb6d6[m apply fix
+[33mda48d1b[m apply fix
+[33m2c48dbc[m apply fix
+[33m713d3e4[m apply fix
+[33m80543b2[m apply fix
+[33m3d951ba[m apply fix
+[33md138717[m apply fix
+[33ma2a4c97[m apply fix
+[33m297df6a[m apply fix
+[33m445e612[m apply fix
+[33mdf65718[m apply fix
+[33m107048f[m apply fix
+[33m39f9763[m apply fix
+[33m9e00f99[m apply fix
+[33md1f8e3b[m apply fix
+[33mf77fa4f[m apply fix
+[33m52d3992[m apply fix
+[33m3a34b57[m apply fix
+[33m58851d0[m apply fix
+[33mc8e0fdb[m apply fix
+[33m12c6465[m apply fix
+[33m3e10adf[m apply fix
+[33m326269f[m installed file
+[33ma921c4b[m apply fix
+[33ma805b52[m apply fix
+[33mbebffdb[m apply fix
+[33m74d815e[m apply fix
+[33mfa9449e[m apply fix
+[33m48913ed[m apply fix
+[33m7604867[m apply fix
+[33m46c0387[m apply fix
+[33m4289a3a[m apply fix
+[33mfafb1c3[m apply fix
+[33mad9795a[m apply fix
+[33mfa13c47[m apply fix
+[33me1e2806[m apply fix
+[33m116ec26[m apply fix
+[33me77d081[m apply fix
+[33maabae45[m apply fix
+[33m10ae077[m apply fix
+[33mdf55776[m apply fix
+[33m9a06532[m apply fix
+[33ma367d49[m apply fix
+[33m4ab14bd[m apply fix
+[33m7a5cae2[m apply fix
+[33m35b479a[m apply fix
+[33mc5cbb90[m apply fix
+[33md319d18[m apply fix
+[33m483b9eb[m apply fix
+[33mb6dcf73[m apply fix
+[33md3beba0[m apply fix
+[33md9a00ee[m apply fix
+[33m38c739c[m created db/mongo.py + fixed deps.py
+[33m7ace1dd[m apply fix
+[33m04fb42e[m apply fix
+[33mae9f089[m apply fix
+[33mb65cc97[m apply fix
+[33mc8f9426[m apply fix
+[33m0c816da[m apply  fix
+[33md77f3db[m apply fix
+[33mb23c3df[m apply fix
+[33me21dae1[m apply fix
+[33m7305997[m apply fix
+[33mc7376d3[m apply fix
+[33m8acaa2c[m removed backend from imports
+[33m1d3f01c[m launch on fly.io
+[33mf43c410[m create fly.io file
+[33mecdede2[m update file
+[33m9ea0191[m create TIERED INVENTORY
+[33mbefb9c9[m update file
+[33ma03fb8b[m create AUTH ROUTES
+[33m90c220e[m create AUTH DEPENDENCIES
+[33m59ee7d1[m create JWT UTILS
+[33mcf0890a[m create USER MODEL
+[33m371d602[m create DATABASE SETUP
+[33m13a9d93[m apply fix
+[33mcc32601[m apply fix
+[33m3f0b61f[m apply fix
+[33m2616dfc[m apply fix
+[33mc578d6c[m apply fix
+[33m31f26b6[m apply fix
+[33m092643b[m apply fix
+[33mdcfa691[m apply fix
+[33m499acd0[m apply fix
+[33md8b338c[m apply fix
+[33m453041a[m applied fix
+[33m220e607[m applied fix to the files
+[33m6207899[m update endpoints and routes
+[33m6cece0e[m create DEMO MODE TOGGLE
+[33ma6a10cf[m create HEAVY EQUIPMENT INVENTORY
+[33m1598e26[m create DOCUSIGN SERVICE
+[33m08b1b00[m create NDA UPLOAD ENDPOINT
+[33me3dbea7[m update main.py file
+[33m4be73db[m create files for backend upgrade
+[33mf8e9114[m updated main.py file
+[33m158f4a0[m verified inventory.py contents
+[33m6fc63f9[m fixed errors
+[33m0068173[m Create Backend UI
+[33mdf5c9c3[m created HEAVY-EQUIPMENT INVENTORY DEMO
+[33mffddced[m created NDA PDF UPLOAD + DOCUSIGN FLOW
+[33med327b9[m Created FASTAPI APP + ENDPOINTS
+[33mbf50f20[m created CORE DATA MODEL
+[33md6aafbd[m This is the MONEY screen
+[33macd37b6[m Show prioritization & historical intelligence
+[33mb70f4cf[m Prove AI scoring logic exists
+[33m922a9c0[m Created Notes files
+[33m93424a4[m Creating frontend UI
+[33mf3c6a63[m updated frontend files
+[33m09ae886[m updated App.jsx + created Header.jsx+Sidebar.jsx
+[33mb0d35c0[m updated Scores.jsx file
+[33m1750bac[m updated App.jsx file
+[33m54453bd[m created Scores.jsx file
+[33mdf31d9f[m updated App.jsx file
+[33mb6350e4[m updated frontend files
+[33ma6d5a48[m updated App.jsx file
+[33m228dae1[m deleted index.jsx duplicate code
+[33m826acd8[m deleted index.jsx + updated main.jsx file
+[33m3acbb9e[m no changes made
+[33m47aa88f[m updated tailwind.config.js file
+[33me496657[m updated package-lock.json + package.json files
+[33m2e82007[m created index.jsx file
+[33m3fdb652[m updated tailwind css file
+[33m95f1dbf[m created workflow profile + Updated App.jsx + Tailwind setup
+[33m15a7d11[m Add CI workflow for backend + frontend
+[33m306fa93[m Initial EasyFinder backend + frontend

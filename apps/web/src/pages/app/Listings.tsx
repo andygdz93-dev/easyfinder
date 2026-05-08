@@ -106,7 +106,7 @@ export const Listings = () => {
   };
 
   const data = listingsQuery.data;
-  const listings = Array.isArray(data) ? data : [];
+  const listings = Array.isArray(data) ? data : Array.isArray((data as any)?.listings) ? (data as any).listings : [];
   const sellerCount = listings.filter((listing) => listing.source?.startsWith("seller:")).length;
 
   useEffect(() => {
@@ -129,7 +129,7 @@ export const Listings = () => {
   const filteredListings = sellerOnly
     ? visibleListings.filter((listing) => listing.source?.startsWith("seller:"))
     : visibleListings;
-  const hasInvalidData = data !== undefined && !Array.isArray(data);
+  const hasInvalidData = false;
 
   return (
     <div className="space-y-6">
