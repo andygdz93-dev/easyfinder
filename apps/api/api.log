@@ -1,0 +1,7 @@
+nohup: ignoring input
+npm warn Unknown project config "ink-workspace-packages". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "prefer-workspace-packages". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "shared-workspace-lockfile". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "force-legacy-deploy". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "forceLegacyDeploy". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.

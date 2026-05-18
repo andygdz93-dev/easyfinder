@@ -4,12 +4,12 @@ export const defaultScoringConfig: ScoringConfig = {
   id: "default",
   name: "Default",
   weights: {
-    price: 0.25,
-    hours: 0.2,
-    year: 0.2,
-    location: 0.15,
-    condition: 0.1,
-    completeness: 0.1,
+    price: 0.35,
+    hours: 0.35,
+    year: 0.0,
+    location: 0.20,
+    condition: 0.0,
+    completeness: 0.0,
   },
   preferredStates: ["CA", "AZ", "TX", "IA"],
   minHours: 0,
@@ -255,7 +255,7 @@ export function scoreListingV2(listing: Listing, config: ScoringConfig): ScoreBr
 
   confidenceScore = clamp(Math.round(confidenceScore), 0, 100);
 
-  const total = clamp(Math.round(deal * 0.25 + usage * 0.25 + risk * 0.25 + speed * 0.25), 0, 100);
+  const total = clamp(Math.round(deal * 0.35 + usage * 0.35 + risk * 0.10 + speed * 0.20), 0, 100);
   const bestOptionEligible = !flags.includes("NON_OPERABLE") && confidenceScore >= 60 && risk >= 40;
 
   if (confidenceScore < 60) {

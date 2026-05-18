@@ -65,8 +65,14 @@ export default async function listingsRoutes(app: FastifyInstance) {
 
     const activeListings = await getListingsCollection().findLiveListings();
 
+    let bestAssigned = false;
     const scored = activeListings.map((listing) => {
       const score = scoreListing({ ...listing, createdAt: listing.createdAt ?? new Date(0).toISOString() }, defaultScoringConfig);
+      const isBestOption = (() => {
+        if (!score.bestOptionEligible || bestAssigned) return false;
+        bestAssigned = true;
+        return true;
+      })();
       return {
         ...normalizeListingImagesForResponse(listing),
         totalScore: score.total,
@@ -74,8 +80,8 @@ export default async function listingsRoutes(app: FastifyInstance) {
         confidenceScore: score.confidenceScore,
         reasons: score.reasons,
         flags: score.flags,
-        bestOptionEligible: score.bestOptionEligible,
-        score,
+        bestOptionEligible: isBestOption,
+        score: { ...score, isBestOption },
       };
     });
 
