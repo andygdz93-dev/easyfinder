@@ -40,6 +40,7 @@ const navSections = [
       { to: "/app/listings", label: "Listings" },
       { to: "/app/scoring", label: "Scoring" },
       { to: "/app/offers", label: "Offers" },
+      { to: "/app/analyze", label: "Deal Analyzer" },
     ],
   },
   {
@@ -276,8 +277,8 @@ export const AppShell = ({
       data-role={userRoleResolved}
       data-plan={planResolved}
     >
-      <div className="flex h-screen overflow-hidden">
-        <aside className="w-[260px] shrink-0 overflow-y-auto border-r border-slate-800/60 bg-slate-900/70 px-6 py-8">
+      <div className="flex h-screen overflow-hidden flex-col md:flex-row">
+        <aside className="hidden md:block w-[260px] shrink-0 overflow-y-auto border-r border-slate-800/60 bg-slate-900/70 px-6 py-8">
           <Link to={logoTarget} className="text-xl font-semibold text-white">
             Easy Finder AI
           </Link>
@@ -340,7 +341,7 @@ export const AppShell = ({
         </aside>
         <div className="flex flex-1 min-w-0">
           {showDemoBanner ? <DemoBanner /> : null}
-          <main className="flex-1 min-w-0 h-screen overflow-y-auto px-6 py-6">
+          <main className="flex-1 min-w-0 h-screen overflow-y-auto px-3 py-4 pb-20 md:px-6 md:py-6 md:pb-6">
             <header className="mb-6 flex items-center justify-between border-b border-slate-800 pb-6">
               <div>
                 <h2 className="text-lg font-semibold">
@@ -375,6 +376,14 @@ export const AppShell = ({
           </main>
         </div>
       </div>
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-slate-800 bg-slate-900 px-2 py-2">
+        {visibleSections.slice(0,1).flatMap(s=>s.items).slice(0,4).map(item=>(
+          <NavLink key={item.to} to={item.to} className={({isActive})=>
+            `flex flex-col items-center gap-0.5 px-3 py-1 text-xs rounded-lg ${isActive?'text-amber-300':'text-slate-400'}`
+          }>{item.label}</NavLink>
+        ))}
+        <button onClick={()=>clearSession()} className="flex flex-col items-center gap-0.5 px-3 py-1 text-xs text-slate-400">Out</button>
+      </nav>
     </div>
   );
 };

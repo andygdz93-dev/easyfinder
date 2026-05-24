@@ -26,7 +26,9 @@ import imageRoutes from "./routes/images.js";
 import { ZodError } from "zod";
 import { env } from "./env.js";
 import meRoutes from "./routes/me.js";
+import brokerChatRoutes from "./routes/broker-chat.js";
 import ironPlanetScraperRoutes from "./routes/scrapers.ironplanet.js";
+import dealRoutes from "./routes/deal.js";
 
 const normalizeRole = (role: unknown): UserRole => {
   if (
@@ -249,6 +251,8 @@ export const buildServer = () => {
   app.register(ndaRoutes, { prefix: "/api/nda" });
   // Always mount billing routes so promo activation is available in all environments.
   app.register(billingRoutes, { prefix: "/api/billing" });
+  app.register(brokerChatRoutes, { prefix: "/api/broker-chat" });
+  app.register(dealRoutes, { prefix: "/api/deal" });
 
   return app;
 };

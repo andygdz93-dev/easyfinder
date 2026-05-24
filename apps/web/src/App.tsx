@@ -37,6 +37,7 @@ import { NdaProvider } from "./lib/nda";
 import { useAuth } from "./lib/auth";
 import { SelectRole } from "./pages/app/SelectRole";
 import { Billing } from "./pages/app/Billing";
+import { DealAnalyzer } from "./pages/app/DealAnalyzer";
 import RequireSellerUploadAccess from "./components/RequireSellerUploadAccess";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminOverview from "./pages/app/admin/AdminOverview";
@@ -208,6 +209,7 @@ export default function App() {
               <Route path="watchlist" element={<Watchlist />} />
               <Route path="scoring" element={<ScoringConfigs />} />
               <Route path="offers" element={<Offers />} />
+              <Route path="analyze" element={<DealAnalyzer />} />
             </Route>
             <Route
               path="admin"

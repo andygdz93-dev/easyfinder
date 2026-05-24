@@ -316,7 +316,7 @@ export const DemoTour = () => {
             />
           </div>
         ) : (
-          <div className="flex h-screen flex-col overflow-hidden md:flex-row">
+          <div className="flex h-screen overflow-hidden">
             <div className="min-w-0 flex-1 overflow-y-auto">
               <TourStepContent
                 step={step}
@@ -454,7 +454,7 @@ const TourOverlay = ({
   const nextDisabled = role === "buyer" && step === 3 && !ndaAccepted;
 
   return (
-    <aside className="pointer-events-auto sticky bottom-0 z-10 w-full shrink-0 border-t border-white/10 bg-slate-950/95 p-4 backdrop-blur md:top-0 md:h-screen md:w-[420px] md:border-l md:border-t-0 md:p-6">
+    <aside className="pointer-events-auto sticky top-0 h-screen w-[420px] shrink-0 border-l border-white/10 bg-slate-950/95 p-6 backdrop-blur">
       <div className="space-y-3">
         <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
           Step {step} of 6

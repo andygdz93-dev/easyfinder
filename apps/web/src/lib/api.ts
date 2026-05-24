@@ -682,3 +682,52 @@ export const getAdminAuditLogs = (params: { event?: string; userId?: string; res
   const query = search.toString();
   return apiRequest<AdminAuditResponse>(`/admin/audit${query ? `?${query}` : ""}`);
 };
+
+export type DealEvalInput = {
+  title: string;
+  price?: number | null;
+  hours?: number | null;
+  year?: number;
+  state?: string;
+  category?: string;
+  operable?: boolean;
+  sellerType?: "dealer" | "auction" | "private" | "unknown";
+  hasInspectionReport?: boolean;
+  hasServiceHistory?: boolean;
+  verifiedSeller?: boolean;
+  availability?: "in_stock" | "scheduled_auction" | "unknown";
+  photoCount?: number;
+};
+
+export type DealEvalResult = {
+  recommendation: "BUY" | "NEGOTIATE" | "WALK";
+  score: {
+    total: number;
+    breakdown: { deal: number; usage: number; risk: number; speed: number };
+    reasons: { kind: string; message: string }[];
+    flags: string[];
+    confidence: number;
+    confidenceScore: number;
+    bestOptionEligible: boolean;
+    disqualified: boolean;
+  };
+};
+
+export type BrokerMessage = { role: "user" | "assistant"; content: string };
+
+export type BrokerResult = {
+  messages: { role: string; content: unknown }[];
+  usage: { input_tokens: number; output_tokens: number };
+};
+
+export const evaluateDeal = (input: DealEvalInput) =>
+  apiRequest<DealEvalResult>("/deal/evaluate", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+
+export const brokerChat = (messages: BrokerMessage[], listing?: DealEvalInput) =>
+  apiRequest<BrokerResult>("/broker-chat", {
+    method: "POST",
+    body: JSON.stringify({ messages, listing }),
+  });
