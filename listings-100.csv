@@ -1,0 +1,101 @@
+title,price,hours,year,state,category,source_url,seller_type,description,city,shipping_available,has_inspection_report,has_service_history,verified_seller
+2019 CAT 336 Hydraulic Excavator,184500,3240,2019,TX,Excavator,https://www.machinerytrader.com/listings/101,dealer,Clean CAT 336 with full service history. EROPS cab AC heat.,Dallas,false,true,true,true
+2017 John Deere 644K Wheel Loader,162000,4100,2017,CA,Loader,https://www.machinerytrader.com/listings/102,dealer,JD 644K loader good rubber recent transmission service.,Fresno,true,false,true,true
+2015 Komatsu D65PX Dozer,143000,5800,2015,AZ,Dozer,https://www.machinerytrader.com/listings/103,auction,Komatsu D65 straight blade PAT undercarriage 60 percent.,Phoenix,false,false,false,false
+2018 CAT 420F2 Backhoe Loader,78500,2950,2018,IA,Backhoe,https://www.machinerytrader.com/listings/104,dealer,CAT 420F2 4WD extend-a-hoe. Clean machine ready to work.,Des Moines,true,true,true,true
+2016 Manitou MT 1440 Telehandler,68000,3600,2016,TX,Telehandler,https://www.machinerytrader.com/listings/105,dealer,Manitou 14m telehandler good tires recent service.,Houston,false,false,true,false
+2020 Volvo EC220E Excavator,221000,1850,2020,FL,Excavator,https://www.machinerytrader.com/listings/106,dealer,Low hour Volvo EC220E. Excellent condition. Full warranty remaining.,Tampa,false,true,true,true
+2014 CAT 950M Wheel Loader,118000,6200,2014,OR,Loader,https://www.machinerytrader.com/listings/107,auction,CAT 950M. High hours but well maintained. New tires.,Portland,false,false,true,false
+2021 Bobcat E85 Excavator,94000,1100,2021,CO,Excavator,https://www.machinerytrader.com/listings/108,dealer,Near new Bobcat E85. Low hours. Dealer maintained.,Denver,true,true,true,true
+2013 Komatsu PC200LC-8 Excavator,72000,7800,2013,GA,Excavator,https://www.machinerytrader.com/listings/109,auction,Older Komatsu PC200 high hours. Runs well priced to sell.,Atlanta,false,false,false,false
+2018 JLG 1350SJP Boom Lift,89000,2400,2018,WA,Lift,https://www.machinerytrader.com/listings/110,dealer,JLG 1350SJP diesel boom lift. Good condition recent inspection.,Seattle,true,true,false,true
+2016 CAT 320EL Excavator,138000,4800,2016,TX,Excavator,https://www.machinerytrader.com/listings/111,dealer,CAT 320EL with clean undercarriage. AC works. Ready to dig.,San Antonio,false,true,true,true
+2018 Komatsu WA380-8 Wheel Loader,174000,3100,2018,CA,Loader,https://www.machinerytrader.com/listings/112,dealer,Komatsu WA380 low hours clean machine. Full dealer service records.,Sacramento,true,true,true,true
+2015 John Deere 850K Dozer,189000,4200,2015,TX,Dozer,https://www.machinerytrader.com/listings/113,dealer,JD 850K LGP dozer. PAT blade. Undercarriage 70 percent. Clean.,Amarillo,false,true,true,true
+2017 CAT 430F2 Backhoe,92000,2200,2017,OH,Backhoe,https://www.machinerytrader.com/listings/114,dealer,CAT 430F2 IT 4WD. Extend-a-hoe. Low hours for year.,Columbus,true,false,true,true
+2019 Genie S-85 Boom Lift,76000,1900,2019,IL,Lift,https://www.machinerytrader.com/listings/115,dealer,Genie S-85 diesel. Clean. Recent annual inspection passed.,Chicago,true,true,true,true
+2014 Volvo L90H Wheel Loader,128000,5500,2014,MN,Loader,https://www.machinerytrader.com/listings/116,auction,Volvo L90H. Good tires. Recent engine service. Runs strong.,Minneapolis,false,false,true,false
+2020 CAT 308 CR Mini Excavator,68000,980,2020,AZ,Excavator,https://www.machinerytrader.com/listings/117,dealer,Near new CAT 308 CR. Low hours. Rubber tracks good shape.,Tucson,true,true,true,true
+2016 Terex RT 100 Rough Terrain Crane,312000,3800,2016,FL,Crane,https://www.machinerytrader.com/listings/118,dealer,Terex RT 100 ton rough terrain. Good boom. Recent load test.,Miami,false,true,true,true
+2015 CAT 140M Motor Grader,198000,5100,2015,ND,Grader,https://www.machinerytrader.com/listings/119,auction,CAT 140M AWD grader. Good blade. Recent transmission service.,Fargo,false,false,true,false
+2017 JCB 3CX Backhoe Loader,74000,3400,2017,GA,Backhoe,https://www.machinerytrader.com/listings/120,dealer,JCB 3CX sideshift. 4WD. Good tires. Clean cab.,Augusta,true,false,true,true
+2018 Liebherr LTM 1070 Mobile Crane,485000,2900,2018,TX,Crane,https://www.machinerytrader.com/listings/121,dealer,Liebherr LTM 1070-4.2. 70 ton. Full boom. Recent cert.,Houston,false,true,true,true
+2016 CAT 299D XHP Skid Steer,48000,2800,2016,IA,Skid Steer,https://www.machinerytrader.com/listings/122,dealer,CAT 299D XHP high flow. Good tracks. Cab AC heat.,Cedar Rapids,true,false,true,true
+2019 Komatsu PC490LC-11 Excavator,368000,2200,2019,WA,Excavator,https://www.machinerytrader.com/listings/123,dealer,Large Komatsu PC490. Low hours. Excellent condition. Dealer unit.,Spokane,false,true,true,true
+2014 John Deere 310SK Backhoe,58000,4800,2014,MO,Backhoe,https://www.machinerytrader.com/listings/124,auction,JD 310SK 4WD. Higher hours. Runs well. Priced to sell.,Kansas City,false,false,false,false
+2017 Manitowoc Grove RT760E Crane,398000,1800,2017,CA,Crane,https://www.machinerytrader.com/listings/125,dealer,Grove RT760E 60 ton rough terrain. Excellent shape. Low hours.,Los Angeles,false,true,true,true
+2020 CAT 272D3 Skid Steer,54000,1400,2020,CO,Skid Steer,https://www.machinerytrader.com/listings/126,dealer,CAT 272D3 high flow. Low hours. Rubber tracks excellent.,Boulder,true,true,true,true
+2015 Volvo EC480EL Excavator,248000,5900,2015,TX,Excavator,https://www.machinerytrader.com/listings/127,auction,Large Volvo EC480. Higher hours. Undercarriage 55 percent.,Fort Worth,false,false,true,false
+2018 CAT 160M3 Motor Grader,224000,2800,2018,WY,Grader,https://www.machinerytrader.com/listings/128,dealer,CAT 160M3 AWD. Low hours. Clean machine. Full service records.,Cheyenne,false,true,true,true
+2016 Skyjack SJ63AJ Boom Lift,42000,3200,2016,NC,Lift,https://www.machinerytrader.com/listings/129,auction,Skyjack 63ft articulating boom. Diesel. Runs well.,Charlotte,true,false,false,false
+2019 Komatsu D51PXi-24 Dozer,276000,1600,2019,MN,Dozer,https://www.machinerytrader.com/listings/130,dealer,Komatsu D51 intelligent machine control. Very low hours. Like new.,Rochester,false,true,true,true
+2013 CAT 938K Wheel Loader,98000,7200,2013,OR,Loader,https://www.machinerytrader.com/listings/131,auction,CAT 938K high hours. Good tires. Recent engine overhaul.,Eugene,false,false,true,false
+2017 Bobcat T870 Track Loader,64000,2600,2017,WI,Skid Steer,https://www.machinerytrader.com/listings/132,dealer,Bobcat T870 high flow. Good tracks. Cab heat AC.,Madison,true,false,true,true
+2020 Volvo EC300EL Excavator,298000,1400,2020,CA,Excavator,https://www.machinerytrader.com/listings/133,dealer,Low hour Volvo EC300. Dealer maintained. Full warranty.,San Diego,false,true,true,true
+2016 CAT D6T Dozer,234000,4400,2016,ID,Dozer,https://www.machinerytrader.com/listings/134,dealer,CAT D6T LGP. PAT blade. Good undercarriage. Clean machine.,Boise,false,true,true,true
+2018 JLG 600S Boom Lift,58000,2100,2018,AZ,Lift,https://www.machinerytrader.com/listings/135,dealer,JLG 600S straight boom diesel. Recent inspection. Good shape.,Mesa,true,true,false,true
+2015 Komatsu GD655-5 Motor Grader,168000,5600,2015,MT,Grader,https://www.machinerytrader.com/listings/136,auction,Komatsu GD655 AWD. Good blade circle. Higher hours.,Billings,false,false,true,false
+2019 CAT 430F2 Backhoe,96000,1800,2019,TN,Backhoe,https://www.machinerytrader.com/listings/137,dealer,Low hour CAT 430F2. 4WD extend-a-hoe. Clean cab. Dealer unit.,Nashville,true,true,true,true
+2016 Liebherr LTM 1055 Mobile Crane,342000,3200,2016,GA,Crane,https://www.machinerytrader.com/listings/138,dealer,Liebherr LTM 1055-3.2. 55 ton all terrain. Good condition.,Savannah,false,true,true,true
+2018 CAT 336F L Excavator,312000,2600,2018,TX,Excavator,https://www.machinerytrader.com/listings/139,dealer,CAT 336F L. Low hours for size. Clean. Full dealer service.,Austin,false,true,true,true
+2014 John Deere 744K Wheel Loader,142000,6800,2014,NE,Loader,https://www.machinerytrader.com/listings/140,auction,JD 744K high hours. Good tires. Engine recently serviced.,Omaha,false,false,true,false
+2020 Bobcat E50 Excavator,58000,800,2020,VA,Excavator,https://www.machinerytrader.com/listings/141,dealer,Near new Bobcat E50. Very low hours. Rubber tracks excellent.,Richmond,true,true,true,true
+2017 CAT D8T Dozer,398000,3800,2017,AK,Dozer,https://www.machinerytrader.com/listings/142,dealer,CAT D8T. Good undercarriage. PAT blade. Dealer maintained.,Anchorage,false,true,true,true
+2016 Genie Z-135 Boom Lift,112000,2800,2016,TX,Lift,https://www.machinerytrader.com/listings/143,dealer,Genie Z-135 diesel articulating boom. Good shape. Certified.,Dallas,true,true,true,true
+2019 Komatsu PC138USLC-11 Excavator,118000,1600,2019,FL,Excavator,https://www.machinerytrader.com/listings/144,dealer,Komatsu PC138 zero tail swing. Low hours. Excellent condition.,Orlando,false,true,true,true
+2015 CAT 246D Skid Steer,38000,3800,2015,KS,Skid Steer,https://www.machinerytrader.com/listings/145,auction,CAT 246D. Higher hours. Good tires. Runs well. Priced right.,Wichita,false,false,false,false
+2018 John Deere 310SL Backhoe,84000,2400,2018,PA,Backhoe,https://www.machinerytrader.com/listings/146,dealer,JD 310SL 4WD. Low hours. Extend-a-hoe. Clean cab.,Pittsburgh,true,false,true,true
+2016 Volvo L110H Wheel Loader,158000,4900,2016,WA,Loader,https://www.machinerytrader.com/listings/147,dealer,Volvo L110H. Good tires. Recent major service. Clean machine.,Tacoma,true,true,true,true
+2020 CAT D6 XL Dozer,312000,1200,2020,TX,Dozer,https://www.machinerytrader.com/listings/148,dealer,Nearly new CAT D6 XL. Low hours. Full warranty. Dealer unit.,Lubbock,false,true,true,true
+2017 JLG 1200SJP Boom Lift,98000,2600,2017,OH,Lift,https://www.machinerytrader.com/listings/149,dealer,JLG 1200SJP diesel. 120ft reach. Good condition. Certified.,Cleveland,true,true,false,true
+2014 Komatsu PC360LC-10 Excavator,164000,6400,2014,MI,Excavator,https://www.machinerytrader.com/listings/150,auction,Komatsu PC360. Higher hours. Undercarriage 50 percent. Runs well.,Detroit,false,false,true,false
+2019 CAT 972M Wheel Loader,298000,2100,2019,AZ,Loader,https://www.machinerytrader.com/listings/151,dealer,CAT 972M. Low hours. Clean. Full dealer service records.,Scottsdale,false,true,true,true
+2016 Manitowoc MLC100 Crawler Crane,698000,2400,2016,TX,Crane,https://www.machinerytrader.com/listings/152,dealer,Manitowoc MLC100 VPC. 100 ton. Full boom. Recent cert.,Midland,false,true,true,true
+2018 CAT 320 GC Excavator,198000,2800,2018,NC,Excavator,https://www.machinerytrader.com/listings/153,dealer,CAT 320 GC. Good hours. Clean machine. Dealer maintained.,Raleigh,false,true,true,true
+2015 John Deere 850K LGP Dozer,212000,5200,2015,WI,Dozer,https://www.machinerytrader.com/listings/154,auction,JD 850K LGP. Higher hours. PAT blade. Undercarriage 55 percent.,Green Bay,false,false,true,false
+2017 CAT 308E2 CR Excavator,78000,2900,2017,IN,Excavator,https://www.machinerytrader.com/listings/155,dealer,CAT 308E2 mini excavator. Good rubber tracks. Cab heat AC.,Indianapolis,true,false,true,true
+2020 Genie GS-4069 Scissor Lift,38000,1100,2020,CA,Lift,https://www.machinerytrader.com/listings/156,dealer,Genie electric scissor lift. Low hours. Indoor use. Excellent.,San Jose,true,true,true,true
+2016 Komatsu WA500-7 Wheel Loader,228000,5100,2016,UT,Loader,https://www.machinerytrader.com/listings/157,auction,Komatsu WA500 large loader. Higher hours. Good tires. Runs strong.,Salt Lake City,false,false,true,false
+2018 CAT 430F2 IT Backhoe,98000,1900,2018,TX,Backhoe,https://www.machinerytrader.com/listings/158,dealer,CAT 430F2 IT 4WD. Low hours. Integrated toolcarrier. Clean.,El Paso,true,true,true,true
+2019 Volvo EC750EL Excavator,498000,1800,2019,CA,Excavator,https://www.machinerytrader.com/listings/159,dealer,Large Volvo EC750. Very low hours. Excellent condition. Dealer.,Bakersfield,false,true,true,true
+2015 CAT 12M3 Motor Grader,178000,5800,2015,CO,Grader,https://www.machinerytrader.com/listings/160,auction,CAT 12M3 AWD grader. Higher hours. Good blade. Runs well.,Pueblo,false,false,true,false
+2017 JLG 800AJ Boom Lift,64000,2400,2017,FL,Lift,https://www.machinerytrader.com/listings/161,dealer,JLG 800AJ articulating boom. Diesel. Good condition. Certified.,Jacksonville,true,true,true,true
+2016 Bobcat S650 Skid Steer,42000,3100,2016,MN,Skid Steer,https://www.machinerytrader.com/listings/162,dealer,Bobcat S650 high flow. Good tires. Cab AC heat. Clean.,Duluth,true,false,true,true
+2018 Komatsu PC240LC-11 Excavator,228000,2400,2018,TX,Excavator,https://www.machinerytrader.com/listings/163,dealer,Komatsu PC240. Low hours. Clean. Full service history.,Corpus Christi,false,true,true,true
+2014 CAT D7E Dozer,278000,6200,2014,CA,Dozer,https://www.machinerytrader.com/listings/164,auction,CAT D7E electric drive. Higher hours. Undercarriage 45 percent.,Stockton,false,false,false,false
+2020 John Deere 344L Wheel Loader,124000,1400,2020,IA,Loader,https://www.machinerytrader.com/listings/165,dealer,JD 344L. Very low hours. Excellent condition. Dealer maintained.,Sioux City,true,true,true,true
+2017 CAT 336F XE Excavator,342000,3100,2017,TX,Excavator,https://www.machinerytrader.com/listings/166,dealer,CAT 336F XE hybrid. Good hours. Excellent fuel economy. Clean.,Waco,false,true,true,true
+2016 Grove GMK4100L All Terrain Crane,524000,2800,2016,FL,Crane,https://www.machinerytrader.com/listings/167,dealer,Grove GMK4100L 100 ton all terrain. Full boom. Recent cert.,Fort Lauderdale,false,true,true,true
+2019 CAT 289D3 Track Loader,58000,1600,2019,GA,Skid Steer,https://www.machinerytrader.com/listings/168,dealer,CAT 289D3 high flow. Low hours. Rubber tracks excellent. Cab.,Macon,true,true,true,true
+2015 Komatsu PC800LC-8 Excavator,398000,5800,2015,WA,Excavator,https://www.machinerytrader.com/listings/169,auction,Large Komatsu PC800. Higher hours. Undercarriage 50 percent.,Everett,false,false,true,false
+2018 John Deere 770G Motor Grader,198000,2600,2018,SD,Grader,https://www.machinerytrader.com/listings/170,dealer,JD 770G AWD grader. Low hours. Good blade circle. Clean.,Sioux Falls,false,true,true,true
+2020 CAT 350 Excavator,428000,1100,2020,TX,Excavator,https://www.machinerytrader.com/listings/171,dealer,Nearly new CAT 350. Very low hours. Full warranty. Dealer unit.,Midland,false,true,true,true
+2016 JCB 540-170 Telehandler,62000,3800,2016,OH,Telehandler,https://www.machinerytrader.com/listings/172,dealer,JCB 540-170 telehandler. Good tires. Cab heat. Recent service.,Dayton,true,false,true,true
+2017 CAT 745 Articulated Truck,298000,3400,2017,AZ,Dump Truck,https://www.machinerytrader.com/listings/173,dealer,CAT 745 articulated hauler. Good tires. Dealer maintained.,Flagstaff,false,true,true,true
+2019 Komatsu HB365LC-3 Excavator,348000,2000,2019,CA,Excavator,https://www.machinerytrader.com/listings/174,dealer,Komatsu HB365 hybrid. Low hours. Excellent fuel savings. Clean.,Riverside,false,true,true,true
+2015 Volvo A40G Articulated Truck,248000,6100,2015,WY,Dump Truck,https://www.machinerytrader.com/listings/175,auction,Volvo A40G. Higher hours. Good tires. Runs strong. Priced right.,Casper,false,false,true,false
+2018 CAT 938M Wheel Loader,168000,2800,2018,TX,Loader,https://www.machinerytrader.com/listings/176,dealer,CAT 938M. Low hours. Clean. Full dealer service records.,Beaumont,true,true,true,true
+2016 Genie Z-60/37 Boom Lift,38000,3400,2016,NC,Lift,https://www.machinerytrader.com/listings/177,auction,Genie Z-60 diesel articulating boom. Higher hours. Runs well.,Durham,true,false,false,false
+2020 John Deere 75G Excavator,88000,1200,2020,VA,Excavator,https://www.machinerytrader.com/listings/178,dealer,JD 75G. Low hours. Excellent condition. Dealer maintained. Cab.,Virginia Beach,false,true,true,true
+2017 CAT D6N LGP Dozer,248000,3600,2017,OR,Dozer,https://www.machinerytrader.com/listings/179,dealer,CAT D6N LGP. Good undercarriage. PAT blade. Clean machine.,Salem,false,true,true,true
+2015 Manitowoc 999 Crawler Crane,1200000,3200,2015,TX,Crane,https://www.machinerytrader.com/listings/180,dealer,Manitowoc 999. 440 ton. Full boom and jib. Recent recertification.,Houston,false,true,true,true
+2019 CAT 259D3 Track Loader,52000,1400,2019,CO,Skid Steer,https://www.machinerytrader.com/listings/181,dealer,CAT 259D3. Low hours. Good tracks. Cab heat AC. Clean.,Colorado Springs,true,true,true,true
+2016 Komatsu PC88MR-10 Excavator,68000,3800,2016,TX,Excavator,https://www.machinerytrader.com/listings/182,dealer,Komatsu PC88 zero tail swing. Good rubber tracks. Cab heat.,Lubbock,false,false,true,true
+2018 John Deere 524K Wheel Loader,148000,2900,2018,MO,Loader,https://www.machinerytrader.com/listings/183,dealer,JD 524K. Low hours. Good tires. Dealer maintained. Clean.,St. Louis,true,true,true,true
+2014 CAT 385C Excavator,298000,7400,2014,CA,Excavator,https://www.machinerytrader.com/listings/184,auction,Large CAT 385C. Very high hours. Undercarriage 40 percent. Runs.,Fresno,false,false,false,false
+2020 Terex TH644C Telehandler,72000,1100,2020,FL,Telehandler,https://www.machinerytrader.com/listings/185,dealer,Terex TH644C. Very low hours. Excellent condition. Dealer unit.,Gainesville,true,true,true,true
+2017 CAT 730C2 Articulated Truck,268000,3200,2017,ND,Dump Truck,https://www.machinerytrader.com/listings/186,dealer,CAT 730C2 hauler. Good tires. Dealer maintained. Clean cab.,Bismarck,false,true,true,true
+2016 Komatsu D85EXi-18 Dozer,268000,4800,2016,TX,Dozer,https://www.machinerytrader.com/listings/187,dealer,Komatsu D85 intelligent machine control. Good undercarriage.,Abilene,false,true,true,true
+2019 JLG 1500SJ Boom Lift,128000,1800,2019,IL,Lift,https://www.machinerytrader.com/listings/188,dealer,JLG 1500SJ diesel. 150ft reach. Excellent condition. Certified.,Rockford,true,true,true,true
+2015 Volvo EC140ELM Excavator,98000,5400,2015,TN,Excavator,https://www.machinerytrader.com/listings/189,auction,Volvo EC140. Higher hours. Good undercarriage. Runs well.,Knoxville,false,false,true,false
+2018 CAT 906M Wheel Loader,98000,2600,2018,NM,Loader,https://www.machinerytrader.com/listings/190,dealer,CAT 906M compact loader. Low hours. Good tires. Clean cab.,Albuquerque,true,false,true,true
+2020 Komatsu PC55MR-5 Excavator,52000,900,2020,GA,Excavator,https://www.machinerytrader.com/listings/191,dealer,Near new Komatsu PC55. Very low hours. Zero tail swing. Clean.,Columbus,true,true,true,true
+2016 John Deere 544K Wheel Loader,138000,5200,2016,KY,Loader,https://www.machinerytrader.com/listings/192,auction,JD 544K. Higher hours. Good tires. Engine recently serviced.,Louisville,false,false,true,false
+2017 CAT 329EL Excavator,182000,3600,2017,TX,Excavator,https://www.machinerytrader.com/listings/193,dealer,CAT 329EL. Good hours. Clean undercarriage. Dealer maintained.,Tyler,false,true,true,true
+2019 Manitou MHT 10120 Telehandler,84000,2100,2019,CA,Telehandler,https://www.machinerytrader.com/listings/194,dealer,Manitou heavy duty telehandler. Low hours. Good condition.,Modesto,false,true,true,true
+2015 CAT 14M Motor Grader,228000,6200,2015,TX,Grader,https://www.machinerytrader.com/listings/195,auction,CAT 14M AWD grader. Higher hours. Good blade. Runs well.,Odessa,false,false,true,false
+2018 Volvo A30G Articulated Truck,198000,3100,2018,CO,Dump Truck,https://www.machinerytrader.com/listings/196,dealer,Volvo A30G. Good tires. Dealer maintained. Clean cab.,Grand Junction,false,true,true,true
+2020 CAT 313 GC Excavator,142000,1300,2020,WA,Excavator,https://www.machinerytrader.com/listings/197,dealer,CAT 313 GC. Low hours. Excellent condition. Full dealer warranty.,Bellingham,false,true,true,true
+2016 Komatsu PC290LC-11 Excavator,198000,4600,2016,OR,Excavator,https://www.machinerytrader.com/listings/198,dealer,Komatsu PC290. Good hours. Clean machine. Full service records.,Medford,false,true,true,true
+2017 JCB 535-125 Telehandler,56000,3200,2017,TX,Telehandler,https://www.machinerytrader.com/listings/199,dealer,JCB 535-125 telehandler. Good tires. Cab heat. Recent service.,Laredo,true,false,true,false
+2019 CAT D5 Dozer,198000,1800,2019,MT,Dozer,https://www.machinerytrader.com/listings/200,dealer,CAT D5. Low hours. Clean. Full dealer service. Like new.,Great Falls,false,true,true,true
