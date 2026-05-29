@@ -14,7 +14,9 @@
     "typecheck": "tsc -p tsconfig.test.json --noEmit",
     "test": "vitest run",
     "promote-admin": "tsx scripts/promote-admin.ts",
-    "seed-seller-listings": "tsx src/scripts/seed-seller-listings.ts"
+    "seed-seller-listings": "tsx src/scripts/seed-seller-listings.ts",
+    "ingest": "tsx src/scripts/ingest.ts",
+    "ingest-csv": "tsx src/scripts/ingest-csv.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.96.0",

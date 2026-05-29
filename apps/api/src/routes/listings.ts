@@ -81,7 +81,7 @@ export default async function listingsRoutes(app: FastifyInstance) {
         reasons: score.reasons,
         flags: score.flags,
         bestOptionEligible: isBestOption,
-        score: { ...score, isBestOption },
+        score: { ...score, bestOptionEligible: isBestOption, isBestOption },
       };
     });
 
@@ -131,7 +131,7 @@ export default async function listingsRoutes(app: FastifyInstance) {
       confidenceScore: score.confidenceScore,
       reasons: score.reasons,
       flags: score.flags,
-      bestOptionEligible: score.bestOptionEligible,
+      eligible: score.bestOptionEligible,
       score,
     });
     }
