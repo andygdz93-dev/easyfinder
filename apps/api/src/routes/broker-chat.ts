@@ -1,7 +1,8 @@
 import type { FastifyInstance } from "fastify";
-import Anthropic from "@anthropic-ai/sdk";
+import Anthropic, { toFile } from "@anthropic-ai/sdk";
+import type { TextBlock } from "@anthropic-ai/sdk/resources/messages";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY ?? "" });
 
 const SYSTEM_PROMPT = `You are EasyFinder AI, a battle-tested heavy equipment deal analyst with 20 years of auction and resale market experience. You specialize in CAT, Komatsu, Volvo, John Deere, JCB — excavators, dozers, wheel loaders, backhoes, telehandlers, motor graders, and compactors.
 
@@ -98,8 +99,8 @@ export default async function brokerChatRoutes(app: FastifyInstance) {
       });
 
       const rawText = response.content
-        .filter((b): b is Anthropic.TextBlock => b.type === "text")
-        .map((b) => b.text)
+        .filter((b): b is TextBlock => b.type === "text")
+        .map((b: TextBlock) => b.text)
         .join("");
 
       let parsed: unknown;
