@@ -138,6 +138,7 @@ export const scoreBreakdownSchema = z.object({
   confidenceScore: z.number(),
   bestOptionEligible: z.boolean(),
   disqualified: z.boolean(),
+  decision: z.enum(["BUY", "NEGOTIATE", "WALK"]),
 });
 export type ScoreBreakdown = z.infer<typeof scoreBreakdownSchema>;
 

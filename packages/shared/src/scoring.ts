@@ -76,6 +76,7 @@ export function scoreListingV2(listing: Listing, config: ScoringConfig): ScoreBr
       confidenceScore: 0,
       bestOptionEligible: false,
       disqualified: true,
+      decision: "WALK" as const,
     };
   }
 
@@ -254,6 +255,13 @@ export function scoreListingV2(listing: Listing, config: ScoringConfig): ScoreBr
     ...speedReasons.slice(1),
   ].filter((item): item is Reason => Boolean(item)).slice(0, 8);
 
+  const decision: "BUY" | "NEGOTIATE" | "WALK" =
+    total >= 70 && confidenceScore >= 60 && bestOptionEligible
+      ? "BUY"
+      : total >= 45
+      ? "NEGOTIATE"
+      : "WALK";
+
   return {
     total,
     breakdown: { deal, usage, risk, speed },
@@ -264,6 +272,7 @@ export function scoreListingV2(listing: Listing, config: ScoringConfig): ScoreBr
     confidenceScore,
     bestOptionEligible,
     disqualified: !bestOptionEligible,
+    decision,
   };
 }
 
