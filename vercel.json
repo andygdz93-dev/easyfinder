@@ -1,4 +1,6 @@
 {
+  "buildCommand": "pnpm --filter @easyfinderai/web build",
+  "outputDirectory": "apps/web/dist",
   "rewrites": [
     {
       "source": "/((?!.*\\.).*)",
